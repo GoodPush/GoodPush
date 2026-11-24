@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=goodpush
+Comment=Cycling training analysis and plans, on your own computer
+Exec=goodpush
+Icon=icon
+Terminal=false
+Categories=Sports;Utility;

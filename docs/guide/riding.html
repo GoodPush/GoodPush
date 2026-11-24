@@ -1,0 +1,412 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Several athletes, several computers" href="computers.html"><link rel="prev" title="The training plan" href="plan.html">
+        <link rel="canonical" href="https://goodpush.github.io/GoodPush/guide/riding.html">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Riding the plan - GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Beta: expect bugs. <a href="https://github.com/GoodPush/GoodPush/issues/new/choose">Tell us what goes wrong</a>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start/install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start/data.html">Getting your data in</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Using GoodPush</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="app.html">The app, page by page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plan.html">The training plan</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Riding the plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="computers.html">Several athletes, several computers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="privacy.html">Privacy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Help and contributing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../community/feedback.html">Help and feedback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/contributing.html">Contributing to GoodPush</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/costs.html">What GoodPush costs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How it works</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="method.html">Methods in short</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/dynamics.html">Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/likelihood.html">Likelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/priors.html">Priors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/fitting.html">Fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/planning.html">Planning with the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model/limits.html">Design choices and limits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/blob/main/srcdocs/guide/riding.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/edit/main/srcdocs/guide/riding.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="riding-the-plan">
+<h1>Riding the plan<a class="headerlink" href="#riding-the-plan" title="Link to this heading">¶</a></h1>
+<section id="on-a-garmin-watch-or-bike-computer">
+<h2>On a Garmin watch or bike computer<a class="headerlink" href="#on-a-garmin-watch-or-bike-computer" title="Link to this heading">¶</a></h2>
+<p>Each session is written as a structured workout (<code class="docutils literal notranslate"><span class="pre">reports/plan/workouts/gp_*.fit</span></code>). Plug the watch in by USB and
+copy the files into <code class="docutils literal notranslate"><span class="pre">GARMIN/NewFiles</span></code>; after unplugging they appear under <em>Training &gt; Workouts</em> (cycling). Pair a
+power source first (power pedals outdoors; a smart trainer as a power sensor or ANT+ FE-C trainer). Or import them in
+Garmin Connect (web: Training &amp; Planning &gt; Workouts &gt; Import) and send them to the watch from there.</p>
+</section>
+<section id="in-incyclist">
+<h2>In Incyclist<a class="headerlink" href="#in-incyclist" title="Link to this heading">¶</a></h2>
+<p>GoodPush can write your sessions straight into Incyclist’s own workout calendar on this computer (no account,
+nothing online): <strong>Settings &gt; Incyclist</strong>, tick <em>Write my plan into Incyclist</em> and Save (or <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">incyclist</span> <span class="pre">on</span></code>).
+After every plan update the next two weeks go into Incyclist’s <code class="docutils literal notranslate"><span class="pre">workouts/calendar.json</span></code>; Incyclist shows them under
+<em>Workouts &gt; Scheduled Workouts</em>.</p>
+<ul class="simple">
+<li><p>Incyclist reads that file when it starts: restart it after a plan change.</p></li>
+<li><p>Targets are % of FTP: set your FTP in Incyclist too.</p></li>
+<li><p>Only GoodPush’s entries are replaced. If you connect an online calendar inside Incyclist, its sync replaces the list.</p></li>
+<li><p>Incyclist installed somewhere else? Set its data folder in Settings &gt; Incyclist (<code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">incyclist</span> <span class="pre">--folder</span> <span class="pre">PATH</span></code>).</p></li>
+</ul>
+<p>Every session is also a Zwift workout (<code class="docutils literal notranslate"><span class="pre">workouts/gp_*.zwo</span></code>) to import by hand into Zwift or Incyclist.</p>
+</section>
+<section id="goodpush-s-trainer-bar">
+<span id="goodpushs-trainer-bar"></span><h2>GoodPush’s trainer bar<a class="headerlink" href="#goodpush-s-trainer-bar" title="Link to this heading">¶</a></h2>
+<p><strong>▶ Ride it now</strong> on Today (or <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">ride</span></code>): a small see-through bar that stays on top of every window, so you can
+watch something while you ride. It shows power (3 s) against the target, heart rate, cadence, the step with its
+countdown, the next step and the session’s shape, and steers the trainer in ERG over ANT+ FE-C. All-out steps
+(sprints, the 20-min test) and free rides use resistance mode instead. The workout clock only runs while you pedal.</p>
+<ul class="simple">
+<li><p><strong>You need</strong> an ANT+ USB stick (<a class="reference internal" href="../start/install.html#ant-usb-stick-for-riding-on-a-trainer"><span class="std std-ref">its driver on Windows</span></a>).
+From source: the <code class="docutils literal notranslate"><span class="pre">[ride]</span></code> extra.</p></li>
+<li><p><strong>The first time</strong>, a window lists the trainers, power meters, cadence sensors and heart-rate straps it hears; pick
+yours (remembered per computer; <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">ride</span> <span class="pre">--pick</span></code> to change them, <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">ride</span> <span class="pre">scan</span></code> to list what’s around).</p></li>
+<li><p><strong>While riding</strong>: drag the bar where you like. Right-click it (or use the tray icon) to pause, skip a step, go harder
+or easier, turn ERG off, change its look, switch devices, or finish. Mouse wheel = 1 % harder / easier,
+↑ / ↓ = 5 %, space = pause, → = skip the step.</p></li>
+<li><p><strong>Finishing</strong> saves a FIT file (a lap per step) in <code class="docutils literal notranslate"><span class="pre">data/raw/goodpush/</span></code>. It’s taken in like any other ride, linked
+to that day’s session, and the plan is rebuilt. If your watch recorded the same ride, the watch’s copy is dropped.
+A crash loses at most a minute: the next ride saves what was left.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">ride</span> <span class="pre">--free</span></code> = no workout, <code class="docutils literal notranslate"><span class="pre">--session</span> <span class="pre">2026-11-03</span></code> = another day’s session, <code class="docutils literal notranslate"><span class="pre">--sim</span></code> = a pretend trainer to
+try it out (saved to a temporary folder only).</p></li>
+<li><p>Keep the stick close to the trainer (a USB extension cable): with a weak signal readings drop out and ERG changes
+arrive late.</p></li>
+<li><p>macOS: the bar shows on every desktop and over full-screen apps; while you ride, GoodPush has no Dock icon (use the
+menu-bar icon).</p></li>
+</ul>
+</section>
+<section id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>FTP test</strong> <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../references.html#id2" title="Hunter Allen, Andrew R. Coggan, and Stephen McGregor. Training and Racing with a Power Meter. VeloPress, Boulder, CO, 3rd edition, 2019.">Allen <em>et al.</em>, 2019</a>]</span>: a 20-minute test every <code class="docutils literal notranslate"><span class="pre">test_every_weeks</span></code> (default 6). Record one from elsewhere on Plan &gt; Record an
+FTP test.</p></li>
+<li><p><strong>Ramp test</strong> with alphaHRV, every <code class="docutils literal notranslate"><span class="pre">ramp_every_weeks</span></code> (default 6): 2-minute steps of about 6 % of FTP <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../references.html#id47" title="H. Kuipers, F. T. J. Verstappen, H. A. Keizer, P. Geurten, and G. van Kranenburg. Variability of aerobic performance in the laboratory and its physiologic correlates. International Journal of Sports Medicine, 6(4):197–201, 1985. doi:10.1055/s-2008-1025839.">Kuipers <em>et al.</em>, 1985</a>]</span>, for LT1 / LT2 <span class="bibtex-citation" id="id3">[<a class="reference internal" href="../references.html#id41" title="Bruce Rogers, David Giles, Nick Draper, Olaf Hoos, and Thomas Gronwald. A new detection method defining the aerobic threshold for endurance exercise and training prescription based on fractal correlation properties of heart rate variability. Frontiers in Physiology, 11:596567, 2021. doi:10.3389/fphys.2020.596567.">Rogers <em>et al.</em>, 2021</a>, <a class="reference internal" href="../references.html#id42" title="Bruce Rogers, David Giles, Nick Draper, Laurent Mourot, and Thomas Gronwald. Detection of the anaerobic threshold in endurance sports: validation of a new method using correlation properties of heart rate variability. Journal of Functional Morphology and Kinesiology, 6(2):38, 2021. doi:10.3390/jfmk6020038.">Rogers <em>et al.</em>, 2021</a>]</span>.
+GoodPush recognises a ramp test in your rides by itself.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="computers.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Several athletes, several computers</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="plan.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">The training plan</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Leon Foks
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Riding the plan</a><ul>
+<li><a class="reference internal" href="#on-a-garmin-watch-or-bike-computer">On a Garmin watch or bike computer</a></li>
+<li><a class="reference internal" href="#in-incyclist">In Incyclist</a></li>
+<li><a class="reference internal" href="#goodpush-s-trainer-bar">GoodPush’s trainer bar</a></li>
+<li><a class="reference internal" href="#tests">Tests</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=bd079e7e"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

@@ -1,0 +1,658 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Likelihood" href="likelihood.html"><link rel="prev" title="Inputs" href="inputs.html">
+        <link rel="canonical" href="https://goodpush.github.io/GoodPush/model/dynamics.html">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Dynamics - GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Beta: expect bugs. <a href="https://github.com/GoodPush/GoodPush/issues/new/choose">Tell us what goes wrong</a>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start/install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start/data.html">Getting your data in</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Using GoodPush</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/app.html">The app, page by page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/plan.html">The training plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/riding.html">Riding the plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/computers.html">Several athletes, several computers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/privacy.html">Privacy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Help and contributing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../community/feedback.html">Help and feedback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/contributing.html">Contributing to GoodPush</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/costs.html">What GoodPush costs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How it works</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guide/method.html">Methods in short</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="likelihood.html">Likelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="priors.html">Priors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fitting.html">Fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planning.html">Planning with the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="limits.html">Design choices and limits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/blob/main/srcdocs/model/dynamics.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/edit/main/srcdocs/model/dynamics.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="dynamics">
+<h1>Dynamics<a class="headerlink" href="#dynamics" title="Link to this heading">¶</a></h1>
+<p>One day, from the morning of day <span class="math notranslate nohighlight">\(t\)</span> to the next (<code class="xref py py-meth docutils literal notranslate"><span class="pre">goodpush.physio.PhysioModel.step()</span></code>). The day starts
+with the state vector <span class="math notranslate nohighlight">\(x_t\)</span> (<a class="reference internal" href="overview.html"><span class="doc">Overview</span></a>), the adaptation pool <span class="math notranslate nohighlight">\(\pi_t\)</span> (one entry per state:
+adaptation earned but not yet realised) and the fatigue <span class="math notranslate nohighlight">\(F_t\)</span>.</p>
+<section id="doses-the-day-s-training-by-intensity-domain">
+<h2>Doses: the day’s training by intensity domain<a class="headerlink" href="#doses-the-day-s-training-by-intensity-domain" title="Link to this heading">¶</a></h2>
+<p>The day’s riding is a power histogram: <span class="math notranslate nohighlight">\(h_{t,b}\)</span> hours in power bin <span class="math notranslate nohighlight">\(b\)</span>, whose centre is
+<span class="math notranslate nohighlight">\(P_b\)</span> watts (10 W bins). It is split into intensity domains at four edges <span class="math notranslate nohighlight">\(\ell_1 &lt; \dots &lt; \ell_4\)</span>
+(log watts) set by the <strong>current</strong> state, so “threshold work” moves up as you get fitter:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\ell = \log\left(\mathrm{LT1}_t,\ \mathrm{CP}_t,\ \mathrm{MAP}_t,\ \mathrm{MAP}_t + \tfrac12(P_{max,t} - \mathrm{MAP}_t)\right),
+\qquad a_k(b) = \sigma\!\left(\frac{\log P_b - \ell_k}{0.05}\right)\]</div>
+</div>
+<p>Here <span class="math notranslate nohighlight">\(\sigma(v) = 1/(1 + e^{-v})\)</span> is the logistic function, so <span class="math notranslate nohighlight">\(a_k(b)\)</span> is the share of bin
+<span class="math notranslate nohighlight">\(b\)</span> above edge <span class="math notranslate nohighlight">\(k\)</span>: the edges are soft, 5 % wide in log power, which keeps the model differentiable.
+The fourth edge is the <strong>sprint line</strong>, halfway from MAP to <span class="math notranslate nohighlight">\(P_{max}\)</span>. A bin’s share in each domain is
+<span class="math notranslate nohighlight">\(1 - a_1,\ a_1 - a_2,\ a_2 - a_3,\ a_3 - a_4,\ a_4\)</span> (below LT1 … above the sprint line), and a domain’s
+dose <span class="math notranslate nohighlight">\(d_{t,j}\)</span> is its hours (the bins’ hours times their shares in it, summed) divided by the domain’s unit
+<span class="math notranslate nohighlight">\(u_j\)</span>:</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 12.0%" />
+<col style="width: 38.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Dose</p></th>
+<th class="head"><p>Domain</p></th>
+<th class="head"><p>Unit (a dose of 1)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>z1</p></td>
+<td><p>below LT1</p></td>
+<td><p>1 h</p></td>
+</tr>
+<tr class="row-odd"><td><p>z2</p></td>
+<td><p>LT1 - CP (tempo, sweet spot, threshold)</p></td>
+<td><p>1 h</p></td>
+</tr>
+<tr class="row-even"><td><p>z3</p></td>
+<td><p>CP - MAP (severe: VO2max intervals, about 105-120 % FTP); the band LT1 - MAP split by power and heart rate (below)</p></td>
+<td><p>10 min</p></td>
+</tr>
+<tr class="row-odd"><td><p>z4</p></td>
+<td><p>MAP - sprint line (above 5-min power: 30/30s, 1-2 min reps, hard surges)</p></td>
+<td><p>5 min</p></td>
+</tr>
+<tr class="row-even"><td><p>sprint</p></td>
+<td><p>above the sprint line</p></td>
+<td><p>1 min</p></td>
+</tr>
+<tr class="row-odd"><td><p>long</p></td>
+<td><p>hours past 2 h in a ride</p></td>
+<td><p>1 h</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The units put a typical session’s dose near 1, so the priors on training effects are comparable across domains.</p>
+<p><strong>Heavy or severe: power and heart rate together.</strong> The band LT1 - MAP is split into heavy (z2) and severe (z3) by a
+severe share per second,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[s = \sigma\!\left(\frac{\log P - \log \mathrm{CP}_t}{0.05} + e\right), \qquad
+z_2 \mathrel{+}= (a_1 - a_3)(1 - s), \quad z_3 \mathrel{+}= (a_1 - a_3)\, s,\]</div>
+</div>
+<p>the soft CP edge plus heart-rate evidence <span class="math notranslate nohighlight">\(e\)</span>, added as log-odds (z1, z4, sprint and long as above). Either alone
+fails. Power within a few % of CP can’t tell steady riding from severe - a VO2max rep with a hard start ridden right at
+CP is booked half heavy, a steady stretch a little above it as severe. Heart rate alone counts long hot rides and long
+climbs (heart rate high for reasons other than the effort) and books history by one rule and planned sessions, which
+have no heart rate, by another. Together, heart rate moves seconds near CP to the side it shows, and power keeps far
+from CP what it says.</p>
+<p>The evidence comes from the data only (<code class="docutils literal notranslate"><span class="pre">metrics.severe_hr</span></code>): heart rate corrected for its lag
+(<span class="math notranslate nohighlight">\(H + \tau\,\dot H\)</span>, <span class="math notranslate nohighlight">\(\tau\)</span> the rider’s own first-order time constant, the one at which lag-filtered power
+lines up best with heart rate) and for each ride’s drift (the upward trend of heart rate less what power explains,
+fitted on its seconds below CP), against threshold heart rate then (an input, not fitted):
+<span class="math notranslate nohighlight">\(e = (H_{corr} - \mathrm{LTHR}_t) / w\)</span>, <span class="math notranslate nohighlight">\(w\)</span> half the scatter of corrected heart rate around a straight line
+(heart rate on log power) in steady riding between LT1 and CP. It enters the model binned (12 bins, clipped to
+<span class="math notranslate nohighlight">\(\pm 6\)</span>): hours per day, power bin and evidence bin. Seconds without heart rate - no strap, a dropout, every
+planned or simulated session - have <span class="math notranslate nohighlight">\(e = 0\)</span>, the plain power edge, so history and plan share one formula. With
+<span class="math notranslate nohighlight">\(e = 0\)</span> the split differs from cutting the band at the CP edge (<span class="math notranslate nohighlight">\(a_1 - a_2\)</span>, <span class="math notranslate nohighlight">\(a_2 - a_3\)</span>) only where
+two soft edges overlap.
+<span class="math notranslate nohighlight">\(d_t = (d_{t,1}, \dots, d_{t,6})\)</span> is the day’s dose vector, in the order of the table.</p>
+<p><strong>Compared with the usual zone models.</strong> The domains are the classic exercise-intensity domains <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../references.html#id28" title="Andrew M. Jones, Anni Vanhatalo, Mark Burnley, R. Hugh Morton, and David C. Poole. Critical power: implications for determination of VO2max and exercise tolerance. Medicine and Science in Sports and Exercise, 42(10):1876–1890, 2010. doi:10.1249/MSS.0b013e3181d9cf7f.">Jones <em>et al.</em>, 2010</a>, <a class="reference internal" href="../references.html#id30" title="David C. Poole and Andrew M. Jones. Oxygen uptake kinetics. Comprehensive Physiology, 2(2):933–996, 2012. doi:10.1002/cphy.c100072.">Poole and Jones, 2012</a>]</span> (moderate below
+LT1, heavy LT1 - CP, severe CP - MAP), with the extreme domain split at the sprint line. Standard models fix their
+zones as % FTP (or lactate / heart rate); these edges are the athlete’s own thresholds, so in % FTP they move with
+the athlete. The % FTP columns use typical ratios: LT1 about 75-85 % FTP, CP 100-105 %, MAP (5-min power)
+115-130 %, the sprint line 250-350 %. The three-zone model is Seiler’s <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../references.html#id7" title="K. Stephen Seiler and Glenn Ø. Kjerland. Quantifying training intensity distribution in elite endurance athletes: is there evidence for an “optimal” distribution? Scandinavian Journal of Medicine &amp; Science in Sports, 16(1):49–56, 2006. doi:10.1111/j.1600-0838.2004.00418.x.">Seiler and Kjerland, 2006</a>]</span>, the five-zone one
+Olympiatoppen’s <span class="bibtex-citation" id="id3">[<a class="reference internal" href="../references.html#id8" title="Stephen Seiler. What is best practice for training intensity and duration distribution in endurance athletes? International Journal of Sports Physiology and Performance, 5(3):276–291, 2010. doi:10.1123/ijspp.5.3.276.">Seiler, 2010</a>]</span>, the seven-zone one Coggan’s <span class="bibtex-citation" id="id4">[<a class="reference internal" href="../references.html#id2" title="Hunter Allen, Andrew R. Coggan, and Stephen McGregor. Training and Racing with a Power Meter. VeloPress, Boulder, CO, 3rd edition, 2019.">Allen <em>et al.</em>, 2019</a>]</span>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9.0%" />
+<col style="width: 14.0%" />
+<col style="width: 21.0%" />
+<col style="width: 26.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Dose</p></th>
+<th class="head"><p>Typical % FTP</p></th>
+<th class="head"><p>3 zones (Seiler: LT1 / LT2)</p></th>
+<th class="head"><p>5 zones (Olympiatoppen I1-I5, lactate)</p></th>
+<th class="head"><p>7 zones (Coggan, % FTP)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>z1</p></td>
+<td><p>&lt; 75-85</p></td>
+<td><p>Z1 (below LT1)</p></td>
+<td><p>I1 (&lt; ~2 mmol/l)</p></td>
+<td><p>1 recovery, 2 endurance, lower 3 tempo</p></td>
+</tr>
+<tr class="row-odd"><td><p>z2</p></td>
+<td><p>75-85 to 100-105</p></td>
+<td><p>Z2 (LT1 - LT2), up to about CP</p></td>
+<td><p>I2, I3 (2 - 4 mmol/l), up to about CP</p></td>
+<td><p>upper 3 tempo, sweet spot, 4 threshold</p></td>
+</tr>
+<tr class="row-even"><td><p>z3</p></td>
+<td><p>100-105 to 115-130</p></td>
+<td><p>Z3 (above LT2)</p></td>
+<td><p>I4, I5 (VO2 rising to max)</p></td>
+<td><p>5 VO2max, lower 6</p></td>
+</tr>
+<tr class="row-odd"><td><p>z4</p></td>
+<td><p>115-130 to 250-350</p></td>
+<td><p>Z3</p></td>
+<td><p>above I5 (anaerobic)</p></td>
+<td><p>6 anaerobic, lower 7</p></td>
+</tr>
+<tr class="row-even"><td><p>sprint</p></td>
+<td><p>&gt; 250-350</p></td>
+<td><p>Z3</p></td>
+<td><p>above I5</p></td>
+<td><p>upper 7 neuromuscular</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>So a Coggan “VO2max” interval (106-120 % FTP) is z3, which may raise both MAP and CP’s share of MAP (the fit
+says how much of each); reps above 5-min power (Coggan 6) are z4, which may raise MAP only. “long” has no counterpart: it counts duration, not intensity.</p>
+<p><strong>CP is not LT2.</strong> The 3- and 5-zone models put their upper edge at a lactate or ventilatory threshold (LT2,
+~4 mmol/l, the maximal lactate steady state, the respiratory compensation point; <span class="bibtex-citation" id="id5">Jones <em>et al.</em> [<a class="reference internal" href="../references.html#id29" title="Andrew M. Jones, Mark Burnley, Matthew I. Black, David C. Poole, and Anni Vanhatalo. The maximal metabolic steady state: redefining the `gold standard'. Physiological Reports, 7(10):e14098, 2019. doi:10.14814/phy2.14098.">2019</a>]</span>); the model’s z2 / z3 edge is CP, the
+power-duration asymptote. They are measured differently (blood or breath vs the best-power curve) and usually lie
+within a few percent of each other, CP more often a little above MLSS, but the gap depends on the athlete’s
+glycolytic profile (VLamax, <span class="bibtex-citation" id="id6">Mader and Heck [<a class="reference internal" href="../references.html#id32" title="Alois Mader and Hermann Heck. A theory of the metabolic origin of “anaerobic threshold”. International Journal of Sports Medicine, 7(Suppl 1):45–65, 1986. doi:10.1055/s-2008-1025802.">1986</a>]</span>): a high glycolytic rate pulls lactate thresholds below CP. So “Seiler Z2 = z2” holds
+only roughly near the top; goodpush’s alpha1 LT2 (<code class="xref py py-mod docutils literal notranslate"><span class="pre">goodpush.alpha</span></code>) is a separate estimate, not an input here.</p>
+</section>
+<section id="adaptation-pool-rate-detraining">
+<h2>Adaptation: pool, rate, detraining<a class="headerlink" href="#adaptation-pool-rate-detraining" title="Link to this heading">¶</a></h2>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}r_t &amp;= 1 - \exp\!\left(-\rho \odot e^{-\gamma F_t}\right) \\
+x_{t+1} &amp;= x_t + r_t\,\pi_t - m \odot \frac{x_t - \phi}{\tau} + \varepsilon_t \\
+\pi_{t+1} &amp;= (1 - r_t)\,\pi_t + G\,d_t\end{split}\]</div>
+</div>
+<p>Symbols, from the top:</p>
+<ul>
+<li><p><span class="math notranslate nohighlight">\(r_t \in (0, 1)\)</span> - the share of the pool that turns into capacity today;</p></li>
+<li><p><span class="math notranslate nohighlight">\(\rho\)</span> (per day, fitted, one per trained state) - that rate when fresh: how fast the reservoir of
+training turns into capacity. Physiology sets its prior: the aerobic ceiling (MAP) in about 1-2 weeks, CP / MAP
+in 2-3, LT1 / 1-h power (mitochondria, fat use) in 4-6. One rate shared by all states fitted to about a day,
+following the old heart-rate readings’ day-to-day swings; <span class="math notranslate nohighlight">\(\gamma\)</span> (fitted) - how much fatigue slows it;</p></li>
+<li><p><span class="math notranslate nohighlight">\(\odot\)</span> - element-wise product; <span class="math notranslate nohighlight">\(m\)</span> - 1 for the states that detrain, 0 for the others;</p></li>
+<li><p><span class="math notranslate nohighlight">\(\phi\)</span> - each state’s detrained floor; <span class="math notranslate nohighlight">\(\tau\)</span> (days) - each state’s detraining time constant (both
+fitted; the division is element-wise);</p></li>
+<li><p><span class="math notranslate nohighlight">\(\varepsilon_t\)</span> - process noise (below);</p></li>
+<li><p><span class="math notranslate nohighlight">\(G\)</span> - the <strong>gain matrix</strong> (states × doses), non-zero only where training is allowed to act:</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 12.5%" />
+<col style="width: 12.5%" />
+<col style="width: 12.5%" />
+<col style="width: 12.5%" />
+<col style="width: 12.5%" />
+<col style="width: 12.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>State</p></th>
+<th class="head"><p>z1</p></th>
+<th class="head"><p>z2</p></th>
+<th class="head"><p>z3</p></th>
+<th class="head"><p>z4</p></th>
+<th class="head"><p>sprint</p></th>
+<th class="head"><p>long</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MAP</p></td>
+<td><p>x</p></td>
+<td><p>x</p></td>
+<td><p>x</p></td>
+<td><p>x</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>LT1 / 1-h power</p></td>
+<td><p>x</p></td>
+<td><p>x</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>CP / MAP</p></td>
+<td></td>
+<td><p>x</p></td>
+<td><p>x</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Pmax</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>durability</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Any aerobic work may raise the ceiling (the data decide how much each does); threshold-type work (LT1 - CP and
+CP - MAP) fills CP toward MAP; endurance hours (easy and tempo, any ride length) fill LT1 toward your 1-hour power.
+The sprint dose trains nothing: W’ follows from MAP, CP and Pmax, and Pmax only drifts. On LT1 / 1-h power, z1 and z2
+share <strong>one</strong> training effect (an hour below LT1 counts as much as an hour LT1 - CP): they come together on nearly
+every easy ride, so the data fix only their sum - as two effects they slid along a ridge, and one forecasts as well.
+Hours past 2 h no longer train LT1 on their own: they are endurance hours too, and with both terms the posterior
+split between “endurance hours” and “long rides” (either alone fit as well).</p>
+</li>
+<li><p><span class="math notranslate nohighlight">\(\pi_t\)</span> - the <strong>adaptation pool</strong>: training adds to it at once, it turns into capacity at rate
+<span class="math notranslate nohighlight">\(r_t\)</span>: a delay between load and performance like PerPot’s <span class="bibtex-citation" id="id7">[<a class="reference internal" href="../references.html#id21" title="Jürgen Perl. PerPot: a metamodel for simulation of load performance interaction. European Journal of Sport Science, 1(2):1–13, 2001. doi:10.1080/17461390100071202.">Perl, 2001</a>]</span> and the delayed fitness
+term of <span class="bibtex-citation" id="id8">Calvert <em>et al.</em> [<a class="reference internal" href="../references.html#id18" title="Thomas W. Calvert, Eric W. Banister, Margaret V. Savage, and Tim Bach. A systems model of the effects of training on physical performance. IEEE Transactions on Systems, Man, and Cybernetics, SMC-6(2):94–102, 1976. doi:10.1109/TSMC.1976.5409179.">1976</a>]</span>. The rate falls with fatigue (<span class="math notranslate nohighlight">\(e^{-\gamma F}\)</span>): you adapt while recovering, slower while
+tired. How much fatigue costs (<span class="math notranslate nohighlight">\(\gamma\)</span>) is learned, not a set limit.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\phi, \tau\)</span> - each trained state decays toward a <strong>detrained floor</strong> with its own time constant
+(<span class="math notranslate nohighlight">\(m\)</span> = 1 for MAP, LT1 / 1-h power and CP/MAP; 0 for Pmax and durability, which only drift - see <a class="reference internal" href="limits.html"><span class="doc">Design choices and limits</span></a>).</p></li>
+<li><p>The fitted quantity is the <strong>training effect</strong> <span class="math notranslate nohighlight">\(E\)</span> (<span class="math notranslate nohighlight">\(E_{ij} = G_{ij}\,\tau_i\)</span> for state <span class="math notranslate nohighlight">\(i\)</span>
+and dose <span class="math notranslate nohighlight">\(j\)</span>): how far a steady daily dose of 1 moves a state in the long run. With the same dose vector
+<span class="math notranslate nohighlight">\(d\)</span> every day the states settle at <span class="math notranslate nohighlight">\(x - \phi = E\,d\)</span>. The data pin down this product, not gain and
+time constant separately, so <span class="math notranslate nohighlight">\(E\)</span> and <span class="math notranslate nohighlight">\(\tau\)</span> are the parameters.</p></li>
+</ul>
+<p>Because the states are logs (and a logit), the dynamics are linear in <em>log</em> capacity: a training effect is a
+<em>relative</em> change (0.01 ≈ 1 %), and the shares LT1 / 1-h power and CP / MAP saturate as they approach 1.</p>
+</section>
+<section id="fatigue">
+<h2>Fatigue<a class="headerlink" href="#fatigue" title="Link to this heading">¶</a></h2>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[F_{t+1} = F_t\, e^{-1/\tau_F} + \sum_b h_{t,b} \left(\frac{P_b}{\mathrm{CP}_t}\right)^2\]</div>
+</div>
+<p>The day’s load (the sum) is hours weighted by the square of intensity relative to CP: an hour at CP adds 1, an
+hour at LT1 about 0.6 - the weighting of TSS, intensity factor squared <span class="bibtex-citation" id="id9">[<a class="reference internal" href="../references.html#id2" title="Hunter Allen, Andrew R. Coggan, and Stephen McGregor. Training and Racing with a Power Meter. VeloPress, Boulder, CO, 3rd edition, 2019.">Allen <em>et al.</em>, 2019</a>]</span>, with CP for FTP. As
+the fatigue term of an impulse-response model <span class="bibtex-citation" id="id10">[<a class="reference internal" href="../references.html#id17" title="E. W. Banister, T. W. Calvert, M. V. Savage, and T. Bach. A systems model of training for athletic performance. Australian Journal of Sports Medicine, 7:57–61, 1975.">Banister <em>et al.</em>, 1975</a>]</span>, fatigue clears exponentially with the time
+constant <span class="math notranslate nohighlight">\(\tau_F\)</span> (days, fitted). It does not lower
+capacity; it lowers what you can do on the day by the form factor <span class="math notranslate nohighlight">\(e^{-s_F F_t}\)</span> (<a class="reference internal" href="overview.html"><span class="doc">Overview</span></a>) and
+slows adaptation through <span class="math notranslate nohighlight">\(r_t\)</span>.</p>
+</section>
+<section id="process-noise">
+<h2>Process noise<a class="headerlink" href="#process-noise" title="Link to this heading">¶</a></h2>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\varepsilon_t = \tfrac{1}{7}\,k_{w(t)}\,\nu \odot \eta_{w(t)}, \qquad \eta_w \sim \mathcal N(0, I)\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(w(t)\)</span> is the week of day <span class="math notranslate nohighlight">\(t\)</span> (a week’s unexplained change comes in equal parts on its seven
+days; as one step each Monday the fitted paths were staircases), <span class="math notranslate nohighlight">\(\eta_w\)</span> one vector per week (fitted, with a standard
+normal prior; <span class="math notranslate nohighlight">\(I\)</span> is the identity matrix), <span class="math notranslate nohighlight">\(\nu\)</span> the noise size per state and <span class="math notranslate nohighlight">\(k_w\)</span> 1, or 5 in a
+week that overlaps a severe illness (from onset to a week after the comeback; illnesses are found from the rider’s
+notes and resting heart rate). An illness takes fitness the training doesn’t explain; with the usual size the fit read
+the drop as fast detraining (on one athlete’s data a lung infection moved the MAP time constant from about 230 to
+300 days). One number a week shared
+by all states was tried: near-max power forecast as well, but LT1 and CP / MAP could then only move in step with
+MAP, and the fit made up for it with implausible dynamics (detraining in days) and a large reading bias. The noise absorbs what
+the model doesn’t explain: illness, heat, a new bike position, missing rides. Its size is <strong>fixed</strong>, not fitted,
+at <span class="math notranslate nohighlight">\(\nu = (0.005, 0.015, 0.015, 0.01, 0.015)\)</span> per week for (log MAP, logit LT1 / 1-h power, logit CP/MAP,
+log Pmax, log durability). With a fitted size the posterior mode runs off to large noise that matches every
+reading exactly. The size was chosen by backtest: at twice this the noise took over changes that training explains
+(forecasts from planned training too flat, held-out LT1 readings predicted worse); at a fifth of it or none the
+model could no longer follow real changes, and LT1’s level went into its readings’ bias.</p>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Link to this heading">¶</a></h2>
+<p>The whole history is one <code class="docutils literal notranslate"><span class="pre">jax.lax.scan</span></code> over days (<code class="xref py py-meth docutils literal notranslate"><span class="pre">goodpush.physio.PhysioModel.run()</span></code>). Arrays are padded to
+buckets of 28 days and 64 observations, so the compiled code is reused as days are added; JAX keeps compiled code
+on disk between runs.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="likelihood.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Likelihood</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="inputs.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Inputs</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Leon Foks
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Dynamics</a><ul>
+<li><a class="reference internal" href="#doses-the-day-s-training-by-intensity-domain">Doses: the day’s training by intensity domain</a></li>
+<li><a class="reference internal" href="#adaptation-pool-rate-detraining">Adaptation: pool, rate, detraining</a></li>
+<li><a class="reference internal" href="#fatigue">Fatigue</a></li>
+<li><a class="reference internal" href="#process-noise">Process noise</a></li>
+<li><a class="reference internal" href="#implementation">Implementation</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=bd079e7e"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>

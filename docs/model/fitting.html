@@ -1,0 +1,460 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Planning with the model" href="planning.html"><link rel="prev" title="Priors" href="priors.html">
+        <link rel="canonical" href="https://goodpush.github.io/GoodPush/model/fitting.html">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>Fitting - GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Beta: expect bugs. <a href="https://github.com/GoodPush/GoodPush/issues/new/choose">Tell us what goes wrong</a>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start/install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start/data.html">Getting your data in</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Using GoodPush</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/app.html">The app, page by page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/plan.html">The training plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/riding.html">Riding the plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/computers.html">Several athletes, several computers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/privacy.html">Privacy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Help and contributing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../community/feedback.html">Help and feedback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/contributing.html">Contributing to GoodPush</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/costs.html">What GoodPush costs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How it works</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../guide/method.html">Methods in short</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamics.html">Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="likelihood.html">Likelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="priors.html">Priors</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planning.html">Planning with the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="limits.html">Design choices and limits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guide/commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/blob/main/srcdocs/model/fitting.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/edit/main/srcdocs/model/fitting.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="fitting">
+<h1>Fitting<a class="headerlink" href="#fitting" title="Link to this heading">¶</a></h1>
+<p>All of it works on <strong>standardised parameters</strong> <span class="math notranslate nohighlight">\(w = (z - \mu_0)/s_0\)</span> (element-wise), where <span class="math notranslate nohighlight">\(z\)</span> is
+the flat vector of every parameter on its unconstrained scale and <span class="math notranslate nohighlight">\(\mu_0, s_0\)</span> are the prior means and
+standard deviations (<a class="reference internal" href="priors.html"><span class="doc">Priors</span></a>). Every coordinate then starts on the same scale
+(<code class="xref py py-class docutils literal notranslate"><span class="pre">goodpush.physio.PhysioFit</span></code>).</p>
+<section id="posterior-mode">
+<h2>Posterior mode<a class="headerlink" href="#posterior-mode" title="Link to this heading">¶</a></h2>
+<p>L-BFGS-B <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../references.html#id58" title="Richard H. Byrd, Peihuang Lu, Jorge Nocedal, and Ciyou Zhu. A limited memory algorithm for bound constrained optimization. SIAM Journal on Scientific Computing, 16(5):1190–1208, 1995. doi:10.1137/0916069.">Byrd <em>et al.</em>, 1995</a>]</span> on the negative log posterior with JAX gradients <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../references.html#id56" title="James Bradbury, Roy Frostig, Peter Hawkins, Matthew James Johnson, Chris Leary, Dougal Maclaurin, George Necula, Adam Paszke, Jake VanderPlas, Skye Wanderman-Milne, and Qiao Zhang. JAX: composable transformations of Python+NumPy programs. https://github.com/jax-ml/jax, 2018.">Bradbury <em>et al.</em>, 2018</a>]</span>, from the last fit (warm start, new weeks at their
+prior mean) or from the priors (<code class="docutils literal notranslate"><span class="pre">--fresh</span></code>). After a bad line search L-BFGS’s memory can mislead it, so it
+restarts (up to 5 times) while that still improves the posterior by more than 0.1. This is <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">physio</span></code>,
+and what the plan uses.</p>
+</section>
+<section id="uncertainty">
+<h2>Uncertainty<a class="headerlink" href="#uncertainty" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>NUTS</strong> (<code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">physio</span> <span class="pre">--samples</span> <span class="pre">N</span> <span class="pre">--nuts</span></code>): NumPyro’s <span class="bibtex-citation" id="id3">[<a class="reference internal" href="../references.html#id55" title="Du Phan, Neeraj Pradhan, and Martin Jankowiak. Composable effects for flexible and accelerated probabilistic programming in NumPyro. 2019. arXiv:1912.11554.">Phan <em>et al.</em>, 2019</a>]</span> No-U-Turn sampler <span class="bibtex-citation" id="id4">[<a class="reference internal" href="../references.html#id54" title="Matthew D. Hoffman and Andrew Gelman. The No-U-Turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research, 15:1593–1623, 2014.">Hoffman and Gelman, 2014</a>]</span>, 4 chains in parallel (one CPU
+device each). Two changes of coordinates come first, each leaving the posterior the same (Jacobian-corrected). The
+training effects of a state are sampled as their log total at the rider’s average dose mix and the shares of its
+domains: the data fix what the usual mix does, not each domain alone. For MAP and CP / MAP that total is taken
+after <span class="math notranslate nohighlight">\(H\)</span> = 84 days of the usual dose instead of in the long run,
+<span class="math notranslate nohighlight">\(r = \log(\text{total}) + \log(1 - e^{-H/\tau})\)</span>: for a short <span class="math notranslate nohighlight">\(\tau\)</span> the long-run effect, for a long one
+the first gain <span class="math notranslate nohighlight">\(\times H\)</span>, the quantity the data pin down either way (with the long-run total the chains froze
+for long stretches at long time constants). And the detrained floor is sampled as the level there, floor +
+<span class="math notranslate nohighlight">\(e^r\)</span>: years of rides fix where the state sits under the usual training, far better than how it splits into
+floor and training lift, and with the lift on a log scale that ridge is curved (divergent draws gathered where the
+lift was large and the floor low). Both are shears, so their Jacobian is 1; the preconditioner’s Jacobian of the
+map, <span class="math notranslate nohighlight">\(J^\top H J\)</span>, includes the log <span class="math notranslate nohighlight">\(\tau\)</span> columns they depend on. NUTS then samples whitened coordinates <span class="math notranslate nohighlight">\(v = v_\text{mode} + L u\)</span> with an identity mass,
+<span class="math notranslate nohighlight">\(L = L_1 L_2 \cdots\)</span>, each stage <span class="math notranslate nohighlight">\(L_i = \operatorname{diag}(s_i)(I + V_i \operatorname{diag}(c_i) V_i^\top)\)</span>
+in low rank (a step costs <span class="math notranslate nohighlight">\(D \times\)</span> rank, not <span class="math notranslate nohighlight">\(D^2\)</span>). The first stage is the inverse Hessian’s
+symmetric square root at the mode, in the directions with curvature above 1.1. The Hessian is local: a long or
+curved ridge is wider than the curvature at the mode says, and NUTS then needs up to 1023 steps a draw. So each
+warm-up block (50, 100, 150 steps) adds a stage learned from where the chains went. For a Gaussian with covariance
+<span class="math notranslate nohighlight">\(S\)</span> in the current coordinates, every draw and its gradient satisfy <span class="math notranslate nohighlight">\(x = S g\)</span>, so
+<span class="math notranslate nohighlight">\(x - g = (I - S^{-1}) x\)</span> is zero wherever the whitening is right; the singular vectors of the draws’
+<span class="math notranslate nohighlight">\(x - g\)</span> give the wrong directions (wide or narrow), and in that subspace the variance is the geometric mean
+of the draws’ covariance and the inverse of the gradients’ (exact for a Gaussian; a principal-component estimate
+from the draws alone is off by about <span class="math notranslate nohighlight">\(D / n\)</span> with <span class="math notranslate nohighlight">\(n\)</span> draws in <span class="math notranslate nohighlight">\(D\)</span> dimensions). Directions with
+a variance more than 2x off are corrected, then each coordinate’s scale. A last block (100 steps) tunes only the
+step size; the draws use the chains’ median for every chain (a chain’s own tuned step only says where it was
+while tuning). Every block reports steps a draw, the share at the tree limit and the step size per chain, with a
+warning for a chain that sees another shape. Split R-hat <span class="bibtex-citation" id="id5">[<a class="reference internal" href="../references.html#id60" title="Andrew Gelman and Donald B. Rubin. Inference from iterative simulation using multiple sequences. Statistical Science, 7(4):457–472, 1992. doi:10.1214/ss/1177011136.">Gelman and Rubin, 1992</a>]</span> and the smallest effective sample size are reported; the R-hat target of 1.01 is
+the one <span class="bibtex-citation" id="id6">Vehtari <em>et al.</em> [<a class="reference internal" href="../references.html#id61" title="Aki Vehtari, Andrew Gelman, Daniel Simpson, Bob Carpenter, and Paul-Christian Bürkner. Rank-normalization, folding, and localization: an improved R-hat for assessing convergence of MCMC. Bayesian Analysis, 16(2):667–718, 2021. doi:10.1214/20-BA1221.">2021</a>]</span> recommend. <code class="docutils literal notranslate"><span class="pre">N</span></code>
+draws per chain, after <code class="docutils literal notranslate"><span class="pre">--warmup</span></code> steps (default 400).</p></li>
+<li><p><strong>Speed</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">goodpush.physio.numba_posterior</span></code>): the potential and its gradient are computed in numba <span class="bibtex-citation" id="id7">[<a class="reference internal" href="../references.html#id57" title="Siu Kwan Lam, Antoine Pitrou, and Stanley Seibert. Numba: a LLVM-based Python JIT compiler. In Proceedings of the Second Workshop on the LLVM Compiler Infrastructure in HPC, 1–6. 2015. doi:10.1145/2833157.2833162.">Lam <em>et al.</em>, 2015</a>]</span>, with a
+hand-written backward (adjoint) pass over the days (W’ differentiated implicitly at its Newton solution). They
+equal the JAX model’s to ~1e-10 (tested); one evaluation takes ~7 ms instead of ~37 ms on one core for years of
+data, and the preconditioner’s Hessian (central differences of the exact gradient) ~35 s instead of ~4 min.
+The run is <strong>checkpointed</strong> (<code class="docutils literal notranslate"><span class="pre">data/processed/physio_nuts.ckpt</span></code>) after every warm-up block and every 200
+draws; running the same command again goes on from there, with the data as it was when the run started (newer
+days follow in the daily updates). <code class="docutils literal notranslate"><span class="pre">--fresh</span></code> starts over.
+The finished run’s checkpoint is kept, so <code class="docutils literal notranslate"><span class="pre">--ess</span> <span class="pre">T</span></code> can go on drawing (blocks of 200) until the smallest
+effective sample size (all but Pmax’s own parameters, reported apart) reaches <code class="docutils literal notranslate"><span class="pre">T</span></code> and R-hat &lt;= 1.01 (or <code class="docutils literal notranslate"><span class="pre">--max-minutes</span></code>, or 4x <code class="docutils literal notranslate"><span class="pre">--samples</span></code> draws). Without a
+checkpoint it goes on from the saved draws: they are mapped into the sampler’s coordinates, the chains start at
+their last draws, and the warm-up runs again from there. The ESS is what sets the
+precision of the ranges (Monte Carlo error = posterior sd / sqrt(ESS)): beyond ~400 more draws change little.</p></li>
+<li><p><strong>The stored whitening.</strong> A full NUTS run starts from the Hessian stage alone, takes the full warm-up, and at the
+end of its learning blocks writes the stages it learned (everything after the Hessian stage) with the parameter
+names, the model’s structure and the sampler’s name to <code class="docutils literal notranslate"><span class="pre">data/processed/physio_whitening.pkl</span></code> (kept on this
+machine), replacing what was there; it never reads that file. A refresh (below) reads it: the Hessian stage fresh
+(the mode moved), the stored stages mapped onto the new parameter vector by name (parameters the stored run
+didn’t have, such as new weeks, get no correction), and a 200-step warm-up instead of 400: one 100-step learning
+block, which corrects what moved, for that run only, and the 100-step step-size block. A refresh never writes
+the file, so the stages don’t pile up day after day; the next full run replaces them. A run going on from its own
+checkpoint keeps the checkpoint’s whitening. Any linear map leaves the posterior the same, so a stale whitening
+costs speed, never correctness.</p></li>
+<li><p>There is no quick approximation: a Gaussian at the mode (Laplace) was tried and taken out - checked by
+importance sampling on real data, its draws were worth about one in 200. <code class="docutils literal notranslate"><span class="pre">--samples</span> <span class="pre">N</span></code> without <code class="docutils literal notranslate"><span class="pre">--nuts</span></code> fits
+the mode only and says that ranges need <code class="docutils literal notranslate"><span class="pre">--nuts</span></code>.</p></li>
+</ul>
+<p>The daily states with posterior draws get 5 / 95 % bands (<code class="docutils literal notranslate"><span class="pre">*_p05</span></code>, <code class="docutils literal notranslate"><span class="pre">*_p95</span></code> in <code class="docutils literal notranslate"><span class="pre">physio_states.parquet</span></code>).</p>
+</section>
+<section id="staying-current-incremental-updates">
+<h2>Staying current: incremental updates<a class="headerlink" href="#staying-current-incremental-updates" title="Link to this heading">¶</a></h2>
+<p>A full NUTS run over years of data takes about an hour, so new days are taken in cheaply
+(<a class="reference internal" href="../api.html#goodpush.models.physio.PhysioRun" title="goodpush.models.physio.PhysioRun"><code class="xref py py-class docutils literal notranslate"><span class="pre">goodpush.models.physio.PhysioRun</span></code></a>):</p>
+<ul class="simple">
+<li><p><strong>The mode</strong>: a full posterior-mode fit over everything, warm-started from the stored fit by parameter name (new
+weeks’ noise at its prior mean). From a nearby optimum L-BFGS needs few iterations: about a second for a week of
+new days, and it ends at the same optimum as any full fit. When data older than 28 days changed (a late sync, a
+re-import) the same fit runs; only the draws’ warm-up differs (below).</p></li>
+<li><p><strong>The ranges</strong> (<code class="docutils literal notranslate"><span class="pre">PhysioRun.refresh</span></code>, <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">physio</span> <span class="pre">--refresh</span></code>): a short NUTS run on today’s data, its
+chains started from the last draw of each chain of the stored run (aligned by name; new weeks’ noise at the new
+mode). Those start points belong to another day’s posterior, so they are not kept as draws. With the stored
+whitening the warm-up is 200 steps (one learning block, one step-size block); when older data changed, the full
+warm-up. Then 800 draws a chain, more until the smallest ESS reaches 200 and the worst R-hat is &lt;= 1.02 (a full
+run asks 1.01), for at most 12 minutes of drawing. A refresh that ends short of those targets saves nothing: the
+stored ranges keep their date, and the same command goes on from its checkpoint. Its
+checkpoint is its own: a refresh never goes on from a full run’s, nor the other way round.</p></li>
+<li><p><strong>Between refreshes</strong> the stored draws are kept as they are, dated by the data day of the run that made them
+(<code class="docutils literal notranslate"><span class="pre">draws_day</span></code>); the app gives that date. A full run
+(<code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">physio</span> <span class="pre">--nuts</span> <span class="pre">--samples</span> <span class="pre">2500</span> <span class="pre">--ess</span> <span class="pre">400</span> <span class="pre">--max-minutes</span> <span class="pre">540</span></code>) is only needed when there are no draws
+or the model changed.</p></li>
+<li><p><strong>In the app</strong> (<code class="docutils literal notranslate"><span class="pre">[physio]</span> <span class="pre">ranges_every_days</span> <span class="pre">=</span> <span class="pre">7</span></code>, 0 = never) the refresh runs on the home computer, in its own
+process at below-normal priority, once the ranges are that many data days older than the best fit, or sooner
+when today’s best-fit CP, LT1 or MAP lies outside its stored 5-95 % range (a test or a maxed effort moved the
+fit, and the old bands would sit beside the number). The ranges move slowly; the best fit follows every ride. At
+most one start per data day, and never while a job, a ride or another NUTS run (a file lock) is going on. Nothing the app serves waits for it: pages use the mode and the
+stored draws, and read the new ranges once they are saved (files are replaced whole).</p></li>
+</ul>
+<p>Importance re-weighting of the stored draws was used until 2026-11-10 and taken out: as the data move away from
+the run that made the draws, the weights degenerate.</p>
+<p>What the fit saw is stored with it (<code class="docutils literal notranslate"><span class="pre">physio_fit.npz</span></code>: a key over days, efforts and readings, and one over the
+history before the last 28 days), so nothing is recomputed while the data are the same.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="planning.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Planning with the model</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="priors.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Priors</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Leon Foks
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Fitting</a><ul>
+<li><a class="reference internal" href="#posterior-mode">Posterior mode</a></li>
+<li><a class="reference internal" href="#uncertainty">Uncertainty</a></li>
+<li><a class="reference internal" href="#staying-current-incremental-updates">Staying current: incremental updates</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=bd079e7e"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>

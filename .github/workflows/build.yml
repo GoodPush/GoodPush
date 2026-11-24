@@ -1,0 +1,148 @@
+# The installers: a .dmg for Apple Silicon and Intel Macs, a setup .exe for Windows and a .tar.gz for Linux.
+# Push a tag (git tag v0.2.0 && git push origin v0.2.0) to build them all into that version's GitHub release, or run
+# it by hand (Actions > Build installers > Run workflow) for a test build: the "build" pre-release, replaced each time.
+# The files go straight onto a release, never into Actions artifacts (whose storage quota one set already exceeds).
+# Not code-signed (see README: Install).
+name: Build installers
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One set of installers at a time: a newer run cancels an older one still building
+concurrency:
+  group: installers
+  cancel-in-progress: true
+
+jobs:
+  # The release the installers go onto: a tag's (a draft until all of them are on it), or by hand the "build" pre-release
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.make.outputs.tag }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: make
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+            gh release view "$tag" > /dev/null 2>&1 ||
+              gh release create "$tag" --verify-tag --draft --title "goodpush $tag" --notes-file packaging/RELEASE_NOTES.md
+          else
+            tag=build
+            gh release delete build --yes --cleanup-tag 2> /dev/null || true
+            gh release create build --target "$GITHUB_SHA" --prerelease --title "Test build (not a release)" \
+              --notes "Built from ${GITHUB_SHA::7} on $GITHUB_REF_NAME by hand. Replaced by the next test build."
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: macos-15, name: mac-apple-silicon}
+          # Intel Mac: jax's last build there, and the last numba with Intel Mac wheels (newer ones need LLVM to build;
+          # it wants numpy < 2.4)
+          - {os: macos-15-intel, name: mac-intel, pins: "jax==0.4.38 jaxlib==0.4.38 numba==0.62.1 'numpy<2.4'"}
+          - {os: windows-latest, name: windows}
+          - {os: ubuntu-22.04, name: linux}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0               # the tags: hatch-vcs takes the version from them
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Qt's libraries (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+      - name: Install goodpush and PyInstaller
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          if [ -n "${{ matrix.pins }}" ]; then pip install ${{ matrix.pins }}; fi
+          pip install ".[build]"
+      - name: Test
+        shell: bash
+        run: pip install pytest && QT_QPA_PLATFORM=offscreen python -m pytest -q tests/test_ride.py tests/test_planning.py
+      - name: Build the app
+        shell: bash
+        working-directory: packaging
+        run: |
+          QT_QPA_PLATFORM=offscreen python make_icon.py
+          python notices.py
+          pyinstaller goodpush.spec --noconfirm --distpath ../dist --workpath ../build
+      - name: macOS disk image
+        if: runner.os == 'macOS'
+        run: |
+          mkdir dmg && cp -R dist/goodpush.app LICENSE DISCLAIMER.md packaging/THIRD_PARTY_NOTICES.txt dmg/ && ln -s /Applications dmg/Applications
+          hdiutil create -volname goodpush -srcfolder dmg -ov -format UDZO "goodpush-${{ matrix.name }}.dmg"
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Zadig, for the ANT+ stick's USB driver: the newest libwdi release with a Zadig in it, that exact version's
+          # source (GPLv3: it ships with the release) and its notice
+          $tag = $null; $z = $null
+          foreach ($t in (gh release list --repo pbatard/libwdi --limit 15 --json tagName --jq '.[].tagName')) {
+            $z = gh release view $t --repo pbatard/libwdi --json assets --jq '.assets[] | select(.name | test("^zadig-[0-9.]+\\.exe$")) | .url' | Select-Object -First 1
+            if ($z) { $tag = $t; break }
+          }
+          if (-not $z) { throw "no Zadig found in the last libwdi releases" }
+          $zname = Split-Path $z -Leaf
+          Invoke-WebRequest $z -OutFile packaging\zadig.exe
+          Invoke-WebRequest "https://github.com/pbatard/libwdi/archive/refs/tags/$tag.tar.gz" -OutFile "libwdi-$tag-source.tar.gz"
+          Write-Host "$zname from libwdi $tag, sha256 $((Get-FileHash packaging\zadig.exe).Hash)"
+          @"
+          Zadig ($zname), from libwdi release ${tag}: https://github.com/pbatard/libwdi/releases/tag/$tag
+          Copyright (c) Pete Batard and contributors. Licensed under the GNU General Public License, version 3
+          (zadig-LICENSE.txt in this folder). It installs the USB driver goodpush needs for an ANT+ stick.
+          Its complete source code for this version: https://github.com/pbatard/libwdi/tree/$tag
+          and libwdi-$tag-source.tar.gz, attached to the goodpush release this installer came from.
+          goodpush ships it unmodified.
+          "@ | Set-Content packaging\zadig-NOTICE.txt
+          $v = python -c "import goodpush; print(goodpush.__version__)"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=$v /O. packaging\goodpush.iss
+          Rename-Item goodpush-setup.exe "goodpush-${{ matrix.name }}-setup.exe"
+      - name: Linux archive
+        if: runner.os == 'Linux'
+        run: |
+          cp packaging/goodpush.desktop packaging/icon.png packaging/install.sh LICENSE DISCLAIMER.md packaging/THIRD_PARTY_NOTICES.txt dist/goodpush/
+          tar -czf "goodpush-${{ matrix.name }}.tar.gz" -C dist goodpush
+      - name: Attach to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(goodpush-*.dmg goodpush-*-setup.exe goodpush-*.tar.gz libwdi-*-source.tar.gz)
+          gh release upload "${{ needs.release.outputs.tag }}" "${files[@]}" --clobber
+
+  # Only after every installer is on it: a tag's release goes public and the older releases go (their tags stay)
+  publish:
+    needs: [release, build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Publish this release, delete the older ones
+        run: |
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+          gh release list --limit 100 --json tagName --jq ".[] | select(.tagName != \"$GITHUB_REF_NAME\") | .tagName" |
+            while read -r t; do
+              if [ "$t" = build ]; then gh release delete build --yes --cleanup-tag; else gh release delete "$t" --yes; fi
+            done

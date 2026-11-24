@@ -1,0 +1,579 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="prev" title="API" href="api.html">
+        <link rel="canonical" href="https://goodpush.github.io/GoodPush/references.html">
+
+    <!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
+        <title>References - GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Beta: expect bugs. <a href="https://github.com/GoodPush/GoodPush/issues/new/choose">Tell us what goes wrong</a>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="start/install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="start/data.html">Getting your data in</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Using GoodPush</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/app.html">The app, page by page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/plan.html">The training plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/riding.html">Riding the plan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/computers.html">Several athletes, several computers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/privacy.html">Privacy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Help and contributing</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="community/feedback.html">Help and feedback</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community/contributing.html">Contributing to GoodPush</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community/costs.html">What GoodPush costs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How it works</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide/method.html">Methods in short</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/dynamics.html">Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/likelihood.html">Likelihood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/priors.html">Priors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/fitting.html">Fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/planning.html">Planning with the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model/limits.html">Design choices and limits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="guide/commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">References</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/blob/main/srcdocs/references.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/GoodPush/GoodPush/edit/main/srcdocs/references.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="references">
+<h1>References<a class="headerlink" href="#references" title="Link to this heading">¶</a></h1>
+<p>The published work behind GoodPush’s methods and its physiological model, cited on the pages above. The app lists
+the same works by topic under <strong>Fitness &gt; Sources</strong>. Where GoodPush combines published pieces in its own way (the
+state-space model, the stamina lines, the heart-rate split of the severe domain), the combination is GoodPush’s and
+is untested beyond what these pages report.</p>
+<div class="docutils container" id="id1">
+<div role="list" class="citation-list">
+<div class="citation" id="id2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Hunter Allen, Andrew R. Coggan, and Stephen McGregor. <em>Training and Racing with a Power Meter</em>. VeloPress, Boulder, CO, 3rd edition, 2019.</p>
+</div>
+<div class="citation" id="id13" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Anael Aubry, Christophe Hausswirth, Julien Louis, Aaron J. Coutts, and Yann Le Meur. Functional overreaching: the key to peak performance during the taper? <em>Medicine and Science in Sports and Exercise</em>, 46(9):1769–1777, 2014. <a class="reference external" href="https://doi.org/10.1249/MSS.0000000000000301">doi:10.1249/MSS.0000000000000301</a>.</p>
+</div>
+<div class="citation" id="id17" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
+<p>E. W. Banister, T. W. Calvert, M. V. Savage, and T. Bach. A systems model of training for athletic performance. <em>Australian Journal of Sports Medicine</em>, 7:57–61, 1975.</p>
+</div>
+<div class="citation" id="id56" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
+<p>James Bradbury, Roy Frostig, Peter Hawkins, Matthew James Johnson, Chris Leary, Dougal Maclaurin, George Necula, Adam Paszke, Jake VanderPlas, Skye Wanderman-Milne, and Qiao Zhang. JAX: composable transformations of Python+NumPy programs. <a class="reference external" href="https://github.com/jax-ml/jax">https://github.com/jax-ml/jax</a>, 2018.</p>
+</div>
+<div class="citation" id="id19" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></span>
+<p>Thierry Busso. Variable dose-response relationship between exercise training and performance. <em>Medicine and Science in Sports and Exercise</em>, 35(7):1188–1195, 2003.</p>
+</div>
+<div class="citation" id="id58" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></span>
+<p>Richard H. Byrd, Peihuang Lu, Jorge Nocedal, and Ciyou Zhu. A limited memory algorithm for bound constrained optimization. <em>SIAM Journal on Scientific Computing</em>, 16(5):1190–1208, 1995. <a class="reference external" href="https://doi.org/10.1137/0916069">doi:10.1137/0916069</a>.</p>
+</div>
+<div class="citation" id="id18" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></span>
+<p>Thomas W. Calvert, Eric W. Banister, Margaret V. Savage, and Tim Bach. A systems model of the effects of training on physical performance. <em>IEEE Transactions on Systems, Man, and Cybernetics</em>, SMC-6(2):94–102, 1976. <a class="reference external" href="https://doi.org/10.1109/TSMC.1976.5409179">doi:10.1109/TSMC.1976.5409179</a>.</p>
+</div>
+<div class="citation" id="id34" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></span>
+<p>Alan Chorley, Richard P. Bott, Simon Marwood, and Kevin L. Lamb. Slowing the reconstitution of W′ in recovery with repeated bouts of maximal exercise. <em>International Journal of Sports Physiology and Performance</em>, 14(2):149–155, 2019. <a class="reference external" href="https://doi.org/10.1123/ijspp.2018-0256">doi:10.1123/ijspp.2018-0256</a>.</p>
+</div>
+<div class="citation" id="id35" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>9<span class="fn-bracket">]</span></span>
+<p>Alan Chorley and others. Bi-exponential modelling of W′ reconstitution kinetics in trained cyclists. <em>European Journal of Applied Physiology</em>, 2021. <a class="reference external" href="https://doi.org/10.1007/s00421-021-04874-3">doi:10.1007/s00421-021-04874-3</a>.</p>
+</div>
+<div class="citation" id="id37" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></span>
+<p>Ida E. Clark, Anni Vanhatalo, and others. Changes in the power-duration relationship following prolonged exercise: estimation using conventional and all-out protocols and relationship with muscle glycogen. <em>American Journal of Physiology - Regulatory, Integrative and Comparative Physiology</em>, 317(1):R59–R67, 2019. <a class="reference external" href="https://doi.org/10.1152/ajpregu.00031.2019">doi:10.1152/ajpregu.00031.2019</a>.</p>
+</div>
+<div class="citation" id="id36" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>11<span class="fn-bracket">]</span></span>
+<p>Ida E. Clark, Anni Vanhatalo, Christopher Thompson, and others. Dynamics of the power-duration relationship during prolonged endurance exercise and influence of carbohydrate ingestion. <em>Journal of Applied Physiology</em>, 127(3):726–736, 2019. <a class="reference external" href="https://doi.org/10.1152/japplphysiol.00207.2019">doi:10.1152/japplphysiol.00207.2019</a>.</p>
+</div>
+<div class="citation" id="id48" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>12<span class="fn-bracket">]</span></span>
+<p>Christopher R. Cole, Eugene H. Blackstone, Fredric J. Pashkow, Claire E. Snader, and Michael S. Lauer. Heart-rate recovery immediately after exercise as a predictor of mortality. <em>New England Journal of Medicine</em>, 341(18):1351–1357, 1999. <a class="reference external" href="https://doi.org/10.1056/NEJM199910283411804">doi:10.1056/NEJM199910283411804</a>.</p>
+</div>
+<div class="citation" id="id24" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>13<span class="fn-bracket">]</span></span>
+<p>Edward F. Coyle, Wade H. Martin, Susan A. Bloomfield, Oliver H. Lowry, and John O. Holloszy. Effects of detraining on responses to submaximal exercise. <em>Journal of Applied Physiology</em>, 59(3):853–859, 1985. <a class="reference external" href="https://doi.org/10.1152/jappl.1985.59.3.853">doi:10.1152/jappl.1985.59.3.853</a>.</p>
+</div>
+<div class="citation" id="id23" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>14<span class="fn-bracket">]</span></span>
+<p>Edward F. Coyle, Wade H. Martin, David R. Sinacore, Michael J. Joyner, James M. Hagberg, and John O. Holloszy. Time course of loss of adaptations after stopping prolonged intense endurance training. <em>Journal of Applied Physiology</em>, 57(6):1857–1864, 1984. <a class="reference external" href="https://doi.org/10.1152/jappl.1984.57.6.1857">doi:10.1152/jappl.1984.57.6.1857</a>.</p>
+</div>
+<div class="citation" id="id49" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>15<span class="fn-bracket">]</span></span>
+<p>Hein A. M. Daanen, Robert P. Lamberts, Victor L. Kallen, Alan Jin, and Nico L. U. Van Meeteren. A systematic review on heart-rate recovery to monitor changes in training status in athletes. <em>International Journal of Sports Physiology and Performance</em>, 7(3):251–260, 2012. <a class="reference external" href="https://doi.org/10.1123/ijspp.7.3.251">doi:10.1123/ijspp.7.3.251</a>.</p>
+</div>
+<div class="citation" id="id4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>16<span class="fn-bracket">]</span></span>
+<p>Carl Foster. Monitoring training in athletes with reference to overtraining syndrome. <em>Medicine and Science in Sports and Exercise</em>, 30(7):1164–1168, 1998.</p>
+</div>
+<div class="citation" id="id3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>17<span class="fn-bracket">]</span></span>
+<p>Joe Friel. <em>The Cyclist's Training Bible</em>. VeloPress, Boulder, CO, 5th edition, 2018.</p>
+</div>
+<div class="citation" id="id53" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>18<span class="fn-bracket">]</span></span>
+<p>Hugh H. K. Fullagar, Sabrina Skorski, Rob Duffield, Daniel Hammes, Aaron J. Coutts, and Tim Meyer. Sleep and athletic performance: the effects of sleep loss on exercise performance, and physiological and cognitive responses to exercise. <em>Sports Medicine</em>, 45(2):161–186, 2015. <a class="reference external" href="https://doi.org/10.1007/s40279-014-0260-0">doi:10.1007/s40279-014-0260-0</a>.</p>
+</div>
+<div class="citation" id="id5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>19<span class="fn-bracket">]</span></span>
+<p>Tim J. Gabbett. The training-injury prevention paradox: should athletes be training smarter and harder? <em>British Journal of Sports Medicine</em>, 50(5):273–280, 2016. <a class="reference external" href="https://doi.org/10.1136/bjsports-2015-095788">doi:10.1136/bjsports-2015-095788</a>.</p>
+</div>
+<div class="citation" id="id60" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>20<span class="fn-bracket">]</span></span>
+<p>Andrew Gelman and Donald B. Rubin. Inference from iterative simulation using multiple sequences. <em>Statistical Science</em>, 7(4):457–472, 1992. <a class="reference external" href="https://doi.org/10.1214/ss/1177011136">doi:10.1214/ss/1177011136</a>.</p>
+</div>
+<div class="citation" id="id40" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>21<span class="fn-bracket">]</span></span>
+<p>Thomas Gronwald, Bruce Rogers, and Olaf Hoos. Fractal correlation properties of heart rate variability: a new biomarker for intensity distribution in endurance exercise and training prescription? <em>Frontiers in Physiology</em>, 11:550572, 2020. <a class="reference external" href="https://doi.org/10.3389/fphys.2020.550572">doi:10.3389/fphys.2020.550572</a>.</p>
+</div>
+<div class="citation" id="id20" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>22<span class="fn-bracket">]</span></span>
+<p>Philippe Hellard, Marta Avalos, Lucien Lacoste, Frédéric Barale, Jean-Claude Chatard, and Grégoire P. Millet. Assessing the limitations of the Banister model in monitoring training. <em>Journal of Sports Sciences</em>, 24(5):509–520, 2006. <a class="reference external" href="https://doi.org/10.1080/02640410500244697">doi:10.1080/02640410500244697</a>.</p>
+</div>
+<div class="citation" id="id54" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>23<span class="fn-bracket">]</span></span>
+<p>Matthew D. Hoffman and Andrew Gelman. The No-U-Turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. <em>Journal of Machine Learning Research</em>, 15:1593–1623, 2014.</p>
+</div>
+<div class="citation" id="id59" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>24<span class="fn-bracket">]</span></span>
+<p>Q. Huangfu and J. A. J. Hall. Parallelizing the dual revised simplex method. <em>Mathematical Programming Computation</em>, 10(1):119–142, 2018. <a class="reference external" href="https://doi.org/10.1007/s12532-017-0130-5">doi:10.1007/s12532-017-0130-5</a>.</p>
+</div>
+<div class="citation" id="id6" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>25<span class="fn-bracket">]</span></span>
+<p>Billy T. Hulin, Tim J. Gabbett, Daniel W. Lawson, Peter Caputi, and John A. Sampson. The acute:chronic workload ratio predicts injury: high chronic workload may decrease injury risk in elite rugby league players. <em>British Journal of Sports Medicine</em>, 50(4):231–236, 2016. <a class="reference external" href="https://doi.org/10.1136/bjsports-2015-094817">doi:10.1136/bjsports-2015-094817</a>.</p>
+</div>
+<div class="citation" id="id29" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>26<span class="fn-bracket">]</span></span>
+<p>Andrew M. Jones, Mark Burnley, Matthew I. Black, David C. Poole, and Anni Vanhatalo. The maximal metabolic steady state: redefining the `gold standard'. <em>Physiological Reports</em>, 7(10):e14098, 2019. <a class="reference external" href="https://doi.org/10.14814/phy2.14098">doi:10.14814/phy2.14098</a>.</p>
+</div>
+<div class="citation" id="id28" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>27<span class="fn-bracket">]</span></span>
+<p>Andrew M. Jones, Anni Vanhatalo, Mark Burnley, R. Hugh Morton, and David C. Poole. Critical power: implications for determination of VO2max and exercise tolerance. <em>Medicine and Science in Sports and Exercise</em>, 42(10):1876–1890, 2010. <a class="reference external" href="https://doi.org/10.1249/MSS.0b013e3181d9cf7f">doi:10.1249/MSS.0b013e3181d9cf7f</a>.</p>
+</div>
+<div class="citation" id="id39" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>28<span class="fn-bracket">]</span></span>
+<p>Jan W. Kantelhardt, Eva Koscielny-Bunde, Henio H. A. Rego, Shlomo Havlin, and Armin Bunde. Detecting long-range correlations with detrended fluctuation analysis. <em>Physica A</em>, 295(3–4):441–454, 2001. <a class="reference external" href="https://doi.org/10.1016/S0378-4371(01)00144-3">doi:10.1016/S0378-4371(01)00144-3</a>.</p>
+</div>
+<div class="citation" id="id22" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>29<span class="fn-bracket">]</span></span>
+<p>Dorothea Kolossa, Muhammad Asad Bin Azhar, Christian Rasche, and others. Performance estimation using the fitness-fatigue model with Kalman filter feedback. <em>International Journal of Computer Science in Sport</em>, 16(2):117–129, 2017. <a class="reference external" href="https://doi.org/10.1515/ijcss-2017-0010">doi:10.1515/ijcss-2017-0010</a>.</p>
+</div>
+<div class="citation" id="id47" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>30<span class="fn-bracket">]</span></span>
+<p>H. Kuipers, F. T. J. Verstappen, H. A. Keizer, P. Geurten, and G. van Kranenburg. Variability of aerobic performance in the laboratory and its physiologic correlates. <em>International Journal of Sports Medicine</em>, 6(4):197–201, 1985. <a class="reference external" href="https://doi.org/10.1055/s-2008-1025839">doi:10.1055/s-2008-1025839</a>.</p>
+</div>
+<div class="citation" id="id57" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>31<span class="fn-bracket">]</span></span>
+<p>Siu Kwan Lam, Antoine Pitrou, and Stanley Seibert. Numba: a LLVM-based Python JIT compiler. In <em>Proceedings of the Second Workshop on the LLVM Compiler Infrastructure in HPC</em>, 1–6. 2015. <a class="reference external" href="https://doi.org/10.1145/2833157.2833162">doi:10.1145/2833157.2833162</a>.</p>
+</div>
+<div class="citation" id="id50" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>32<span class="fn-bracket">]</span></span>
+<p>R. P. Lamberts, J. Swart, B. Capostagno, T. D. Noakes, and M. I. Lambert. Heart rate recovery as a guide to monitor fatigue and predict changes in performance parameters. <em>Scandinavian Journal of Medicine &amp; Science in Sports</em>, 20(3):449–457, 2010. <a class="reference external" href="https://doi.org/10.1111/j.1600-0838.2009.00977.x">doi:10.1111/j.1600-0838.2009.00977.x</a>.</p>
+</div>
+<div class="citation" id="id51" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>33<span class="fn-bracket">]</span></span>
+<p>Robert P. Lamberts, Jeroen Swart, Timothy D. Noakes, and Michael I. Lambert. A novel submaximal cycle test to monitor fatigue and predict cycling performance. <em>British Journal of Sports Medicine</em>, 45(10):797–804, 2011. <a class="reference external" href="https://doi.org/10.1136/bjsm.2009.061325">doi:10.1136/bjsm.2009.061325</a>.</p>
+</div>
+<div class="citation" id="id15" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>34<span class="fn-bracket">]</span></span>
+<p>Yann Le Meur, Aurélien Pichon, Karine Schaal, and others. Evidence of parasympathetic hyperactivity in functionally overreached athletes. <em>Medicine and Science in Sports and Exercise</em>, 45(11):2061–2071, 2013. <a class="reference external" href="https://doi.org/10.1249/MSS.0b013e3182980125">doi:10.1249/MSS.0b013e3182980125</a>.</p>
+</div>
+<div class="citation" id="id44" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>35<span class="fn-bracket">]</span></span>
+<p>Jukka A. Lipponen and Mika P. Tarvainen. A robust algorithm for heart rate variability time series artefact correction using novel beat classification. <em>Journal of Medical Engineering &amp; Technology</em>, 43(3):173–181, 2019. <a class="reference external" href="https://doi.org/10.1080/03091902.2019.1640306">doi:10.1080/03091902.2019.1640306</a>.</p>
+</div>
+<div class="citation" id="id46" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>36<span class="fn-bracket">]</span></span>
+<p>Qianli D. Y. Ma, Ronny P. Bartsch, Pedro Bernaola-Galván, Mitsuru Yoneyama, and Plamen Ch. Ivanov. Effect of extreme data loss on long-range correlated and anticorrelated signals quantified by detrended fluctuation analysis. <em>Physical Review E</em>, 81(3):031101, 2010. <a class="reference external" href="https://doi.org/10.1103/PhysRevE.81.031101">doi:10.1103/PhysRevE.81.031101</a>.</p>
+</div>
+<div class="citation" id="id32" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>37<span class="fn-bracket">]</span></span>
+<p>Alois Mader and Hermann Heck. A theory of the metabolic origin of “anaerobic threshold”. <em>International Journal of Sports Medicine</em>, 7(Suppl 1):45–65, 1986. <a class="reference external" href="https://doi.org/10.1055/s-2008-1025802">doi:10.1055/s-2008-1025802</a>.</p>
+</div>
+<div class="citation" id="id16" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>38<span class="fn-bracket">]</span></span>
+<p>Ed Maunder, Stephen Seiler, Mathew J. Mildenhall, Andrew E. Kilding, and Daniel J. Plews. The importance of `durability' in the physiological profiling of endurance athletes. <em>Sports Medicine</em>, 51(8):1619–1628, 2021. <a class="reference external" href="https://doi.org/10.1007/s40279-021-01459-0">doi:10.1007/s40279-021-01459-0</a>.</p>
+</div>
+<div class="citation" id="id14" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>39<span class="fn-bracket">]</span></span>
+<p>Romain Meeusen, Martine Duclos, Carl Foster, Andrew Fry, Michael Gleeson, David Nieman, John Raglin, Gerard Rietjens, Jürgen Steinacker, and Axel Urhausen. Prevention, diagnosis, and treatment of the overtraining syndrome: joint consensus statement of the european college of sport science and the american college of sports medicine. <em>Medicine and Science in Sports and Exercise</em>, 45(1):186–205, 2013. <a class="reference external" href="https://doi.org/10.1249/MSS.0b013e318279a10a">doi:10.1249/MSS.0b013e318279a10a</a>.</p>
+</div>
+<div class="citation" id="id27" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>40<span class="fn-bracket">]</span></span>
+<p>H. Monod and J. Scherrer. The work capacity of a synergic muscular group. <em>Ergonomics</em>, 8(3):329–338, 1965. <a class="reference external" href="https://doi.org/10.1080/00140136508930810">doi:10.1080/00140136508930810</a>.</p>
+</div>
+<div class="citation" id="id26" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>41<span class="fn-bracket">]</span></span>
+<p>Iñigo Mujika and Sabino Padilla. Detraining: loss of training-induced physiological and performance adaptations. Part II: long term insufficient training stimulus. <em>Sports Medicine</em>, 30(3):145–154, 2000. <a class="reference external" href="https://doi.org/10.2165/00007256-200030030-00001">doi:10.2165/00007256-200030030-00001</a>.</p>
+</div>
+<div class="citation" id="id25" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>42<span class="fn-bracket">]</span></span>
+<p>Iñigo Mujika and Sabino Padilla. Detraining: loss of training-induced physiological and performance adaptations. Part I: short term insufficient training stimulus. <em>Sports Medicine</em>, 30(2):79–87, 2000. <a class="reference external" href="https://doi.org/10.2165/00007256-200030020-00002">doi:10.2165/00007256-200030020-00002</a>.</p>
+</div>
+<div class="citation" id="id12" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>43<span class="fn-bracket">]</span></span>
+<p>Iñigo Mujika and Sabino Padilla. Scientific bases for precompetition tapering strategies. <em>Medicine and Science in Sports and Exercise</em>, 35(7):1182–1187, 2003.</p>
+</div>
+<div class="citation" id="id38" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>44<span class="fn-bracket">]</span></span>
+<p>C.-K. Peng, S. Havlin, H. E. Stanley, and A. L. Goldberger. Quantification of scaling exponents and crossover phenomena in nonstationary heartbeat time series. <em>Chaos</em>, 5(1):82–87, 1995. <a class="reference external" href="https://doi.org/10.1063/1.166141">doi:10.1063/1.166141</a>.</p>
+</div>
+<div class="citation" id="id21" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>45<span class="fn-bracket">]</span></span>
+<p>Jürgen Perl. PerPot: a metamodel for simulation of load performance interaction. <em>European Journal of Sport Science</em>, 1(2):1–13, 2001. <a class="reference external" href="https://doi.org/10.1080/17461390100071202">doi:10.1080/17461390100071202</a>.</p>
+</div>
+<div class="citation" id="id55" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>46<span class="fn-bracket">]</span></span>
+<p>Du Phan, Neeraj Pradhan, and Martin Jankowiak. Composable effects for flexible and accelerated probabilistic programming in NumPyro. 2019. <a class="reference external" href="https://arxiv.org/abs/1912.11554">arXiv:1912.11554</a>.</p>
+</div>
+<div class="citation" id="id52" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>47<span class="fn-bracket">]</span></span>
+<p>Daniel J. Plews, Paul B. Laursen, Jamie Stanley, Andrew E. Kilding, and Martin Buchheit. Training adaptation and heart rate variability in elite endurance athletes: opening the door to effective monitoring. <em>Sports Medicine</em>, 43(9):773–781, 2013. <a class="reference external" href="https://doi.org/10.1007/s40279-013-0071-8">doi:10.1007/s40279-013-0071-8</a>.</p>
+</div>
+<div class="citation" id="id30" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>48<span class="fn-bracket">]</span></span>
+<p>David C. Poole and Andrew M. Jones. Oxygen uptake kinetics. <em>Comprehensive Physiology</em>, 2(2):933–996, 2012. <a class="reference external" href="https://doi.org/10.1002/cphy.c100072">doi:10.1002/cphy.c100072</a>.</p>
+</div>
+<div class="citation" id="id31" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>49<span class="fn-bracket">]</span></span>
+<p>Michael J. Puchowicz, Jonathan Baker, and David C. Clarke. Development and field validation of an omni-domain power-duration model. <em>Journal of Sports Sciences</em>, 38(7):801–813, 2020. <a class="reference external" href="https://doi.org/10.1080/02640414.2020.1735609">doi:10.1080/02640414.2020.1735609</a>.</p>
+</div>
+<div class="citation" id="id41" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>50<span class="fn-bracket">]</span></span>
+<p>Bruce Rogers, David Giles, Nick Draper, Olaf Hoos, and Thomas Gronwald. A new detection method defining the aerobic threshold for endurance exercise and training prescription based on fractal correlation properties of heart rate variability. <em>Frontiers in Physiology</em>, 11:596567, 2021. <a class="reference external" href="https://doi.org/10.3389/fphys.2020.596567">doi:10.3389/fphys.2020.596567</a>.</p>
+</div>
+<div class="citation" id="id42" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>51<span class="fn-bracket">]</span></span>
+<p>Bruce Rogers, David Giles, Nick Draper, Laurent Mourot, and Thomas Gronwald. Detection of the anaerobic threshold in endurance sports: validation of a new method using correlation properties of heart rate variability. <em>Journal of Functional Morphology and Kinesiology</em>, 6(2):38, 2021. <a class="reference external" href="https://doi.org/10.3390/jfmk6020038">doi:10.3390/jfmk6020038</a>.</p>
+</div>
+<div class="citation" id="id43" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>52<span class="fn-bracket">]</span></span>
+<p>Bruce Rogers, David Giles, Nick Draper, Laurent Mourot, and Thomas Gronwald. Influence of artefact correction and recording device type on the practical application of a non-linear heart rate variability biomarker for aerobic threshold determination. <em>Sensors</em>, 21(3):821, 2021. <a class="reference external" href="https://doi.org/10.3390/s21030821">doi:10.3390/s21030821</a>.</p>
+</div>
+<div class="citation" id="id11" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>53<span class="fn-bracket">]</span></span>
+<p>Bent R. Rønnestad, Joar Hansen, and Stian Ellefsen. Block periodization of high-intensity aerobic intervals provides superior training effects in trained cyclists. <em>Scandinavian Journal of Medicine &amp; Science in Sports</em>, 24(1):34–42, 2014. <a class="reference external" href="https://doi.org/10.1111/j.1600-0838.2012.01485.x">doi:10.1111/j.1600-0838.2012.01485.x</a>.</p>
+</div>
+<div class="citation" id="id7" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>54<span class="fn-bracket">]</span></span>
+<p>K. Stephen Seiler and Glenn Ø. Kjerland. Quantifying training intensity distribution in elite endurance athletes: is there evidence for an “optimal” distribution? <em>Scandinavian Journal of Medicine &amp; Science in Sports</em>, 16(1):49–56, 2006. <a class="reference external" href="https://doi.org/10.1111/j.1600-0838.2004.00418.x">doi:10.1111/j.1600-0838.2004.00418.x</a>.</p>
+</div>
+<div class="citation" id="id8" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>55<span class="fn-bracket">]</span></span>
+<p>Stephen Seiler. What is best practice for training intensity and duration distribution in endurance athletes? <em>International Journal of Sports Physiology and Performance</em>, 5(3):276–291, 2010. <a class="reference external" href="https://doi.org/10.1123/ijspp.5.3.276">doi:10.1123/ijspp.5.3.276</a>.</p>
+</div>
+<div class="citation" id="id10" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>56<span class="fn-bracket">]</span></span>
+<p>Stephen Seiler, Kjersti Jøranson, Bent V. Olesen, and Ken J. Hetlelid. Adaptations to aerobic interval training: interactive effects of exercise intensity and total work duration. <em>Scandinavian Journal of Medicine &amp; Science in Sports</em>, 23(1):74–83, 2013. <a class="reference external" href="https://doi.org/10.1111/j.1600-0838.2011.01351.x">doi:10.1111/j.1600-0838.2011.01351.x</a>.</p>
+</div>
+<div class="citation" id="id33" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>57<span class="fn-bracket">]</span></span>
+<p>Philip F. Skiba, Weerapong Chidnok, Anni Vanhatalo, and Andrew M. Jones. Modeling the expenditure and reconstitution of work capacity above critical power. <em>Medicine and Science in Sports and Exercise</em>, 44(8):1526–1532, 2012. <a class="reference external" href="https://doi.org/10.1249/MSS.0b013e3182517a80">doi:10.1249/MSS.0b013e3182517a80</a>.</p>
+</div>
+<div class="citation" id="id9" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>58<span class="fn-bracket">]</span></span>
+<p>Thomas Stöggl and Billy Sperlich. Polarized training has greater impact on key endurance variables than threshold, high intensity, or high volume training. <em>Frontiers in Physiology</em>, 5:33, 2014. <a class="reference external" href="https://doi.org/10.3389/fphys.2014.00033">doi:10.3389/fphys.2014.00033</a>.</p>
+</div>
+<div class="citation" id="id45" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>59<span class="fn-bracket">]</span></span>
+<p>Mika P. Tarvainen, Perttu O. Ranta-aho, and Pasi A. Karjalainen. An advanced detrending method with application to HRV analysis. <em>IEEE Transactions on Biomedical Engineering</em>, 49(2):172–175, 2002. <a class="reference external" href="https://doi.org/10.1109/10.979357">doi:10.1109/10.979357</a>.</p>
+</div>
+<div class="citation" id="id62" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>60<span class="fn-bracket">]</span></span>
+<p>Leonard J. Tashman. Out-of-sample tests of forecasting accuracy: an analysis and review. <em>International Journal of Forecasting</em>, 16(4):437–450, 2000. <a class="reference external" href="https://doi.org/10.1016/S0169-2070(00)00065-0">doi:10.1016/S0169-2070(00)00065-0</a>.</p>
+</div>
+<div class="citation" id="id61" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>61<span class="fn-bracket">]</span></span>
+<p>Aki Vehtari, Andrew Gelman, Daniel Simpson, Bob Carpenter, and Paul-Christian Bürkner. Rank-normalization, folding, and localization: an improved R-hat for assessing convergence of MCMC. <em>Bayesian Analysis</em>, 16(2):667–718, 2021. <a class="reference external" href="https://doi.org/10.1214/20-BA1221">doi:10.1214/20-BA1221</a>.</p>
+</div>
+</div>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="api.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">API</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Leon Foks
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=bd079e7e"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

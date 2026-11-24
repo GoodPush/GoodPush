@@ -1,0 +1,144 @@
+# goodpush configuration  -  edit freely, then run:  goodpush run
+# Paths are relative to the folder containing this file.
+
+[athlete]
+name = ""              # shown in the report title
+sex = "male"            # "male" or "female" (used for power-profile percentiles)
+birth_year = 0          # 0 = unknown
+timezone = "UTC"        # your timezone, e.g. "Europe/London", "America/Los_Angeles" (assigns rides/sleep to days)
+weight_kg = 0           # fallback when no weight history is available (0 = unknown)
+max_hr = 0              # 0 = estimate from data
+resting_hr = 0          # 0 = estimate from Garmin data (or 55 if none)
+lthr = 0                # lactate-threshold HR; 0 = estimate from best 20-min HR
+
+[paths]
+strava = "data/raw/strava"      # unzipped Strava export (contains activities.csv)
+garmin = "data/raw/garmin"      # unzipped Garmin export and/or *.fit sleep files
+processed = "data/processed"
+reports = "reports"
+# downloads = "E:/Downloads"   # where your browser saves files (default: your Downloads folder)  privacy: ok
+
+[ftp]
+# "auto": estimate FTP each day from the critical-power model on the previous
+# `window_days` of rides.  "manual": use [ftp.history] (step function); before the
+# first entry the automatic estimate is used, so history keeps its own FTP.
+mode = "auto"
+window_days = 90
+auto_method = "fitted"  # fitted to Garmin's own FTP + your [ftp.history] + your ramp tests (needs 10+ values,
+                        # else "cp"); "model" = the physio model's LT2 (tests weigh most); "cp" or "p20"
+floor_days = 180        # FTP never drops below 95 % of the best 20 min of this many days (0 = off)
+fallback = 200          # used before any power data exists
+
+[ftp.history]
+# "2024-01-15" = 265
+
+[load]
+ctl_days = 42
+atl_days = 7
+include_sports = "all"  # "all" or "cycling" - which activities count toward training load
+# TSS per hour used when an activity has no power and no heart rate
+default_tss_per_hour = { ride = 45, run = 50, strength = 30, yoga = 10, other = 30 }
+
+[ingest]
+workers = 0             # parallel parser processes; 0 = auto (cpu count - 1)
+keep_streams = true     # keep 1 Hz streams (npz) for future analyses
+max_power = 2000        # watts; samples above are treated as spikes
+
+[analysis]
+driver_window_weeks = 8   # training window preceding a performance change
+progress_min_gain = 0.04  # 4 % gain in eFTP marks a "progress period"
+
+# Adaptive training plan. Most of these are also in the app (Settings > Plan); saving there keeps
+# these comments. A change re-plans from today; sessions you ticked off or changed stay.
+[plan]
+enabled = false               # make a plan at all
+hours_per_week = 4.0          # most hours in a week (a phase can set its own; recovery weeks get less);
+                            # it builds up to it: each week at most 10 % more than your last 4 weeks' average (one
+                            # more 10 % a week ahead), each ride the same from your longest recent ride
+plan_starting_hours = 0.0     # the build-up starts from at least this week's hours, if you can already ride more
+                            # than your last weeks show; 0 = your last 4 weeks' average
+availability = []                        # hours you can ride each weekday, Mon..Sun; the longest
+                            # day gets the long ride, 0 = no riding that day; [] = use the days below
+rest_days = ["mon"]          # days off (with availability: days set to 0)
+key_days = ["tue", "thu"]   # the two days for hard sessions (tests go on the first)
+long_day = "sat"            # the long ride, only used without availability
+recovery_days = ["fri"]     # easy spin days (e.g. the day before a key day)
+intensity = "model"          # what the hard days are:
+                            #   "model": the physiological model picks each key day's session (tempo, sweet
+                            #   spot, threshold, VO2max or anaerobic) for the best forecast on your race
+                            #   mornings and at the end of the plan, averaged over mix_draws posterior
+                            #   draws (0 = the best fit alone); pyramidal until the model is fitted
+                            #   "polarized": easy riding below LT1 plus hard work above LT2 only (VO2max
+                            #   formats incl. over-unders, anaerobic); no tempo / sweet spot / threshold;
+                            #   VO2max in recovery weeks. Same number of hard days in every style:
+                            #   2 a week (maintenance, recovery weeks 1; a race week 1 besides the race).
+                            #   "pyramidal": tempo and sweet spot in base, threshold + VO2max / sweet spot in
+                            #   build, threshold + VO2max / anaerobic in specialty, a tempo in recovery weeks
+mix_draws = 10              # intensity "model": posterior draws the choice is averaged over; 0 = best fit only
+load_model = "ctl"            # how much to ride each week:
+                            #   "physio": the physiological model fitted to your data (goodpush physio) picks
+                            #   each week's easy hours and hard work for the best forecast on your race
+                            #   mornings; how much fatigue costs you is learned from your data (no limit
+                            #   to set), and your sleep / HRV / resting HR / bedtime tell it how tired you are;
+                            #   blocks ramp up (+8 %/week at least), the recovery week drops to at most 65 %
+                            #   of the push week; at most 10 % above your highest fatigue so far, so the
+                            #   ceiling rises as you reach new highs (once you have ~4 months of rides)
+                            #   "ctl": fixed rules - CTL rises min_ramp..max_ramp a week, recovery weeks at
+                            #   70 % of a steady week, races set the taper through TSB
+min_ramp = 1.5              # "ctl" only: CTL points a loading week should add at least ...
+max_ramp = 2.5              # ... and at most (the last loading week of a block may go further)
+test_every_weeks = 6        # a 20-min FTP test when the last is older than this
+ramp_every_weeks = 6        # a ramp test with alphaHRV for LT1 / LT2 (0 = never); in a loading week
+                            # a test day rides on in Z2 after the test, up to the day's time
+test_efforts = false        # now and then a key session in a loading week opens with an all-out effort: 1 min
+                            # (at most every 4 weeks), 3 min (6) or 5 min (8), after a primer with ERG off; it
+                            # measures your power curve instead of inferring it (the sprint end stays inferred)
+ftp = 0                    # 0 = the FTP from your data (or [ftp]); a number overrides it for the plan
+
+# Write the plan into Incyclist's workout calendar after every plan update (all local, no
+# account). folder = Incyclist's data folder; "" = the usual place (%APPDATA%\Incyclist on Windows).
+[incyclist]
+sync = false
+folder = ""
+
+# The physiological model (goodpush physio). ranges_every_days = on the home computer the app re-samples the
+# 5-95 % ranges when they are this many days older than the data, or sooner when today's best-fit CP, LT1 or MAP
+# has left its range (`goodpush physio --refresh`: about 10 minutes in the background, low priority; the app never
+# waits for it); 0 = only when you run that command. The best fit itself follows every ride.
+[physio]
+ranges_every_days = 7
+
+# Your folder on several computers: pair them in Settings > Other computers (or over ssh: `goodpush peer add
+# NAME USER@HOST FOLDER`, then `goodpush peer sync NAME`; pip install -e goodpush[sync]). home = the computer that
+# downloads from Garmin / Strava (its name; "" = any); the others get the data from it.
+# serve = this computer lets the ones paired with it sync (home network / Tailscale addresses only); every_hours =
+# how often this computer syncs with the one it joined while both apps run (0 = only when you press Sync, and after
+# a ride). Both per computer.
+[sync]
+home = ""
+serve = true
+every_hours = 2.0
+
+# Ride on the trainer with a small always-on-top bar: `goodpush ride` (ANT+ USB stick;
+# pip install -e goodpush[ride]). The devices you pick (`goodpush ride --pick`) are kept per machine
+# in ~/.goodpush/ride_devices.json, not here.
+# resistance = % for free rides and resistance mode. bike_kg = the bike, for sim mode (a road: your
+# weight comes from the weight log or [athlete]). opacity = the bar's background
+# (0 = see-through, 1 = solid), scale = its size, x / y = where it sits (-1 = top centre),
+# click_through = clicks go to the window underneath (turn it off from the tray icon).
+[ride]
+resistance = 30
+bike_kg = 9
+opacity = 0.6
+scale = 1.0
+x = -1
+y = -1
+click_through = false
+
+# Life events, illness, races, injuries... shown on charts and used when
+# interpreting overreaching. type: illness | injury | race | travel | life | note
+[[events]]
+date = "2026-01-01"
+end = "2026-01-01"
+type = "note"
+note = "example - replace or delete"

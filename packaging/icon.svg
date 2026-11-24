@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="1024" height="1024">
+<title>goodpush</title>
+<!-- the desktop / installer icon (make_icon.py draws it into icon.png / icon.ico): the logo's bike
+     (app/static/mark.svg) with the heartbeat across it, on a dark tile; the platform's margin around it -->
+<rect x="12" y="12" width="96" height="96" rx="21" fill="#1a1a19"/>
+<g transform="translate(60 60) scale(.76) translate(-107 -50)" fill="none" stroke-linecap="round"
+   stroke-linejoin="round">
+  <g stroke="#6cbbe6">
+    <circle cx="80" cy="57" r="18" stroke-width="8"/>
+    <circle cx="134" cy="57" r="18" stroke-width="8"/>
+    <path d="M80 57H104L120 38L134 57M104 57L94 33M88 32H99M96 38H120M134 57L116.5 33H123" stroke-width="5"/>
+  </g>
+  <path d="M50 57H76Q80 51 84 57H98L101 61L107 20L113 72L116 57H128Q134 49 140 57H164" stroke="#1a1a19"
+        stroke-width="7" stroke-opacity=".75"/>
+  <path d="M50 57H76Q80 51 84 57H98L101 61L107 20L113 72L116 57H128Q134 49 140 57H164" stroke="#ee8fb0"
+        stroke-width="4.5" stroke-opacity=".65"/>
+</g>
+</svg>

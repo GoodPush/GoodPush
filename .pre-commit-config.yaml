@@ -1,0 +1,52 @@
+# Checks before every commit: no secrets, no personal data, no private files; file hygiene, lint (ruff) and the
+# project's own code rules (tools/hygiene_check.py) on what the commit adds. Built docs (docs/) are left alone.
+# Set up once:  pip install pre-commit  &&  pre-commit install
+# (installs both the pre-commit and the commit-msg hook). Run on everything: pre-commit run --all-files
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: check-ast                          # Python that parses
+      - id: debug-statements                   # no leftover breakpoint() / pdb
+      - id: trailing-whitespace                # these three fix the file: add it again and commit
+        exclude: ^docs/
+      - id: end-of-file-fixer
+        exclude: ^docs/
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: ^docs/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff                               # settings: pyproject.toml [tool.ruff]
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+  - repo: local
+    hooks:
+      - id: goodpush-privacy
+        name: goodpush privacy (personal data, private files)
+        entry: python tools/privacy_check.py
+        language: python
+        exclude: ^(tools/privacy_check\.py|tests/test_privacy_check\.py|\.secrets\.baseline)$
+      - id: goodpush-hygiene
+        name: goodpush hygiene (the project's code rules, on added lines)
+        entry: python tools/hygiene_check.py
+        language: python
+        files: \.(py|js)$
+        exclude: ^docs/
+      - id: goodpush-privacy-message
+        name: goodpush privacy (commit message)
+        entry: python tools/privacy_check.py --message
+        language: python
+        stages: [commit-msg]

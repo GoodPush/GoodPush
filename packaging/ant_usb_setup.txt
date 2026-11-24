@@ -1,0 +1,42 @@
+goodpush: setting up your ANT+ USB stick (Windows, once per computer)
+=====================================================================
+
+goodpush talks to your trainer, power meter and heart-rate strap through an ANT+ USB stick. Windows needs a
+small USB driver for the stick (WinUSB). Zadig, the program that opened next to this note, puts it on.
+
+Before you start
+- Plug the stick in.
+- Quit Zwift, Incyclist, TrainerRoad, Garmin Express and any other app that uses the stick.
+
+1. Zadig asks Windows for permission: click Yes. If it asks whether to check for updates, either answer is fine.
+
+2. In Zadig's menu: Options > List All Devices (so it has a tick).
+
+3. Open the drop-down list at the top and pick your stick. It is usually called "ANT USBStick2",
+   "ANT USB-m Stick" or "Dynastream ...".
+   To be sure it's the stick: the first "USB ID" box below the list says 0FCF.
+   No entry with 0FCF? Unplug the stick, plug it back in, and pick Options > List All Devices again.
+
+   CAREFUL: pick only the stick. Changing the driver of anything else (keyboard, mouse, Bluetooth, webcam,
+   headset) can stop that device working.
+
+4. Look at the "Driver" box to the LEFT of the green arrow: that is what the stick has now.
+   - It says WinUSB or libusb0: the stick is already set up (Zwift or Incyclist may have done it).
+     Change nothing: close Zadig and go to "Check" below.
+   - Anything else, or empty: make sure the box to the RIGHT of the arrow says WinUSB (the small up / down
+     arrows next to it change it), then click "Install Driver" (or "Replace Driver").
+
+5. Wait until Zadig says the driver was installed successfully. It can take a minute or two.
+
+6. Close Zadig. Unplug the stick and plug it back in.
+
+Check
+Start a ride in goodpush. The first time, it lists the trainers, power meters, cadence sensors and heart-rate
+straps it hears: pick yours. If it says "No ANT+ USB stick found", go through the steps again.
+Only one app can use the stick at a time: quit the others before you ride with goodpush.
+
+To do this again later: Start menu > goodpush ANT+ USB setup.
+
+Undo (if another app no longer finds the stick)
+Device Manager > find the stick (under "Universal Serial Bus devices") > right-click > Uninstall device,
+tick "Delete the driver software for this device", then unplug the stick and plug it back in.

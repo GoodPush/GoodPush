@@ -1,0 +1,4 @@
+# One line ending everywhere (Windows and Mac): LF in the repo and in the working copy, whatever core.autocrlf says.
+* text=auto eol=lf
+# except Windows batch files: cmd.exe wants CRLF
+*.cmd text eol=crlf

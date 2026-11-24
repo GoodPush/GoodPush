@@ -1,0 +1,79 @@
+name: Do the numbers make sense?
+description: Compare GoodPush's numbers, plan or warnings with what you know about your own body. Matches count too!
+labels: [model feedback]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is one of the most useful things you can do for GoodPush: its model has been tested on very few people.
+        You don't need to know how it works, only something about your body you trust.
+
+        **Relative numbers are enough** ("about 10 % lower than my lab test"). Share only what you're happy to be
+        public.
+  - type: dropdown
+    id: what
+    attributes:
+      label: Which numbers?
+      multiple: true
+      options:
+        - FTP / critical power (CP)
+        - LT1 (aerobic threshold, top of zone 2)
+        - LT2 / threshold heart rate
+        - MAP / VO2max power
+        - W' or sprint power
+        - The power-duration curve (best efforts)
+        - Fatigue, form or readiness (Today)
+        - Illness or overreaching warnings (Recovery)
+        - How hard the plan's sessions are
+        - How much the plan has me ride
+        - How my fitness changed over time
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Overall
+      options:
+        - It matches what I know
+        - Close, but a bit off
+        - Clearly off
+        - It was right, then went wrong
+        - Not sure what to make of it
+    validations:
+      required: true
+  - type: textarea
+    id: compare
+    attributes:
+      label: What GoodPush says, and what you know
+      description: |
+        For each number: GoodPush's value (or "X % higher / lower than ..."), what you compare it with, and how and
+        when you measured it: lab test (lactate, gas exchange), ramp or 20-min test, a race, confirmed heart-rate
+        zones, or how the sessions feel.
+      placeholder: |
+        LT1: GoodPush about 8 % below my lab LT1 (lactate test, March this year).
+        Threshold intervals: I can't finish the last rep of 3x12; sweet spot feels about right.
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: What GoodPush has to work with
+      description: Roughly. This helps us see where the model struggles.
+      placeholder: |
+        - About 3 years of rides, power meter on most (indoor trainer + pedals)
+        - Chest strap, alphaHRV on some rides
+        - Garmin watch for sleep and HRV for the last year
+        - Did the full model run (Model page shows ranges) / only the quick fit
+    validations:
+      required: false
+  - type: textarea
+    id: you
+    attributes:
+      label: About you (optional)
+      description: Anything that may matter, as much or as little as you like - years of training, kind of riding, age range, recent illness or breaks.
+  - type: input
+    id: version
+    attributes:
+      label: GoodPush version
+      placeholder: "0.1.0"

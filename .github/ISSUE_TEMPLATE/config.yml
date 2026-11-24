@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: The GoodPush guide
+    url: https://goodpush.github.io/GoodPush/
+    about: How to install it, get your data in and use each page. Troubleshooting is there too.
+  - name: A security problem
+    url: https://github.com/GoodPush/GoodPush/security/advisories/new
+    about: A way for someone else to reach your data or computer. Please report it privately, not as an issue.

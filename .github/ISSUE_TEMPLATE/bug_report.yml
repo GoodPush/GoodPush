@@ -1,0 +1,54 @@
+name: Something's wrong
+description: A bug, an error message, a crash, or something that doesn't work the way it says.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Issues are **public**: please don't attach ride files, account exports, `goodpush.toml` or
+        anything from your `data/` folder, and check screenshots for your name, maps and health numbers.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, step by step, and what went wrong. Paste any error message as text.
+      placeholder: |
+        1. Opened Plan
+        2. Clicked "Add phase", picked Build
+        3. The page went blank
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: false
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run GoodPush?
+      options:
+        - The installed app (downloaded installer)
+        - From source (pip / conda)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: GoodPush version
+      description: Filled in when you use the app's "Report a problem" button; otherwise at the bottom of Settings.
+      placeholder: "0.1.0"
+  - type: input
+    id: computer
+    attributes:
+      label: Your computer
+      placeholder: "Windows 11 / macOS 15 (Apple Silicon) / Ubuntu 24.04 ..."
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: |
+        Screenshots, how often it happens, what you tried. If the app wrote a log, it is in the `logs/` folder of
+        your GoodPush folder: read it first and remove anything personal before pasting.

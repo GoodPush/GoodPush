@@ -1,0 +1,18 @@
+name: Idea or question
+description: Something you'd like GoodPush to do, a confusing sentence, or a question.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to do, or what's unclear?
+      description: |
+        Say what you want to find out or do, and why ("I want to see whether my long rides are getting easier"),
+        rather than how it should look. For confusing wording, quote it and say what you thought it meant.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: GoodPush version (if it's about the app)
+      placeholder: "0.1.0"
