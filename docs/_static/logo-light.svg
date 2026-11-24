@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 10 462 92" width="462" height="92">
+<title>goodpush</title>
+<style>:root { color:#0b0b0b }</style>
+<!-- good (the oo are a bike) + a heartbeat + push. The page draws it with <use href="logo.svg#logo">: the
+     letters take the text colour there. textLength keeps the bike and the trace in place in any font. -->
+<g id="logo" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif" font-size="84"
+   fill="currentColor" stroke-linecap="round" stroke-linejoin="round">
+  <text x="0" y="78" font-weight="700" textLength="52" lengthAdjust="spacingAndGlyphs">g</text>
+  <g fill="none" stroke="#6cbbe6">
+    <circle cx="80" cy="57" r="18" stroke-width="8"/>
+    <circle cx="134" cy="57" r="18" stroke-width="8"/>
+    <path d="M80 57H104L120 38L134 57M104 57L94 33M88 32H99M96 38H120M134 57L116.5 33H123" stroke-width="5"/>
+  </g>
+  <text x="162" y="78" font-weight="700" textLength="52" lengthAdjust="spacingAndGlyphs">d</text>
+  <path d="M218 57H232Q236 50 240 57H246L249 62L255 24L261 70L265 57H272" fill="none" stroke="#ee8fb0"
+        stroke-width="5"/>
+  <text x="280" y="78" font-weight="400" textLength="180">push</text>
+</g>
+</svg>

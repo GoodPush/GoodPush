@@ -14,6 +14,7 @@ it costs and what it would change for you. None of them are in place yet.
 | Building the installers (Mac, Windows, Linux) | 0 | GitHub Actions, free for public repositories |
 | This guide | 0 | GitHub Pages |
 | Your data | 0 | stays on your computer; Garmin's Personal API, Strava's export and Google Health are free to you |
+| Your plan on your watch / apps | 0 | [intervals.icu](https://intervals.icu) passes it on to Garmin, Wahoo, Zwift and more for free. It is run independently and paid for by its supporters, so please consider becoming one ([why](https://github.com/GoodPush/GoodPush#support-intervalsicu)) |
 | The maintainer's time | 0 | unpaid |
 
 ## What would cost money

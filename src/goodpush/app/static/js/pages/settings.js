@@ -175,6 +175,8 @@ class SettingsPage extends Page {
       <li>Past days and workouts you made in intervals.icu yourself are left alone.</li>
       <li>MyWhoosh: connect it in intervals.icu; it takes the next 7 days (ramps ride as a steady average, no cadence targets).</li>
       <li>Targets are % of FTP: keep your FTP in intervals.icu at ${fmt(S.plan?.ftp)} W too.</li></ul>
+    <p class="small muted" style="margin:8px 0 0">intervals.icu is free to use and is paid for by the riders who support it. If it gets your plan to
+      your watch, please consider <a href="https://intervals.icu" target="_blank" rel="noopener">becoming a supporter</a>.</p>
   </div>`;
   }
 

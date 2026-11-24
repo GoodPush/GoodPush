@@ -1,4 +1,9 @@
-# GoodPush
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/_static/logo-dark.svg">
+    <img alt="GoodPush" src="docs/_static/logo-light.svg" width="320">
+  </picture>
+</h1>
 
 **Free cycling-training analysis and an adaptive training plan that run on your own computer.** Connect your Garmin
 (or drop in a Strava or Garmin export) and GoodPush shows you:
@@ -61,6 +66,18 @@ Developers: [install from source](https://goodpush.github.io/GoodPush/start/inst
 
 No Garmin? A Strava export works too. Details:
 [Getting your data in](https://goodpush.github.io/GoodPush/start/data.html).
+
+## Support intervals.icu
+
+GoodPush gets your plan onto your watch, bike computer and training apps through
+[intervals.icu](https://intervals.icu): it sends your workouts there, and intervals.icu passes them on to Garmin,
+Wahoo, Zwift, MyWhoosh and more. Those connections are what make a free, local tool like GoodPush practical.
+Building them ourselves would mean paid developer programmes and a server we would have to run.
+
+intervals.icu is a small independent project that is free to use and paid for by the riders who support it. If you
+use GoodPush with intervals.icu, please **[become an intervals.icu supporter](https://intervals.icu)**. It keeps the
+bridge GoodPush stands on standing. GoodPush has no connection to intervals.icu and gets nothing from it; we just
+rely on it.
 
 ## Help, feedback and contributing
 
