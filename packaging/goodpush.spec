@@ -26,7 +26,7 @@ UNUSED = ["tkinter", "matplotlib", "IPython", "pytest", "PIL",
           "pyarrow.flight", "pyarrow._flight", "pyarrow._s3fs", "pyarrow._gcsfs", "pyarrow._azurefs", "pyarrow._hdfs",
           "pyarrow.orc", "pyarrow._orc", "pyarrow.substrait", "pyarrow._substrait", "pyarrow.cuda", "pyarrow._cuda",
           "pyarrow.gandiva",
-          "PySide6.QtWebEngineCore", "PySide6.QtQml", "PySide6.QtQuick", "PySide6.QtPdf", "PySide6.Qt3DCore"]
+          "PySide6.QtQml", "PySide6.QtQuick", "PySide6.QtPdf", "PySide6.Qt3DCore"]
 # ... and their files, plus pyarrow's C++ headers / sources and packages' metadata of what's left out
 UNUSED_FILES = ("flight", "arrow_s3", "substrait", "gandiva", "arrow_cuda", "translations",
                 "pyarrow/include/", "pyarrow/src/", ".pyx", ".pxd", "garminconnect-", "garth-", "curl_cffi-")
@@ -39,8 +39,11 @@ a = Analysis(
     excludes=UNUSED,
     noarchive=False,
 )
+# spike/qt-webengine: the app's own window (launcher.AppWindow) needs Qt WebEngine, and WebEngine its locales
+KEEP = ("qtwebengine_locales/en-US.pak",)
 a.binaries = [b for b in a.binaries if not any(k in b[0].replace("\\", "/") for k in UNUSED_FILES)]
-a.datas = [d for d in a.datas if not any(k in d[0].replace("\\", "/") for k in UNUSED_FILES)]
+a.datas = [d for d in a.datas if any(k in d[0].replace("\\", "/") for k in KEEP)
+           or not any(k in d[0].replace("\\", "/") for k in UNUSED_FILES)]
 pyz = PYZ(a.pure)
 exe = EXE(
     pyz, a.scripts, [],

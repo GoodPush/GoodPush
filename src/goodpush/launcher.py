@@ -114,6 +114,10 @@ class App:
             self.open()
             return
         self.start()
+        if os.environ.get(AppWindow.ENV):        # spike: the app in its own window (Qt WebEngine)
+            AppWindow(self.url).run()
+            self.quit()
+            return
         self.handler.pages.open_unless_seen(self.url)   # a goodpush tab still open reloads itself instead
         if not self.tray():                      # no tray (some Linux desktops): until Quit in the page
             self.stopped.wait()
@@ -149,6 +153,79 @@ class App:
         from PySide6.QtWidgets import QSystemTrayIcon
         if reason == QSystemTrayIcon.ActivationReason.Trigger and sys.platform != "darwin":
             self.open()
+
+
+class AppWindow:
+    """Spike (branch spike/qt-webengine): the page in a window of its own (Qt WebEngine) instead of a browser tab.
+    A profile that keeps localStorage, links to other sites in your browser, downloads into Downloads. With
+    GOODPUSH_WEBVIEW_CHECK=<file> it loads the page, writes what it found there as JSON and quits (the build check)."""
+    ENV = "GOODPUSH_WEBVIEW"
+    CHECK = "GOODPUSH_WEBVIEW_CHECK"
+    CHECK_S = 60                                 # the check gives up after this long
+
+    def __init__(self, url: str):
+        self.url = url
+        self.found = {}
+
+    def run(self) -> None:
+        from PySide6.QtCore import QStandardPaths, QTimer
+        from PySide6.QtWebEngineCore import QWebEngineProfile
+        from PySide6.QtWebEngineWidgets import QWebEngineView
+        from PySide6.QtWidgets import QApplication
+        from .folders import Folders
+        app = QApplication.instance() or QApplication([])
+        self.app = app
+        self.profile = QWebEngineProfile("goodpush", app)            # named: kept on disk (the default one isn't)
+        self.profile.setPersistentStoragePath(str(Folders.machine() / "webview"))   # this computer's, not an athlete's
+        self.profile.downloadRequested.connect(self.download)
+        self.downloads = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation)
+        self.view = QWebEngineView(self.profile)
+        self.view.page().newWindowRequested.connect(self.elsewhere)
+        self.view.setWindowTitle("goodpush")
+        self.view.resize(1280, 860)
+        if os.environ.get(self.CHECK):
+            self.view.loadFinished.connect(self.loaded)
+            QTimer.singleShot(self.CHECK_S * 1000, self.report)
+        self.view.load(self.url)
+        self.view.show()
+        app.exec()
+
+    def elsewhere(self, request) -> None:
+        """a link to another site (target=_blank): in your browser."""
+        webbrowser.open(request.requestedUrl().toString())
+
+    def download(self, item) -> None:
+        item.setDownloadDirectory(self.downloads)
+        item.accept()
+
+    def loaded(self, ok: bool) -> None:
+        """the check: the page loaded, the app's scripts ran (its tabs), localStorage works."""
+        self.found["loaded"] = ok
+        js = ("localStorage.setItem('gp_check', '1');"
+              "JSON.stringify({title: document.title, tabs: document.querySelectorAll('#tabs a').length,"
+              " storage: localStorage.getItem('gp_check'), agent: navigator.userAgent})")
+        self.view.page().runJavaScript(js, 0, self.scripted)
+
+    def scripted(self, result) -> None:
+        self.found.update(json.loads(result or "{}"))
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(3000, self.drawn)        # the app's first /api/state and render
+
+    def drawn(self) -> None:
+        self.view.page().runJavaScript("document.querySelector('#main')?.innerText.slice(0, 200) || ''", 0, self.content)
+
+    def content(self, text) -> None:
+        """the page drawn (more than its "Loading…"), else a second later again (report() ends it at CHECK_S)."""
+        self.found["main_text"] = text
+        if len(text or "") > 20:
+            self.report()
+            return
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(1000, self.drawn)
+
+    def report(self) -> None:
+        Path(os.environ[self.CHECK]).write_text(json.dumps(self.found), encoding="utf-8")
+        self.app.quit()
 
 
 def main(argv: list[str] | None = None) -> None:

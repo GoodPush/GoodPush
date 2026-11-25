@@ -29,9 +29,10 @@ garmin = ["garminconnect>=0.3.19", "curl_cffi"]
 physio = ["jax>=0.4.30", "numpyro>=0.15", "numba>=0.60", "filelock>=3.12"]   # Intel Mac: numba from conda-forge (no recent pip wheels)
 ride = ["openant>=1.3", "pyusb>=1.2", "libusb-package", "bleak>=1.0", "PySide6-Essentials>=6.6"]
 sync = ["cryptography>=42", "paramiko>=3.4"]    # goodpush peer: paired apps (https; its certificate), or over ssh
+webview = ["goodpush[ride]", "PySide6-WebEngine"]   # spike: the app in its own window (launcher.AppWindow, GOODPUSH_WEBVIEW=1)
 all = ["goodpush[garmin,physio,ride,sync]"]          # what the installed app bundles
 dev = ["goodpush[all]", "pytest>=7", "hatchling>=1.26", "pre-commit>=3", "detect-secrets>=1.5"]
-build = ["goodpush[all]", "pyinstaller>=6.6", "pillow"]   # packaging/: the installers (pillow: the icon)
+build = ["goodpush[all,webview]", "pyinstaller>=6.6", "pillow"]   # packaging/: the installers (pillow: the icon)
 docs = ["goodpush[physio]", "sphinx>=7", "furo", "myst-parser>=4", "sphinxcontrib-bibtex>=2.6"]            # srcdocs/ -> docs/ (GitHub Pages)
 
 [project.scripts]
