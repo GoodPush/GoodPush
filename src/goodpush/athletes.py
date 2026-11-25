@@ -1,5 +1,5 @@
-"""Several athletes on one machine: a registry of their folders (~/.goodpush/athletes.toml) and each one's own
-credentials (~/.goodpush/athletes/<name>/).
+"""Several athletes on one machine: a registry of their folders (athletes.toml in the machine folder,
+folders.Folders) and each one's own credentials (athletes/<name>/ there).
 
 An athlete folder holds everything of that person (goodpush.toml, data, plan, model fits, reports): copy or sync it
 to move them to another machine. Credentials stay on each machine, per athlete, and are never in the folder.
@@ -13,6 +13,7 @@ import shutil
 import tomllib
 from pathlib import Path
 
+from .folders import Folders
 
 NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
 
@@ -20,12 +21,13 @@ NAME = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
 class Athletes:
     """The athletes of this machine: name -> folder, a default, and where each one's credentials live."""
     REGISTRY = "athletes.toml"
-    MACHINE_FILES = ("athletes.toml", "athletes", "privacy_terms.txt", "app_key")   # not credentials of a person
+    # not credentials of a person (Folders.PROJECT: on macOS the installed app's project is in this folder too)
+    MACHINE_FILES = ("athletes.toml", "athletes", "privacy_terms.txt", "app_key", Folders.PROJECT)
     SET = None                     # the GOODPUSH_SECRETS value `use` set (one you set yourself is left alone)
-    HOME = None                    # this machine's folder when not ~/.goodpush (the tests: never the real one)
+    HOME = None                    # this machine's folder when not Folders.machine() (the tests: never the real one)
 
     def __init__(self, home: Path | None = None):
-        self.home = Path(home or self.HOME or Path.home() / ".goodpush")
+        self.home = Path(home or self.HOME or Folders.machine())
         f = self.home / self.REGISTRY
         data = tomllib.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
         self.default = str(data.get("default") or "")
@@ -47,7 +49,7 @@ class Athletes:
 
     def add(self, name: str, folder, default: bool = False, credentials: bool = False) -> Path:
         """Register `folder` as athlete `name` (the first one becomes the default). `credentials`: copy this
-        machine's current credentials (~/.goodpush, from before there were athletes) to theirs; nothing is
+        machine's current credentials (the machine folder's, from before there were athletes) to theirs; nothing is
         removed or overwritten."""
         if not NAME.match(name):
             raise ValueError("an athlete name is lower-case letters, digits, - or _ (e.g. 'athlete_name')")

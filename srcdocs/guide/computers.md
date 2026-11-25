@@ -13,7 +13,8 @@ goodpush athlete                                           # list them (* = the 
 goodpush --athlete sam app --port 8766                     # one app per athlete, each on its own port
 ```
 
-Garmin / Strava / Google sign-ins are kept per athlete on each computer (`~/.goodpush/athletes/<name>/`), never in the
+Garmin / Strava / Google sign-ins are kept per athlete on each computer (`athletes/<name>/` in GoodPush's own folder, see
+[where things are kept](privacy.md)), never in the
 folder, so a folder can be copied to another computer as it is.
 
 ## One athlete on several computers

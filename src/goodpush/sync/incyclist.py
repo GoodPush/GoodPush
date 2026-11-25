@@ -32,11 +32,9 @@ KEEP_PAST_DAYS = 14
 
 
 def default_folder() -> Path:
-    if sys.platform == "win32":
-        return Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming") / "Incyclist"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "Incyclist"
-    return Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "Incyclist"
+    """Incyclist's own folder (an Electron app's: %APPDATA%, ~/Library/Application Support, ~/.config)."""
+    import platformdirs
+    return Path(platformdirs.user_config_dir("Incyclist", appauthor=False, roaming=True))
 
 
 def folder(cfg: dict) -> Path:

@@ -145,7 +145,9 @@ def main(argv: list[str] | None = None) -> None:
         from .cli import main as cli_main
         cli_main(args)
         return
+    from .folders import Folders
     from .progress import Console
+    Folders.migrate()                            # the folders from before, once (cli.main does it for commands)
     Console.no_quick_edit()                      # started from a terminal: a click must not freeze it
     App().run()
 

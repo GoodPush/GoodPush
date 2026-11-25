@@ -27,11 +27,19 @@ about anything GoodPush does. To open it anyway:
 GoodPush opens in your web browser. An icon in the menu bar (Mac) or system tray (Windows) opens it again or quits
 it. Your data lives in
 
-* Mac: `~/Library/Application Support/goodpush`
-* Windows: `%APPDATA%\goodpush`
-* Linux: `~/.local/share/goodpush`
+* Mac: `~/Library/Application Support/goodpush/athlete`
+* Windows: `%APPDATA%\goodpushthlete`
+* Linux: `~/.local/share/goodpush/athlete`
 
-(set the `GOODPUSH_HOME` environment variable to keep it somewhere else). **To update**, install the new version over
+and your keys and sign-ins in GoodPush's own folder on this computer:
+
+* Mac: `~/Library/Application Support/goodpush`
+* Windows: `%LOCALAPPDATA%\goodpush`
+* Linux: `~/.config/goodpush`
+
+To keep either somewhere else, e.g. on another drive: quit GoodPush, move the folder there, and set the environment
+variable `GOODPUSH_HOME` (your data) or `GOODPUSH_CONFIG` (keys and sign-ins) to its new place. Earlier versions kept
+the data one folder up and the keys in `~/.goodpush`; GoodPush moves them to the places above once, by itself. **To update**, install the new version over
 the old one: your data stays. Next: [get your data in](data.md).
 
 ### ANT+ USB stick (for riding on a trainer)

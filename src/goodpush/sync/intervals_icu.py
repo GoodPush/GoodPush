@@ -26,7 +26,7 @@ class IntervalsIcuError(RuntimeError):
 
 
 class IntervalsIcu:
-    """The intervals.icu API for one athlete's key (in their ~/.goodpush)."""
+    """The intervals.icu API for one athlete's key (in their credentials folder, athletes.Athletes.secrets)."""
     BASE = "https://intervals.icu/api/v1/athlete/0"
     KEY_FILE = "intervals_icu.json"            # {"key", "saved"}
     SENT_FILE = "intervals_icu_sent.json"      # {"at", "ids": {external_id: date}, "sent", "deleted"}: the last push

@@ -9,7 +9,7 @@
         <link rel="prefetch" href="../_static/logo-dark.svg" as="image">
 
     <link rel="shortcut icon" href="../_static/mark.svg"><!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
-        <title>Install - GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</title>
+        <title>Install - GoodPush 0.1.2.dev1+ga76191586.d20261125</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -168,7 +168,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">GoodPush 0.1.1.dev3+g5f9e9f33a.d20261122</div></a>
+      <a href="../index.html"><div class="brand">GoodPush 0.1.2.dev1+ga76191586.d20261125</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -323,11 +323,19 @@ can set up an ANT+ USB stick).</p></li>
 <p>GoodPush opens in your web browser. An icon in the menu bar (Mac) or system tray (Windows) opens it again or quits
 it. Your data lives in</p>
 <ul class="simple">
-<li><p>Mac: <code class="docutils literal notranslate"><span class="pre">~/Library/Application</span> <span class="pre">Support/goodpush</span></code></p></li>
-<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">%APPDATA%\goodpush</span></code></p></li>
-<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">~/.local/share/goodpush</span></code></p></li>
+<li><p>Mac: <code class="docutils literal notranslate"><span class="pre">~/Library/Application</span> <span class="pre">Support/goodpush/athlete</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">%APPDATA%\goodpushthlete</span></code></p></li>
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">~/.local/share/goodpush/athlete</span></code></p></li>
 </ul>
-<p>(set the <code class="docutils literal notranslate"><span class="pre">GOODPUSH_HOME</span></code> environment variable to keep it somewhere else). <strong>To update</strong>, install the new version over
+<p>and your keys and sign-ins in GoodPush’s own folder on this computer:</p>
+<ul class="simple">
+<li><p>Mac: <code class="docutils literal notranslate"><span class="pre">~/Library/Application</span> <span class="pre">Support/goodpush</span></code></p></li>
+<li><p>Windows: <code class="docutils literal notranslate"><span class="pre">%LOCALAPPDATA%\goodpush</span></code></p></li>
+<li><p>Linux: <code class="docutils literal notranslate"><span class="pre">~/.config/goodpush</span></code></p></li>
+</ul>
+<p>To keep either somewhere else, e.g. on another drive: quit GoodPush, move the folder there, and set the environment
+variable <code class="docutils literal notranslate"><span class="pre">GOODPUSH_HOME</span></code> (your data) or <code class="docutils literal notranslate"><span class="pre">GOODPUSH_CONFIG</span></code> (keys and sign-ins) to its new place. Earlier versions kept
+the data one folder up and the keys in <code class="docutils literal notranslate"><span class="pre">~/.goodpush</span></code>; GoodPush moves them to the places above once, by itself. <strong>To update</strong>, install the new version over
 the old one: your data stays. Next: <a class="reference internal" href="data.html"><span class="std std-doc">get your data in</span></a>.</p>
 <section id="ant-usb-stick-for-riding-on-a-trainer">
 <h3>ANT+ USB stick (for riding on a trainer)<a class="headerlink" href="#ant-usb-stick-for-riding-on-a-trainer" title="Link to this heading">¶</a></h3>
@@ -527,7 +535,7 @@ goodpush<span class="w"> </span>init
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=bd079e7e"></script>
+</div><script src="../_static/documentation_options.js?v=be9ad634"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

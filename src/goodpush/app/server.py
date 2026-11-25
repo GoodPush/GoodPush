@@ -6,7 +6,7 @@ Buttons call /api/action, which runs the work in a background thread.
 
 Security: by default it listens on 127.0.0.1 only. With --lan it listens on your
 network so your phone can open it; every request then needs the access key printed
-at start-up (kept in ~/.goodpush/app_key; first visit with ?key=... sets a cookie).
+at start-up (kept in the machine folder's app_key, folders.Folders; first visit with ?key=... sets a cookie).
 """
 from __future__ import annotations
 

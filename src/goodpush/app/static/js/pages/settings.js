@@ -192,7 +192,7 @@ class SettingsPage extends Page {
       <li>At <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> (free): create a project and enable the <b>Google Health API</b>.
         Set up the OAuth consent screen (External, add yourself as a test user), then <b>Publish app</b> – left in Testing, Google signs you out every 7 days; under 100 users it needs no review.
         Then Credentials → <b>OAuth client ID</b>, type <b>Desktop app</b>.</li>
-      <li>Paste its ID and secret here and connect. They stay on this PC (<code>~/.goodpush</code>).</li></ol>
+      <li>Paste its ID and secret here and connect. They stay on this PC, in goodpush's own folder (not the project).</li></ol>
     <div class="row"><input id="ghid" placeholder="Client ID (…apps.googleusercontent.com)" autocomplete="off" spellcheck="false" style="flex:2;min-width:220px">
       <input type="password" id="ghsecret" placeholder="Client secret" autocomplete="off" spellcheck="false" style="flex:1;min-width:140px">
       <button class="btn primary" id="ghconnect">Connect</button></div>
@@ -211,7 +211,7 @@ class SettingsPage extends Page {
     if (!LOCAL) return `<div class="card small muted">Garmin ${G.configured ? "✓" : "–"} · intervals.icu ${I.configured ? "✓" : "–"}.
       Add or change keys from the app on your PC (they never travel over Wi-Fi).</div>`;
     return `<div class="card">
-    <p class="small muted" style="margin:0 0 12px">Stored only on this PC, in your user folder (<code>~/.goodpush</code>), never in the project or sent to other computers.</p>
+    <p class="small muted" style="margin:0 0 12px">Stored only on this PC, in goodpush's own folder, never in the project or sent to other computers.</p>
     <h3 style="margin:0 0 6px">Garmin Personal API</h3>
     <div class="row">${G.configured ? saved(G) + '<span class="small muted">· Garmin emails you before it expires</span>' : missing}</div>
     ${G.configured ? `<div class="row" style="margin-top:8px"><button class="btn sm" id="testkey">Test key</button><button class="btn sm" id="forgetkey">Remove key</button></div>

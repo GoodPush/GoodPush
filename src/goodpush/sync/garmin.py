@@ -3,7 +3,7 @@
 Preferred route now: the official Personal API (sync/garmin_api.py, `goodpush garmin-key`).
 This module keeps the older routes: the community `garminconnect`
 package (install with `pip install -e goodpush[garmin]`). It logs in like the
-Garmin Connect web site; tokens are cached in ~/.goodpush/garmin_tokens so you
+Garmin Connect web site; tokens are cached in the machine folder's garmin_tokens (folders.Folders) so you
 only type your password (and MFA code) once a year or so.
 
 `goodpush sync garmin` fetches every day after the newest one you already have,

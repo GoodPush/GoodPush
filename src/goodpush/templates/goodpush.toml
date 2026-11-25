@@ -121,7 +121,7 @@ every_hours = 2.0
 
 # Ride on the trainer with a small always-on-top bar: `goodpush ride` (ANT+ USB stick;
 # pip install -e goodpush[ride]). The devices you pick (`goodpush ride --pick`) are kept per machine
-# in ~/.goodpush/ride_devices.json, not here.
+# in ride_devices.json in goodpush's own folder on that computer, not here.
 # resistance = % for free rides and resistance mode. bike_kg = the bike, for sim mode (a road: your
 # weight comes from the weight log or [athlete]). opacity = the bar's background
 # (0 = see-through, 1 = solid), scale = its size, x / y = where it sits (-1 = top centre),

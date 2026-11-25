@@ -38,6 +38,7 @@ repos:
         name: goodpush privacy (personal data, private files)
         entry: python tools/privacy_check.py
         language: python
+        additional_dependencies: [platformdirs]     # finds privacy_terms.txt in goodpush's machine folder
         exclude: ^(tools/privacy_check\.py|tests/test_privacy_check\.py|\.secrets\.baseline)$
       - id: goodpush-hygiene
         name: goodpush hygiene (the project's code rules, on added lines)
@@ -49,4 +50,5 @@ repos:
         name: goodpush privacy (commit message)
         entry: python tools/privacy_check.py --message
         language: python
+        additional_dependencies: [platformdirs]
         stages: [commit-msg]

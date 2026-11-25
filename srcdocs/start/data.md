@@ -12,7 +12,8 @@ Garmin's **Personal API** is Garmin's official, read-only way to get your own da
    365 days). Garmin shows it only once and e-mails you before it expires.
 2. In GoodPush, click **Connect Garmin** on the Today page (or go to **Settings > Garmin connection**) and paste it.
 
-The key is kept in your user folder (`~/.goodpush/`), never in your GoodPush folder. GoodPush then pulls your last
+The key is kept in GoodPush's own folder on this computer ([where](../guide/privacy.md)), never in your GoodPush
+folder. GoodPush then pulls your last
 90 days: rides with their original .fit files, sleep, resting HR, HRV, stress, Body Battery, steps and weight.
 After that **Update now** on Today pulls only what's new. To have the app check by itself while it runs, set
 **Settings > Garmin connection > Also check Garmin by itself every ... hours** (`[garmin] auto_sync_hours`; 0, the
@@ -94,6 +95,6 @@ Without a subscription the sync fails with "Application ... Inactive": use the f
 ### Where downloads and sign-ins go
 
 Downloads go to `data/raw/garmin/api/`, `data/raw/strava/api/` and `data/raw/google_health/`, next to your exports
-and never touching them. Keys and sign-ins are kept in `~/.goodpush/` in your user folder (`GOODPUSH_SECRETS` moves
-it), never in your GoodPush folder; your Garmin password is never stored. `goodpush deauth strava|garmin` removes
+and never touching them. Keys and sign-ins are kept in GoodPush's own folder on this computer
+([where](../guide/privacy.md); `GOODPUSH_CONFIG` moves it), never in your GoodPush folder; your Garmin password is never stored. `goodpush deauth strava|garmin` removes
 them.

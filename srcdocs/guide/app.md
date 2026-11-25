@@ -91,5 +91,5 @@ see it all. Charts that share a crosshair zoom together. On a ride, where a drag
 `goodpush app --lan` prints a link with an access key (`http://192.168.x.x:8765/?key=...`). Open it once on your
 phone (same Wi-Fi); the key is remembered, and you can add the page to your home screen. Keep the link private: it
 opens your health data. Without `--lan` the app only answers on the computer itself. Windows asks once whether
-Python may use the network: allow it on private networks only. The key lives in `~/.goodpush/app_key`; delete that
-file to make a new one.
+Python may use the network: allow it on private networks only. The key lives in `app_key` in GoodPush's own folder
+([where things are kept](privacy.md)); delete that file to make a new one.

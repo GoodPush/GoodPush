@@ -17,7 +17,9 @@ server, account or tracking of its own. Nothing is sent anywhere unless you set 
   type of computer in the form; nothing is posted until you press Submit on GitHub, and you see everything first.
 
 **Where things are kept**: your data, settings and reports in your GoodPush folder; keys and sign-ins in
-`~/.goodpush/` in your user folder (never in the GoodPush folder, so the folder can be copied or backed up as it is).
+GoodPush's own folder on this computer (`%LOCALAPPDATA%\goodpush` on Windows, `~/Library/Application Support/goodpush`
+on a Mac, `~/.config/goodpush` on Linux; `GOODPUSH_CONFIG` moves it), never in the GoodPush folder, so the folder can
+be copied or backed up as it is.
 
 If you put your GoodPush folder under version control or in a shared folder, keep `data/` and `reports/` private:
 they hold your health data.

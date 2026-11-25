@@ -238,16 +238,9 @@ def find_root(start: Path | None = None) -> Path | None:
 
 def default_root() -> Path:
     """Where the installed app keeps your project (goodpush.toml, your data, reports) when it isn't started
-    from a project folder: GOODPUSH_HOME, else the platform's place for app data."""
-    if os.environ.get("GOODPUSH_HOME"):
-        return Path(os.environ["GOODPUSH_HOME"]).expanduser()
-    if sys.platform == "darwin":
-        base = Path.home() / "Library" / "Application Support"
-    elif os.name == "nt":
-        base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
-    else:
-        base = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
-    return base / "goodpush"
+    from a project folder: GOODPUSH_HOME, else in the platform's place for app data (folders.Folders)."""
+    from .folders import Folders
+    return Folders.default_project()
 
 
 def load_project(root: str | Path | None = None, athlete: str | None = None) -> Project:

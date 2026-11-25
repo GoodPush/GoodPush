@@ -336,7 +336,7 @@ def cmd_streams(args):
 
 
 def cmd_garmin_key(args):
-    """Store (or test / forget) your Garmin Personal API key in ~/.goodpush."""
+    """Store (or test / forget) your Garmin Personal API key in this computer's machine folder."""
     from .sync import garmin_api as G
     if args.forget:
         G.forget_key()
@@ -423,21 +423,14 @@ def _rider_kg(proj, default: float = 75.0) -> float:
 
 def _downloads_dir(proj) -> Path:
     """[paths] downloads in goodpush.toml (when that folder exists: a setting from another computer
-    falls through), else the Windows Downloads folder (wherever it was moved to), else ~/Downloads."""
+    falls through), else the system's Downloads folder (wherever it was moved to; platformdirs)."""
     import os
+
+    import platformdirs
     cfg = proj.cfg.get("paths", {}).get("downloads")
     if cfg and Path(os.path.expandvars(os.path.expanduser(cfg))).is_dir():
         return Path(os.path.expandvars(os.path.expanduser(cfg)))
-    if os.name == "nt":
-        try:
-            import winreg
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion"
-                                r"\Explorer\User Shell Folders") as k:
-                v, _ = winreg.QueryValueEx(k, "{374DE290-123F-4565-9164-39C4925E467B}")
-                return Path(os.path.expandvars(v))
-        except Exception:
-            pass
-    return Path.home() / "Downloads"
+    return Path(platformdirs.user_downloads_dir())
 
 
 def cmd_garmin_import(args):
@@ -594,7 +587,7 @@ def cmd_physio(args):
                           for i, (s, w) in enumerate(zip(t, p))))
 
 
-DEVICES_FILE = "ride_devices.json"     # ~/.goodpush/: the trainer / sensors `goodpush ride` uses
+DEVICES_FILE = "ride_devices.json"     # the machine folder (Folders): the trainer / sensors `goodpush ride` uses
 SAVED = "Saved "                       # `goodpush ride`'s line naming the ride it saved (the app reads it)
 
 
@@ -685,6 +678,8 @@ def cmd_summary(args):
 
 
 def main(argv=None):
+    from .folders import Folders
+    Folders.migrate()                            # the folders from before, once (only a goodpush you start moves them)
     ap = argparse.ArgumentParser(prog="goodpush", description=__doc__)
     ap.add_argument("--root", help="project folder (default: search upward for goodpush.toml)")
     ap.add_argument("--athlete", help="whose folder and credentials (`goodpush athlete list`; default: the folder "

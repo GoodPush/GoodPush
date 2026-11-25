@@ -1,8 +1,8 @@
 """Pull the latest data straight from Strava and Garmin Connect.
 
-Credentials and tokens live in ~/.goodpush/ (outside the project folder, so the
-project can be shared or put in git without leaking them). Override with the
-GOODPUSH_SECRETS environment variable.
+Credentials and tokens live in this computer's machine folder (folders.Folders: outside the project folder, so
+the project can be shared or put in git without leaking them); each athlete's in its athletes/<name>/
+(GOODPUSH_SECRETS, set by athletes.Athletes.use).
 """
 from __future__ import annotations
 
@@ -10,13 +10,15 @@ import json
 import os
 from pathlib import Path
 
+from ..folders import Folders
+
 # a first sync (nothing from that source yet) reaches this far back; older history comes from the
 # services' account exports (`goodpush import`), not from their APIs
 FIRST_SYNC_DAYS = 90
 
 
 def secrets_dir() -> Path:
-    p = Path(os.environ.get("GOODPUSH_SECRETS") or Path.home() / ".goodpush")
+    p = Path(os.environ.get("GOODPUSH_SECRETS") or Folders.machine())
     p.mkdir(parents=True, exist_ok=True)
     return p
 

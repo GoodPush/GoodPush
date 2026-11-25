@@ -9,7 +9,7 @@ Each person uses their own free Google Cloud project, so nothing is shared and n
    100 users, and in "Testing" Google expires the sign-in every 7 days) -> Credentials ->
    OAuth client ID, type "Desktop app".
 3. goodpush app > Settings > Fitbit / Google Health: paste the client ID and secret, Connect,
-   approve. The client and the refresh token stay in ~/.goodpush (never in the project).
+   approve. The client and the refresh token stay in the machine folder (folders.Folders; never in the project).
 
 Each sync pulls the daily summaries and sleep sessions since the last sync (a year the first
 time) and keeps every data point by its resource name in data/raw/google_health/<type>.json;
@@ -98,7 +98,7 @@ class GoogleHealth:
         return AUTH_URL + "?" + urllib.parse.urlencode(q)
 
     def finish(self, code: str, state: str) -> None:
-        """Swap the code Google sent back for a refresh token (kept in ~/.goodpush)."""
+        """Swap the code Google sent back for a refresh token (kept in the machine folder)."""
         if state not in self.pending:
             raise GoogleHealthError("That sign-in link is stale - press Connect again.")
         verifier, redirect_uri = self.pending.pop(state)

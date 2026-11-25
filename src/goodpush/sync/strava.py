@@ -4,7 +4,7 @@ One-time setup (`goodpush auth strava`):
   1. Create an API application at https://www.strava.com/settings/api
      - "Authorization Callback Domain": localhost
   2. Run `goodpush auth strava`, paste the Client ID and Client Secret, approve in
-     the browser. Tokens are stored in ~/.goodpush/strava.json and refreshed
+     the browser. Tokens are stored in strava.json in the machine folder and refreshed
      automatically.
 
 `goodpush sync strava` then fetches every activity newer than the newest one you

@@ -1,7 +1,7 @@
 """Garmin Connect Personal API (official, read-only, your own data).
 
 Create a key once in Garmin Connect (Settings > Personal API Key, valid 30-365 days),
-then `goodpush garmin-key` stores it in ~/.goodpush/garmin_personal_api.json (never in
+then `goodpush garmin-key` stores it in garmin_personal_api.json in the machine folder (folders.Folders; never in
 the project folder). Each sync swaps the key for an access token (valid 24 h, cached)
 and pulls only the days and activities you don't have yet:
 

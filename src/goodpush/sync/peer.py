@@ -13,7 +13,7 @@ The folder holds three kinds of files, each synced its own way:
   sides the home machine's wins (they can be rebuilt).
 
 Never synced: machine caches (jax_cache, the NUTS checkpoint, *.pkl), credentials (key.txt, tokens: those stay in
-~/.goodpush on each machine) and settings that belong to one machine ([paths] downloads, [incyclist], where the ride
+the machine folder on each machine, folders.Folders) and settings that belong to one machine ([paths] downloads, [incyclist], where the ride
 overlay sits on screen).
 
 The home machine ([sync] home in goodpush.toml; `goodpush peer add` makes it the machine you run it on) downloads from

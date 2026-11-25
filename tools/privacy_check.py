@@ -7,7 +7,7 @@ Secrets in general (keys, tokens, high-entropy strings) are detect-secrets' job;
 specific to goodpush: ride / health data files, the workspace goodpush.toml, device numbers, e-mail
 addresses, home-folder and drive paths (C: too), password values, GPS coordinates, Google / Strava credentials,
 and your own terms in
-~/.goodpush/privacy_terms.txt (one per line: names, address, serial numbers ...; that file stays private).
+privacy_terms.txt in goodpush's machine folder (TERMS_FOLDERS; one per line: names, address, serial numbers ...; that file stays private).
 A term written "code: NAME" applies only to the package's code, tests and model docs (CODE_PATHS): the
 software is for any rider, so it names none - while NAME may still sign the licence and the author fields.
 A line with "privacy: ok" in it is let through.
@@ -48,15 +48,30 @@ class PrivacyCheck:
     CODE = "code:"
     CODE_PATHS = re.compile(r"^(src|tests|srcdocs/model)/")
 
+    TERMS = "privacy_terms.txt"
+
     def __init__(self, terms_file: Path | None = None):
         if terms_file is None:
-            home = os.environ.get("GOODPUSH_SECRETS") or Path.home() / ".goodpush"
-            terms_file = Path(home) / "privacy_terms.txt"
+            terms_file = next((d / self.TERMS for d in self.terms_folders() if (d / self.TERMS).is_file()),
+                              Path(self.TERMS))
         lines = terms_file.read_text(encoding="utf-8").splitlines() if terms_file.exists() else []
         terms = [t.strip() for t in lines if t.strip() and not t.lstrip().startswith("#")]
         self.terms = [t for t in terms if not t.lower().startswith(self.CODE)]
         self.code_terms = [t[len(self.CODE):].strip() for t in terms if t.lower().startswith(self.CODE)]
         self.problems: list[str] = []
+
+    @staticmethod
+    def terms_folders() -> list[Path]:
+        """where privacy_terms.txt may be, first found wins: goodpush's machine folder (GOODPUSH_CONFIG, else the
+        platform's: goodpush.folders.Folders, which this hook's own environment can't import), then ~/.goodpush
+        (before 2026-11-25, until goodpush moves it)."""
+        out = [Path(os.environ[k]) for k in ("GOODPUSH_CONFIG", "GOODPUSH_SECRETS") if os.environ.get(k)]
+        try:
+            import platformdirs
+            out.append(Path(platformdirs.user_config_dir("goodpush", appauthor=False, roaming=False)))
+        except ImportError:
+            pass
+        return out + [Path.home() / ".goodpush"]
 
     def check_path(self, path: str) -> bool:
         rel = PurePosixPath(path.replace("\\", "/")).as_posix()

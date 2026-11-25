@@ -19,6 +19,7 @@ dependencies = [
     "pyarrow>=12",
     "h5py>=3.8",
     "tqdm>=4.60",
+    "platformdirs>=4",
     "tzdata",
     "tomli>=2.0; python_version < '3.11'",
 ]
