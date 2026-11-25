@@ -27,6 +27,7 @@ class Folders:
     HOME_ENV = "GOODPUSH_HOME"
     PROJECT = "athlete"                      # the default project's folder in the app's data folder
     PROJECT_FILE = "goodpush.toml"           # what makes a folder a project (config.CONFIG_NAME)
+    OLD_CREDENTIALS = "athletes"             # Athletes.CREDENTIALS until 2026-11-25 (it read like athlete folders)
     LEGACY = Path.home() / ".goodpush"       # the machine folder until 2026-11 (None: nothing to move; the tests)
     lock = threading.Lock()
     migrated = False                         # this process has looked (the tests: True for the whole session)
@@ -59,7 +60,7 @@ class Folders:
     @classmethod
     def migrate(cls) -> None:
         """once per process: the default project down into its own folder, then ~/.goodpush's files into the
-        machine folder, then the registry's entry for that project. Each step moves only what isn't at the new
+        machine folder, its athletes/ renamed credentials/, then the registry's entry for that project. Each step moves only what isn't at the new
         place yet, so a step cut short (a file in use on Windows) goes on next time; nothing is overwritten."""
         with cls.lock:
             if cls.migrated:
@@ -68,6 +69,7 @@ class Folders:
             try:
                 moved = cls.move_project()
                 cls.move_machine()
+                cls.rename_credentials()
                 if moved:
                     cls.reregister(*moved)
             except OSError as e:
@@ -94,6 +96,15 @@ class Folders:
         os.replace(old / cls.PROJECT_FILE, new / cls.PROJECT_FILE)
         print(f"goodpush: moved the app's project to {new}", file=sys.stderr)
         return old, new
+
+    @classmethod
+    def rename_credentials(cls) -> None:
+        """the machine folder's athletes/<name> (sign-ins) -> credentials/<name>."""
+        from .athletes import Athletes
+        old, new = cls.config_dir() / cls.OLD_CREDENTIALS, cls.config_dir() / Athletes.CREDENTIALS
+        if old.is_dir() and not new.exists():
+            os.replace(old, new)
+            print(f"goodpush: renamed {old} to {new}", file=sys.stderr)
 
     @classmethod
     def move_machine(cls) -> None:

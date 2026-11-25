@@ -266,7 +266,8 @@ class SshSide(FolderSide):
         try:
             self.sftp.stat(self.root)
         except FileNotFoundError as e:
-            raise FileNotFoundError(f"{self.label}: no folder {self.root}") from e
+            raise FileNotFoundError(f"{self.label}: no folder {self.root} (moved there with `goodpush athlete move`? "
+                                    f"then `goodpush peer add` it again here with its new folder)") from e
         while todo:
             pre = todo.pop()
             for a in self.sftp.listdir_attr(self.path(pre) if pre else self.root):

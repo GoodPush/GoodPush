@@ -1154,6 +1154,12 @@ class Jobs:
         self.spawn(fn)
         return True
 
+    def drop_queued(self) -> str | None:
+        """forget the job waiting for the current one (its name; None: none waits)."""
+        with self.lock:
+            nxt, self.next = self.next, None
+        return nxt[0] if nxt else None
+
     def spawn(self, fn):
 
         def add(*a):
@@ -1715,6 +1721,36 @@ class AthleteSwitch:
         if not (path / CONFIG_NAME).exists():
             init_project(path)
         self.switch(name)
+
+    def move(self, name: str, folder: str):
+        """athlete `name`'s folder to `folder` (athletes.FolderMove: a rename, or a copy checked and then the old one
+        deleted; only re-pointed when you moved it yourself), as a job. The one the app shows: its paired computers
+        wait meanwhile, then the app serves the new place. ValueError before anything changed: why not."""
+        from .. import athletes
+        reason = self.why_not()
+        if reason:
+            raise ValueError(reason.replace("switch", "move it"))
+        move = athletes.FolderMove(athletes.Athletes(), name, folder)
+        shown = move.src == self.data.proj.root.resolve()
+        return self.ranges.jobs.start(f"Moving {name}'s folder", lambda log: self.moving(move, shown, log))
+
+    def moving(self, move, shown: bool, log) -> None:
+        """the job: the move; the app then on the new folder (a job asked for meanwhile, which holds the old
+        folder, isn't run)."""
+        from ..config import load_project
+        move.progress = log
+        if shown:
+            self.hub.server.stop()
+        try:
+            move.run()
+        finally:
+            if shown:
+                self.data.proj = load_project(move.dest if (move.dest / move.config).is_file() else move.src)
+                self.data._cache = {}
+                dropped = self.ranges.jobs.drop_queued()
+                if dropped:
+                    log(f"Not run (it was asked for during the move): {dropped}. Do it again.")
+                self.hub.moved()
 
     def remove(self, name: str) -> None:
         """take athlete `name` off this computer (Athletes.remove: their folder stays); not the one the app shows."""
@@ -2374,9 +2410,12 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
                     if a == "peer_serve":
                         hub.set_serve(bool(body.get("on")))
                         return self._json({"ok": True})
-                if body.get("action") in ("athlete_switch", "athlete_add", "athlete_remove"):   # the app name's menu
-                    if self.client_address[0] not in ("127.0.0.1", "::1"):
+                if body.get("action") in ("athlete_switch", "athlete_add", "athlete_remove", "athlete_move"):
+                    if self.client_address[0] not in ("127.0.0.1", "::1"):     # the app name's menu
                         return self._json({"error": "Switch athletes on the computer running goodpush."}, 400)
+                    if body["action"] == "athlete_move":
+                        started = switcher.move(str(body.get("name") or ""), str(body.get("folder") or ""))
+                        return self._json({"started": bool(started), "busy": not started})
                     if body["action"] == "athlete_remove":
                         switcher.remove(str(body.get("name") or ""))
                         return self._json({"athletes": switcher.status()})

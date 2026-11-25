@@ -2,7 +2,6 @@ import os
 import sys
 from pathlib import Path
 
-import platformdirs
 import pytest
 
 from goodpush.athletes import Athletes
@@ -30,21 +29,27 @@ def machine(tmp_path, monkeypatch):
 def test_folders_are_where_they_were_and_can_move(tmp_path, monkeypatch):
     """the default project's parent stays the place it had before platformdirs (installs keep their data); the
     machine folder is the platform's; both follow their environment variable."""
+    import subprocess
     old = {"darwin": Path.home() / "Library" / "Application Support",
            "win32": Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")}.get(
         sys.platform, Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share"))
-    assert Folders.data_dir() == old / "goodpush"
+    # asked in a fresh process: Windows keeps a process's first answer for its folders, and another test ran with
+    # USERPROFILE set to a temporary folder
+    ask = ("import platformdirs; from goodpush.folders import Folders; from goodpush.sync.incyclist import "
+           "default_folder; print(Folders.data_dir()); print(default_folder()); "
+           "print(platformdirs.user_config_dir('goodpush', appauthor=False, roaming=False))")
+    data, incyclist, config = subprocess.run([sys.executable, "-c", ask], capture_output=True, text=True,
+                                             check=True).stdout.splitlines()[:3]
+    assert Path(data) == old / "goodpush"
+    if sys.platform == "win32":                            # Incyclist where it was; the machine folder: Local
+        assert Path(incyclist) == Path(os.environ["APPDATA"]) / "Incyclist"
+        assert Path(config) == Path(os.environ["LOCALAPPDATA"]) / "goodpush"
     monkeypatch.setattr(Folders, "data_dir", classmethod(lambda cls: tmp_path))   # not this computer's own
     monkeypatch.delenv(Folders.HOME_ENV, raising=False)
     assert Folders.default_project() == tmp_path / "athlete"
     monkeypatch.setenv(Folders.HOME_ENV, str(tmp_path / "elsewhere"))
     assert Folders.default_project() == tmp_path / "elsewhere"
     assert Folders.machine() == Path(os.environ[Folders.CONFIG_ENV])          # conftest's: the tests' own
-    if sys.platform == "win32":                                                    # Incyclist: unchanged too
-        from goodpush.sync.incyclist import default_folder
-        assert default_folder() == Path(os.environ["APPDATA"]) / "Incyclist"
-        assert platformdirs.user_config_dir("goodpush", appauthor=False, roaming=False) == \
-            str(Path(os.environ["LOCALAPPDATA"]) / "goodpush")
 
 
 @pytest.mark.parametrize("shared", [False, True], ids=["apart", "macos"])
@@ -108,3 +113,16 @@ def test_a_goodpush_command_moves_them(machine, tmp_path, monkeypatch, capsys):
     main(["athlete", "list"])
     assert not legacy.exists() and "athlete_name" in capsys.readouterr().out
     assert Athletes().folder("athlete_name") == data / "athlete"
+
+
+def test_sign_ins_folder_is_renamed_credentials(machine, tmp_path, monkeypatch):
+    """athletes/<name> in the machine folder read like athlete folders: credentials/<name> since 2026-11-25."""
+    legacy, data = machine
+    (legacy / "athletes" / "athlete_name").mkdir(parents=True)
+    (legacy / "athletes" / "athlete_name" / "garmin_personal_api.json").write_text("{}")
+    config = tmp_path / "config"
+    monkeypatch.setenv(Folders.CONFIG_ENV, str(config))
+    Folders.migrate()
+    assert not (config / "athletes").exists()
+    assert Athletes(config).secrets("athlete_name") == config / "credentials" / "athlete_name"
+    assert (config / "credentials" / "athlete_name" / "garmin_personal_api.json").exists()

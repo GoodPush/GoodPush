@@ -1,7 +1,7 @@
 """Pull the latest data straight from Strava and Garmin Connect.
 
 Credentials and tokens live in this computer's machine folder (folders.Folders: outside the project folder, so
-the project can be shared or put in git without leaking them); each athlete's in its athletes/<name>/
+the project can be shared or put in git without leaking them); each athlete's in its credentials/<name>/
 (GOODPUSH_SECRETS, set by athletes.Athletes.use).
 """
 from __future__ import annotations

@@ -9,7 +9,7 @@
         <link rel="prefetch" href="../_static/logo-dark.svg" as="image">
 
     <link rel="shortcut icon" href="../_static/mark.svg"><!-- Generated with Sphinx 9.2.0 and Furo 2025.12.19 -->
-        <title>Several athletes, several computers - GoodPush 0.1.2.dev1+ga76191586.d20261125</title>
+        <title>Several athletes, several computers - GoodPush 0.1.2.dev3+g4d9f57061</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -168,7 +168,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">GoodPush 0.1.2.dev1+ga76191586.d20261125</div></a>
+      <a href="../index.html"><div class="brand">GoodPush 0.1.2.dev3+g4d9f57061</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -292,9 +292,16 @@ GoodPush logo (top left) to switch. From the command line, register them once an
 <span class="n">goodpush</span> <span class="o">--</span><span class="n">athlete</span> <span class="n">sam</span> <span class="n">app</span> <span class="o">--</span><span class="n">port</span> <span class="mi">8766</span>                     <span class="c1"># one app per athlete, each on its own port</span>
 </pre></div>
 </div>
-<p>Garmin / Strava / Google sign-ins are kept per athlete on each computer (<code class="docutils literal notranslate"><span class="pre">athletes/&lt;name&gt;/</span></code> in GoodPush’s own folder, see
+<p>Garmin / Strava / Google sign-ins are kept per athlete on each computer (<code class="docutils literal notranslate"><span class="pre">credentials/&lt;name&gt;/</span></code> in GoodPush’s own folder, see
 <a class="reference internal" href="privacy.html"><span class="std std-doc">where things are kept</span></a>), never in the
 folder, so a folder can be copied to another computer as it is.</p>
+<p><strong>To give an athlete another folder</strong> (another drive, say): in the app, click the logo, then 📁 next to them, and type
+the new place; or <code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">athlete</span> <span class="pre">move</span> <span class="pre">NAME</span> <span class="pre">FOLDER</span></code> (quit the app first if it shows them). The new folder has to be
+new or empty. On the same drive the folder is simply renamed; on another drive it’s copied with every file’s time
+kept, checked file by file, and only then is the old one deleted. If you moved the folder yourself, GoodPush shows it
+as “folder missing”: 📁 there (or the same command) points it to the new place. Paired computers keep syncing as
+before: they talk to the app, not to a folder, and the copy keeps the file times they compare. A computer that syncs
+with this one over ssh (<code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">peer</span> <span class="pre">add</span></code>) has the old folder written down: <code class="docutils literal notranslate"><span class="pre">peer</span> <span class="pre">add</span></code> it again there.</p>
 </section>
 <section id="one-athlete-on-several-computers">
 <h2>One athlete on several computers<a class="headerlink" href="#one-athlete-on-several-computers" title="Link to this heading">¶</a></h2>
@@ -405,7 +412,7 @@ Settings &gt; General &gt; Sharing &gt; Remote Login), and you connect to it onc
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=be9ad634"></script>
+</div><script src="../_static/documentation_options.js?v=aca67b90"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

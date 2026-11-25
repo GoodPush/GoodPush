@@ -13,9 +13,17 @@ goodpush athlete                                           # list them (* = the 
 goodpush --athlete sam app --port 8766                     # one app per athlete, each on its own port
 ```
 
-Garmin / Strava / Google sign-ins are kept per athlete on each computer (`athletes/<name>/` in GoodPush's own folder, see
+Garmin / Strava / Google sign-ins are kept per athlete on each computer (`credentials/<name>/` in GoodPush's own folder, see
 [where things are kept](privacy.md)), never in the
 folder, so a folder can be copied to another computer as it is.
+
+**To give an athlete another folder** (another drive, say): in the app, click the logo, then 📁 next to them, and type
+the new place; or `goodpush athlete move NAME FOLDER` (quit the app first if it shows them). The new folder has to be
+new or empty. On the same drive the folder is simply renamed; on another drive it's copied with every file's time
+kept, checked file by file, and only then is the old one deleted. If you moved the folder yourself, GoodPush shows it
+as "folder missing": 📁 there (or the same command) points it to the new place. Paired computers keep syncing as
+before: they talk to the app, not to a folder, and the copy keeps the file times they compare. A computer that syncs
+with this one over ssh (`goodpush peer add`) has the old folder written down: `peer add` it again there.
 
 ## One athlete on several computers
 

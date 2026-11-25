@@ -14,15 +14,27 @@ def _proj(args):
 
 
 def cmd_athlete(args):
-    """The athletes on this machine: list them, add one (their folder; a new folder gets a goodpush.toml) or remove
-    one (their sign-ins here go, their folder stays)."""
-    from .athletes import Athletes
+    """The athletes on this machine: list them, add one (their folder; a new folder gets a goodpush.toml), move one's
+    folder (athletes.FolderMove) or remove one (their sign-ins here go, their folder stays)."""
+    from .athletes import Athletes, FolderMove
     from .config import CONFIG_NAME, init_project
+    from .progress import Progress
     reg = Athletes()
+    if args.action == "move":
+        if not args.name or not args.folder:
+            sys.exit("usage: goodpush athlete move NAME FOLDER   (quit the app first if it shows NAME)")
+        try:
+            FolderMove(reg, args.name, args.folder, Progress.terminal()).run()
+        except ValueError as e:
+            sys.exit(str(e))
+        return
     if args.action == "add":
         if not args.name or not args.folder:
             sys.exit("usage: goodpush athlete add NAME FOLDER [--default] [--credentials]")
-        folder = reg.add(args.name, args.folder, args.default, credentials=False)
+        try:
+            folder = reg.add(args.name, args.folder, args.default, credentials=False)
+        except ValueError as e:
+            sys.exit(str(e))
         if not (folder / CONFIG_NAME).exists():
             init_project(folder)
         copied = reg.copy_credentials(args.name) if args.credentials else []
@@ -686,10 +698,12 @@ def main(argv=None):
                                       "you're in, else this machine's default athlete)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init", help="create goodpush.toml and folders").set_defaults(fn=cmd_init)
-    sp = sub.add_parser("athlete", help="the athletes on this machine: list, add NAME FOLDER, remove NAME")
-    sp.add_argument("action", nargs="?", choices=("list", "add", "remove"), default="list")
+    sp = sub.add_parser("athlete", help="the athletes on this machine: list, add NAME FOLDER, move NAME FOLDER, "
+                                        "remove NAME")
+    sp.add_argument("action", nargs="?", choices=("list", "add", "move", "remove"), default="list")
     sp.add_argument("name", nargs="?")
-    sp.add_argument("folder", nargs="?", help="their folder (created with a goodpush.toml if new)")
+    sp.add_argument("folder", nargs="?", help="their folder (add: created with a goodpush.toml if new; move: "
+                                              "a new or empty one, or where you moved it yourself)")
     sp.add_argument("--default", action="store_true", help="the athlete used when you don't say")
     sp.add_argument("--credentials", action="store_true",
                     help="copy this machine's current sign-ins (Garmin, Strava, ...) to this athlete")
