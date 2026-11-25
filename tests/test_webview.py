@@ -24,3 +24,6 @@ def test_the_app_opens_in_its_own_window(tmp_path):
     assert got["loaded"] and got["tabs"] >= 5 and got["storage"] == "1", got
     assert len(got["main_text"]) > 20, got                                       # the page drew (more than Loading…)
     assert (tmp_path / "machine" / "webview").is_dir()
+    # a download lands (here: next to the check's file, not in Downloads) and the window says so
+    assert got["saved"] and (tmp_path / got["download"]).is_file(), got
+    assert got["notice"] == f"Saved to Downloads: {got['download']}" and got["notice_shown"], got
