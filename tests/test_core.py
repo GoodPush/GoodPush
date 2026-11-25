@@ -1893,6 +1893,34 @@ def test_installed_app_uses_the_default_athlete_and_leaves_another_goodpush_alon
     assert app.choose() is True and app.port == 8766                       # opened twice: just shows the page
 
 
+def test_quit_in_the_app_stops_the_server_and_asks_while_a_ride_is_open(tmp_path: Path, monkeypatch):
+    """closing the browser leaves goodpush running: the top bar's Quit stops it, asking first when it's busy."""
+    import json
+    import threading
+    import urllib.request
+    from http.server import ThreadingHTTPServer
+    from types import SimpleNamespace
+    from goodpush.app.server import RideLauncher, make_handler
+    from goodpush.config import init_project, load_project
+    init_project(tmp_path)
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(load_project(tmp_path), None, lan=False))
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}/api/action"
+    post = lambda b: json.loads(urllib.request.urlopen(urllib.request.Request(  # noqa: E731
+        url, json.dumps(b).encode(), {"Content-Type": "application/json", "X-GoodPush": "1"})).read())
+    monkeypatch.setattr(RideLauncher, "proc", SimpleNamespace(poll=lambda: None))     # a ride window open
+    try:
+        assert "ride window" in post({"action": "quit"})["ask"]
+        assert th.is_alive()                                                # nothing stopped before the answer
+        assert post({"action": "quit", "force": True}) == {"ok": True}
+        th.join(5)
+        assert not th.is_alive()
+    finally:
+        srv.shutdown() if th.is_alive() else None
+        srv.server_close()
+
+
 def test_console_quick_edit_off_is_safe_anywhere():
     """off in a real Windows console; elsewhere (CI, pytest's captured streams, macOS) just False."""
     from goodpush.progress import Console

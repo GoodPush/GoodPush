@@ -68,6 +68,27 @@ class ThemeSwitch {
 }
 const themes = new ThemeSwitch();
 
+// the top bar's Quit (on the computer running goodpush): stops the app, tray icon included. A busy app asks first.
+// The tab stays with a note; started again, goodpush reloads it (JobWatch.stayAlive)
+class QuitButton {
+  async quit() {
+    let j = await api.query({action: "quit"});
+    if (j?.ask) j = confirm(j.ask) ? await api.query({action: "quit", force: true}) : null;
+    if (!j?.ok) return;
+    document.title = "goodpush stopped";
+    $("#main").innerHTML = `<div class="card"><h2>goodpush has stopped</h2>
+      <p>You can close this tab. Start goodpush again and this page comes back by itself.</p></div>`;
+    document.querySelectorAll("#tabs, .topright").forEach((e) => { e.hidden = true; });
+  }
+
+  wire() {
+    const b = $("#quitbtn");
+    b.hidden = !LOCAL;
+    b.addEventListener("click", () => this.quit());
+  }
+}
+const quitButton = new QuitButton();
+
 class Router {
   route() { const p = location.hash.replace("#", "").split("/")[0]; return PAGES[p] ? p : "today"; }
 
@@ -154,4 +175,5 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#themebtn").addEventListener("click", () => { const k = Object.keys(THEMES); themes.setTheme(k[(k.indexOf(themes.theme()) + 1) % k.length]); });
   $("#syncbtn").addEventListener("click", () => api.action({action: "peer_sync_all"}, "Syncing…"));
   athleteMenu.wire();
+  quitButton.wire();
 });

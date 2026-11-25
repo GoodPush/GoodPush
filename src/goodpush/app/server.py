@@ -2296,6 +2296,19 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
                     started = jobs.start("Opening the ride window", lambda log: RideLauncher.start(proj, key, log, saved),
                                          queue=True)
                     return self._json({"started": bool(started), "busy": not started, "queued": started == "queued"})
+                if body.get("action") == "quit":         # the top bar's Quit: stop goodpush on this computer
+                    if self.client_address[0] not in ("127.0.0.1", "::1"):
+                        return self._json({"error": "Quit goodpush on the computer running it."}, 400)
+                    busy = [f"“{jobs.status()['name']}” is still running and stops."] if jobs.status()["running"] else []
+                    if RideLauncher.proc is not None and RideLauncher.proc.poll() is None:
+                        busy.append("A ride window is open: its ride isn't added to your rides once you save it.")
+                    if full_run.running():
+                        busy.append("The model run goes on by itself, without its backtest.")
+                    if busy and not body.get("force"):
+                        return self._json({"ask": " ".join(busy) + "\n\nQuit goodpush anyway?"})
+                    self._json({"ok": True})
+                    threading.Thread(target=self.server.shutdown, name="goodpush quit", daemon=True).start()
+                    return None
                 if body.get("action") == "incyclist_settings" and self.client_address[0] not in ("127.0.0.1", "::1"):
                     return self._json({"error": "Change the Incyclist settings on the PC running goodpush."}, 400)
                 if body.get("action") in ("icu_key", "icu_forget"):     # the key only travels from this PC's browser
@@ -2440,7 +2453,8 @@ def serve(proj, port: int = 8765, lan: bool = False, open_browser: bool = True):
     if open_browser:                        # a tab still open from before reloads itself instead
         threading.Thread(target=handler.pages.open_unless_seen, args=(local,), daemon=True).start()
     try:
-        httpd.serve_forever()
+        httpd.serve_forever()                # until Ctrl+C or the app's Quit (httpd.shutdown)
+        print("stopped (Quit in the app)")
     except KeyboardInterrupt:
         print("\nstopped")
     finally:

@@ -44,6 +44,7 @@ class App:
         self.url = f"http://127.0.0.1:{port}/"
         self.httpd = None
         self.handler = None
+        self.stopped = threading.Event()           # the server ended (Quit)
 
     @staticmethod
     def build() -> str:
@@ -87,7 +88,19 @@ class App:
         from .app.server import make_handler
         self.handler = make_handler(self.project(), None, False, port=self.port)
         self.httpd = ThreadingHTTPServer(("127.0.0.1", self.port), self.handler)
-        threading.Thread(target=self.httpd.serve_forever, name="goodpush server", daemon=True).start()
+        threading.Thread(target=self.serve, name="goodpush server", daemon=True).start()
+
+    def serve(self) -> None:
+        """the server until it's shut down (the page's Quit, or the tray's), then the tray goes too."""
+        self.httpd.serve_forever()
+        self.stopped.set()
+        try:
+            from PySide6.QtCore import QMetaObject, Qt
+            from PySide6.QtWidgets import QApplication
+        except ImportError:
+            return
+        if QApplication.instance() is not None:          # its event loop runs on the main thread
+            QMetaObject.invokeMethod(QApplication.instance(), "quit", Qt.ConnectionType.QueuedConnection)
 
     def open(self) -> None:
         webbrowser.open(self.url)
@@ -102,8 +115,8 @@ class App:
             return
         self.start()
         self.handler.pages.open_unless_seen(self.url)   # a goodpush tab still open reloads itself instead
-        if not self.tray():                      # no tray (some Linux desktops): until the process is stopped
-            threading.Event().wait()
+        if not self.tray():                      # no tray (some Linux desktops): until Quit in the page
+            self.stopped.wait()
 
     def tray(self) -> bool:
         """the menu bar / system tray icon (Open goodpush, Quit) until you quit; False when there's none."""
