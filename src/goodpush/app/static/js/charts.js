@@ -26,11 +26,9 @@ export function el(tag, attrs, parent) {
 }
 // A zoomable x range: one per chart, or one per group of charts on the same axis (they zoom together); all
 // forgotten on a page change. extent = all the data, view = what's shown (null = all of it). EChart keeps its zoom
-// here (range buttons and redraws keep it); the power-curve heatmap, drawn by the page, also uses the wheel,
-// grab-and-drag and scrollbar here.
+// here, so range buttons, zoom buttons (zoomTo / zoomAt / pan) and redraws keep it.
 export class TimeWindow {
   static windows = {};           // key (chart id or group) -> window
-  static dragging = null;        // a window being dragged (its scrollbar thumb, or the chart grabbed)
 
   static of(key) { return (TimeWindow.windows[key] ||= new TimeWindow(key)); }
   static forget(...keys) { for (const k of keys) delete TimeWindow.windows[k]; }
@@ -40,8 +38,7 @@ export class TimeWindow {
     this.key = key;
     this.extent = null;          // [x0, x1] of all the data
     this.view = null;            // [x0, x1] shown, null = everything
-    this.opened = false;         // its opening window (a chart's spec.view) was applied: "Reset zoom" then shows all
-    this.redraw = null;          // for a chart the page draws itself (the heatmap)
+    this.opened = false;         // its opening window (a chart's spec.view) was applied: showing all then stays
   }
 
   shown() { return this.view || this.extent; }
@@ -76,60 +73,13 @@ export class TimeWindow {
     if (z) this.zoomTo([z[0] + frac * (z[1] - z[0]), z[1] + frac * (z[1] - z[0])]);
   }
 
-  changed() {                    // redraw what shows it (or let it redraw itself, e.g. the ride page with finer data)
+  changed() {                    // redraw its charts (or let the page redraw them: onView, e.g. the ride page with finer data)
     const mine = Object.entries(EChart.live).filter(([cid, c]) => (c.spec.group || cid) === this.key);
     const hook = mine.find(([, c]) => c.spec.onView)?.[1].spec;
-    if (this.redraw) this.redraw();
-    else if (hook) hook.onView(this.view);
+    if (hook) hook.onView(this.view);
     else mine.forEach(([cid, c]) => EChart.draw(cid, c.spec));
   }
 
-  wheel(ev, at) {                // Ctrl + wheel / pinch zooms around x = at, Shift + wheel / a sideways swipe pans
-    const pan = ev.shiftKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY);
-    if (ev.ctrlKey || ev.metaKey) this.zoomAt(at, ev.deltaY > 0 ? 1.5 : 1 / 1.5);
-    else if (pan && this.view) this.pan(0.15 * Math.sign(ev.shiftKey ? ev.deltaY : ev.deltaX));
-    else return;                 // a plain wheel keeps scrolling the page
-    ev.preventDefault();
-  }
-
-  // drag the window: `span` x units over `w` pixels (negative: grabbing the chart, it moves with the pointer).
-  // The drag is followed on the window, so it survives the chart redrawing underneath it.
-  grab(ev, span, w) {
-    const [a, b] = this.shown();
-    TimeWindow.dragging = {win: this, x: ev.clientX, a, b, span, w, d: 0, timer: 0};
-  }
-
-  static follow(ev) {            // redraw at most every 30 ms while dragging
-    const g = TimeWindow.dragging;
-    if (!g) return;
-    g.d = (ev.clientX - g.x) / g.w * g.span;
-    if (!g.timer) g.timer = setTimeout(() => { g.timer = 0; if (TimeWindow.dragging === g) g.win.zoomTo([g.a + g.d, g.b + g.d]); }, 30);
-  }
-
-  static drop() {                // let go: exactly where you dropped it
-    const g = TimeWindow.dragging;
-    TimeWindow.dragging = null;
-    if (g) { clearTimeout(g.timer); if (g.d) g.win.zoomTo([g.a + g.d, g.b + g.d]); }
-  }
-
-  // a scrollbar under chart `id`: the thumb is the window shown; drag it, or click the track to jump there
-  scrollbar(id, box, m, W) {
-    box.parentNode.querySelector(`.cscroll[data-for="${id}"]`)?.remove();
-    const e = this.extent, [a, b] = this.shown(), span = e[1] - e[0];
-    const track = document.createElement("div"), thumb = document.createElement("div");
-    track.className = "cscroll"; track.dataset.for = id;
-    track.style.marginLeft = m.l + "px"; track.style.width = (W - m.l - m.r) + "px";
-    thumb.className = "cthumb";
-    thumb.style.left = ((a - e[0]) / span * 100) + "%"; thumb.style.width = Math.max((b - a) / span * 100, 2) + "%";
-    track.appendChild(thumb);
-    box.after(track);
-    thumb.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.grab(ev, span, track.clientWidth); });
-    track.addEventListener("pointerdown", (ev) => {
-      if (ev.target !== track) return;
-      const at = e[0] + (ev.clientX - track.getBoundingClientRect().left) / track.clientWidth * span;
-      this.zoomTo([at - (b - a) / 2, at + (b - a) / 2]);
-    });
-  }
 }
 // A stretch selected on a chart group (spec.select = `sel` {range, onChange}): its numbers in an aside beside the
 // charts (.selgrid > aside.selpanel), with Zoom to it / Clear. The page works the numbers out; draw(head, body)
@@ -174,6 +124,8 @@ export class SelectionPanel {
 // onView(range | null): called once a zoom has settled (the ride page redraws with finer data); xStep(span, n): the
 // x tick step for the span shown, about n ticks (xTickFmt gets it too); spec.yScale {y0, y1, top, bottom, H}: the y
 // axis and plot as drawn, for a histogram beside the chart (the ride page's sideHist).
+// A heatmap: rows [labels, top down] and a series {kind: "heat", cells: [{value: [x, row], itemStyle: {color}}], x:
+// [first, last]}, coloured by the page; tipItem(x, row) is the hover's html for one cell.
 export class EChart {
   static live = {};              // id -> EChart drawn (disposed once its box has left the page)
   static PICK_MS = 300;          // a click waits this long in case it is the first of a double-click
@@ -217,7 +169,7 @@ export class EChart {
     this.pickT = 0;
     box.innerHTML = "";
     box.style.position = "relative";
-    this.chart = init(box, null, {renderer: "svg"});
+    this.chart = init(box, null, {renderer: spec.rows ? "canvas" : "svg"});   // a heatmap's thousands of cells: canvas
     this.selBox = box.appendChild(document.createElement("div"));
     this.selBox.className = "esel";
     this.selBox.hidden = true;
@@ -237,7 +189,7 @@ export class EChart {
     this.spec = spec;
     this.xv = (spec.x || []).map((v) => spec.xType === "date" ? new Date(v + "T12:00:00").getTime() : v);
     const allX = spec.series.flatMap((s) => this.xs(s)).filter((v) => v != null);
-    const has = spec.series.some((s) => (s.y || []).some((v) => v != null));
+    const has = spec.series.some((s) => s.cells?.length || (s.y || []).some((v) => v != null));
     if (!has) { this.chart.clear(); this.empty(true); return; }
     this.empty(false);
     this.zoomable = (spec.xType === "date" || spec.xType === "num") && allX.length > 1;
@@ -309,13 +261,17 @@ export class EChart {
           ...(step ? {customValues: this.stepValues(dom, step)} : {}),
           ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v, step)} : {}),
           ...(ticks ? {customValues: [...ticks.keys()], formatter: (v) => ticks.get(v) ?? ""} : {})}},
-      yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
-        splitNumber: H < 150 ? 3 : H < 260 ? 4 : 5,             // fewer y ticks on a short chart
-        axisLine: {show: false}, axisTick: {show: false}, splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
-      tooltip: {trigger: "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
+      yAxis: spec.rows
+        ? {type: "category", data: spec.rows, inverse: true, axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
+          axisLabel: {color: ink2, fontSize: 11}}
+        : {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
+          splitNumber: H < 150 ? 3 : H < 260 ? 4 : 5,             // fewer y ticks on a short chart
+          axisLine: {show: false}, axisTick: {show: false}, splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
+      tooltip: {trigger: spec.tipItem ? "item" : "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
         backgroundColor: css("--surface"), borderColor: css("--line"), borderWidth: 1, textStyle: {color: css("--ink"), fontSize: 12.5},
         extraCssText: "border-radius:9px;box-shadow:none;white-space:nowrap",
-        axisPointer: {type: "line", lineStyle: {color: css("--muted"), type: [3, 3]}}, formatter: (p) => this.tip(p)},
+        axisPointer: {type: "line", lineStyle: {color: css("--muted"), type: [3, 3]}},
+        formatter: spec.tipItem ? (p) => spec.tipItem(p.value[0], p.value[1]) : (p) => this.tip(p)},
       dataZoom: this.zoomable ? [
         {type: "inside", xAxisIndex: 0, zoomOnMouseWheel: "ctrl", moveOnMouseWheel: "shift", moveOnMouseMove: spec.select ? "shift" : true,
           startValue: view?.[0], endValue: view?.[1]},
@@ -374,6 +330,9 @@ export class EChart {
       const quiet = {type: "line", symbol: "none", silent: true, stack, stackStrategy: "all", tooltip: {show: false}, lineStyle: {opacity: 0}};
       return [{...quiet, data: lo}, {...quiet, data: gap, areaStyle: {color: col, opacity: s.opacity ?? 0.16}}];
     }
+    if (s.kind === "heat") {        // cells [{value: [x, row], itemStyle: {color}}]: each x .. x + 1 by its row (spec.rows)
+      return [{type: "custom", data: s.cells, clip: true, encode: {x: 0, y: 1}, renderItem: (_, api) => this.heatCell(api)}];
+    }
     if (s.kind === "bar") {
       return [{type: "bar", data: this.pairs(X, s.y), barMaxWidth: 24,
         itemStyle: {color: col, opacity: s.opacity ?? 0.85, borderRadius: 2}}];
@@ -394,6 +353,11 @@ export class EChart {
     return [{type: "line", data: this.pairs(X, s.y), connectNulls: !!s.connect, showSymbol: !!s.markers, symbolSize: 5,
       itemStyle: {color: col}, lineStyle: {color: col, width: s.width || 2, type: s.dash ? [5, 4] : "solid"},
       ...(s.area ? {areaStyle: {color: col, opacity: 0.14}} : {})}];
+  }
+
+  heatCell(api) {
+    const p = api.coord([api.value(0), api.value(1)]), [w, h] = api.size([1, 1]);
+    return {type: "rect", shape: {x: p[0], y: p[1] - h / 2, width: w + 0.5, height: h + 0.5}, style: {fill: api.visual("color")}};
   }
 
   errorBar(api, col) {
@@ -545,8 +509,6 @@ export class EChart {
 let rsT;
 export const tail = (arr, n) => (arr || []).slice(Math.max(0, (arr || []).length - n));
 
-window.addEventListener("pointermove", (ev) => TimeWindow.follow(ev));
-window.addEventListener("pointerup", () => TimeWindow.drop());
 // capture: ECharts' inside zoom stops the moves of every drag over a chart (also one it doesn't pan)
 window.addEventListener("pointermove", (ev) => EChart.selFollow(ev), true);
 window.addEventListener("pointerup", () => EChart.selDrop(), true);

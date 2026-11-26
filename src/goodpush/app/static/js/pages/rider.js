@@ -196,7 +196,7 @@ class RiderPage extends Page {
     return `<h2>Your power curve over time${hint("Durations 5 s to 2 h (down) over the weeks (across). Hover for the watts; grey: nothing that long ridden.\n• Observed: your best in the 6 weeks around that week\n• Predicted: the model's all-out curve, fresh\n• In these two, colour is per duration (5-95 % of the span shown)\n• Observed ÷ predicted: white = 100 %, blue below (most riding), red above = model too low\n" + ZOOM_HELP)}</h2>
   <div class="card"><div class="row"><div class="seg" id="curveView">${views.map(([v, n]) => `<button data-v="${v}" class="${this.curveView === v ? "on" : ""}">${n}</button>`).join("")}</div>
     <span class="spacer"></span><div class="seg" id="curveSpan">${[[365, "1 y"], [1095, "3 y"], [0, "All"]].map(([d, n]) => `<button data-d="${d}" class="${d === this.curveSpan ? "on" : ""}">${n}</button>`).join("")}</div></div>
-    <div id="curveHeat" style="position:relative;margin-top:8px"><canvas style="width:100%;height:300px;display:block"></canvas><div class="heatsel" style="position:absolute;display:none;top:0;bottom:22px;pointer-events:none;background:color-mix(in srgb, var(--accent) 18%, transparent);border:1px solid var(--accent)"></div><div class="heattip" style="position:absolute;display:none;pointer-events:none;background:var(--surface);color:var(--ink);box-shadow:0 2px 8px rgb(0 0 0 / .25);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;white-space:nowrap"></div></div>
+    <div id="curveHeat" class="chart" style="margin-top:8px"></div>
     <div class="row small muted" id="curveKey" style="margin-top:6px">${this.curveKey()}</div></div>`;
   }
 
@@ -207,87 +207,45 @@ class RiderPage extends Page {
       : `<span>lower</span>${bar(HEAT_RAMP)}<span>higher</span>`;
   }
 
-  // zoom like the other time charts (key "curve", in weeks): drag across = zoom to it, Ctrl + wheel / pinch zooms, zoomed
-  // in a drag or Shift + wheel moves sideways, double-click shows it all; the 1 y / 3 y / All buttons set the window
+  // weeks across (x = week index, each cell x .. x + 1), durations down; zoom like the other charts (TimeWindow "curveHeat",
+  // in weeks), and after each zoom the rows are coloured again for the weeks shown (onView); the 1 y / 3 y / All buttons
+  // set the window
   chartCurve() {
-    const C = this.curve.data, box = $("#curveHeat");
-    if (!C || !C.date || !box) return;
-    const cv = box.querySelector("canvas"), tip = box.querySelector(".heattip"), Z = C[this.curveView] || C.measured, K = "curve";
-    const fixed = this.curveView === "percent", key = $("#curveKey");
+    const C = this.curve.data;
+    if (!C || !C.date || !$("#curveHeat")) return;
+    const Z = C[this.curveView] || C.measured, fixed = this.curveView === "percent", key = $("#curveKey");
     if (key) key.innerHTML = this.curveKey();
     const n = C.date.length, start = C.measured.reduce((m, row) => Math.min(m, row.findIndex((v) => v != null) >= 0 ? row.findIndex((v) => v != null) : n), n);
-    const tw = TimeWindow.of(K);
-    tw.extent = [start, n];                                   // from your first data
-    tw.redraw = () => this.chartCurve();
-    if (!tw.opened) { tw.opened = true; if (this.curveSpan) tw.zoomTo([n - this.curveSpan / 7, n]); if (tw.view) return; }
-    const [a, b] = tw.shown(), i0 = Math.max(start, Math.floor(a)), i1 = Math.min(n, Math.ceil(b));
+    const tw = TimeWindow.of("curveHeat"), open = this.curveSpan ? [Math.max(start, n - this.curveSpan / 7), n] : null;
+    const [a, b] = tw.view || (!tw.opened && open) || [start, n], i0 = Math.max(start, Math.floor(a)), i1 = Math.min(n, Math.ceil(b));
+    const label = (t) => t < 60 ? t + " s" : t < 3600 ? t / 60 + " min" : t / 3600 + " h", none = css("--line");
+    const cells = [];
+    C.s.forEach((t, r) => {
+      const vals = Z[r].slice(i0, i1).filter((v) => v != null).sort((p, q) => p - q);
+      const lo = vals[Math.floor(0.05 * (vals.length - 1))], hi = vals[Math.ceil(0.95 * (vals.length - 1))];   // 5-95 % of the weeks shown: one odd week can't flatten the rest
+      for (let c = start; c < n; c++) {
+        const v = Z[r][c];
+        cells.push({value: [c, r], itemStyle: {color: v == null ? none : fixed ? percentColour(v) : heatColour(hi > lo ? (v - lo) / (hi - lo) : 1)}});
+      }
+    });
+    const cols = b - a, ticks = [];
+    let last = "";
+    for (let c = start; c < n; c++) {        // a label each year, half-year or month, by how much is shown
+      const d = C.date[c], y = d.slice(0, 4), m = d.slice(5, 7), k = cols > 160 ? y : cols > 40 ? y + (m >= "07") : y + m;
+      if (k !== last && c > start) ticks.push([c, cols > 160 ? y : niceDate(d, {month: "short", year: "2-digit"})]);
+      last = k;
+    }
+    const w = (v) => v == null ? "–" : fmt(v) + " W";
+    EChart.draw("curveHeat", {xType: "num", xDomain: [start, n], view: open, rows: C.s.map(label), xTicks: ticks,
+      onView: () => this.chartCurve(),
+      tipItem: (c, r) => `<div class="th">${label(C.s[r])}, week to ${esc(niceDate(C.date[c], {day: "numeric", month: "short", year: "numeric"}))}</div>`
+        + `<div>observed <b>${w(C.measured[r][c])}</b> · predicted <b>${w(C.model[r][c])}</b>${C.percent?.[r]?.[c] == null ? "" : ` · <b>${fmt(C.percent[r][c])} %</b>`}</div>`,
+      series: [{kind: "heat", x: [start, n], cells}]});
+    const [s0, s1] = tw.shown();
     document.querySelectorAll("#curveSpan button").forEach((y) => {
       const d = Number(y.dataset.d);
-      y.classList.toggle("on", d ? !!tw.view && Math.abs(b - a - d / 7) < 1 && b >= n - 0.5 : !tw.view);
+      y.classList.toggle("on", d ? !!tw.view && Math.abs(s1 - s0 - d / 7) < 1 && s1 >= n - 0.5 : !tw.view);
     });
-    const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight, L = 52, B = 22, PW = W - L;
-    cv.width = W * dpr; cv.height = H * dpr;
-    const g = cv.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
-    const cw = PW / (b - a), rh = (H - B) / C.s.length, ink = css("--muted"), xOf = (c) => L + (c - a) * cw;
-    const label = (t) => t < 60 ? t + " s" : t < 3600 ? t / 60 + " min" : t / 3600 + " h";
-    g.save(); g.beginPath(); g.rect(L, 0, PW, H - B); g.clip();
-    C.s.forEach((t, r) => {
-      const row = Z[r].slice(i0, i1), vals = row.filter((v) => v != null).sort((p, q) => p - q);
-      const lo = vals[Math.floor(0.05 * (vals.length - 1))], hi = vals[Math.ceil(0.95 * (vals.length - 1))];   // 5-95 % of the weeks shown: one odd week can't flatten the rest
-      const colour = (v) => fixed ? percentColour(v) : heatColour(hi > lo ? (v - lo) / (hi - lo) : 1);
-      row.forEach((v, c) => { g.fillStyle = v == null ? css("--line") : colour(v); g.fillRect(xOf(i0 + c), r * rh, Math.ceil(cw) + 0.5, Math.ceil(rh)); });
-    });
-    g.restore();
-    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "right"; g.textBaseline = "middle";
-    C.s.forEach((t, r) => g.fillText(label(t), L - 6, r * rh + rh / 2));
-    g.textAlign = "center"; g.textBaseline = "top";
-    const cols = b - a;
-    let last = "";
-    for (let c = i0; c < i1; c++) {        // a label each year, half-year or month, by how much is shown
-      const d = C.date[c], y = d.slice(0, 4), m = d.slice(5, 7), key = cols > 160 ? y : cols > 40 ? y + (m >= "07") : y + m;
-      if (key !== last && c > i0) {
-        g.fillStyle = ink; g.fillText(cols > 160 ? y : niceDate(d, {month: "short", year: "2-digit"}), xOf(c), H - B + 5); g.fillRect(xOf(c), H - B, 1, 4);
-      }
-      last = key;
-    }
-    const at = (e) => { const rect = cv.getBoundingClientRect(); return [e.clientX - rect.left, e.clientY - rect.top]; };
-    const colAt = (x) => a + (x - L) / cw, sel = box.querySelector(".heatsel");
-    let drag = null;
-    cv.style.cursor = tw.view ? "grab" : "crosshair";
-    cv.style.touchAction = "pan-y";
-    cv.onpointerdown = (e) => {
-      if (e.button > 0) return;
-      e.preventDefault();
-      if (tw.view && !e.shiftKey) {             // grab it: the window follows the pointer (the scrollbar's drag, reversed)
-        tw.grab(e, b - a, -PW); cv.style.cursor = "grabbing"; return;
-      }
-      drag = {x0: at(e)[0], x1: at(e)[0]};
-      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ }
-    };
-    cv.onpointermove = (e) => {
-      const [x, y] = at(e);
-      if (drag) {
-        drag.x1 = x;
-        tip.style.display = "none";
-        sel.style.display = "block"; sel.style.left = Math.min(drag.x0, x) + "px"; sel.style.width = Math.abs(x - drag.x0) + "px";
-        return;
-      }
-      const c = Math.floor(colAt(x)), r = Math.floor(y / rh);
-      if (x < L || c < i0 || c >= i1 || r < 0 || r >= C.s.length) { tip.style.display = "none"; return; }
-      const w = (v) => v == null ? "–" : fmt(v) + " W", pc = (C.percent || [])[r]?.[c];
-      tip.innerHTML = `<b>${label(C.s[r])}, week to ${esc(niceDate(C.date[c], {day: "numeric", month: "short", year: "numeric"}))}</b><br>observed ${w(C.measured[r][c])} · predicted ${w(C.model[r][c])}${pc == null ? "" : ` · ${fmt(pc)} %`}`;
-      tip.style.display = "block"; tip.style.left = Math.min(x + 12, W - 200) + "px"; tip.style.top = Math.max(y - 30, 0) + "px";
-    };
-    cv.onpointerup = () => {
-      const d = drag; drag = null;
-      sel.style.display = "none";
-      if (d && Math.abs(d.x1 - d.x0) >= 6) tw.zoomTo([colAt(Math.min(d.x0, d.x1)), colAt(Math.max(d.x0, d.x1))]);
-    };
-    cv.onpointerleave = () => { if (!drag) tip.style.display = "none"; };
-    cv.onwheel = (e) => tw.wheel(e, colAt(at(e)[0]));
-    cv.ondblclick = () => tw.zoomTo(null);
-    if (tw.view) tw.scrollbar("curveHeat", box, {l: L, r: 0}, W);
-    else box.parentNode.querySelector('.cscroll[data-for="curveHeat"]')?.remove();
   }
 
   html() {
@@ -387,7 +345,7 @@ class RiderPage extends Page {
     }, true);
     new Segmented("#curveView", (b) => { this.curveView = b.dataset.v; this.chartCurve(); });
     new Segmented("#curveSpan", (b) => {      // chartCurve marks the button that matches the window shown
-      this.curveSpan = Number(b.dataset.d); const n = this.curve.data?.date?.length; if (n) TimeWindow.of("curve").zoomTo(this.curveSpan ? [n - this.curveSpan / 7, n] : null);
+      this.curveSpan = Number(b.dataset.d); const n = this.curve.data?.date?.length; if (n) TimeWindow.of("curveHeat").zoomTo(this.curveSpan ? [n - this.curveSpan / 7, n] : null);
     });
     new Segmented("#powerRange", (b) => this.chartPower(Number(b.dataset.d)));
     new Segmented("#phyrange", (b) => this.chartPhysio(Number(b.dataset.d)));
