@@ -55,3 +55,14 @@ def test_notices_file_has_sources(tmp_path):
     notices.main(out)
     text = out.read_text(encoding="utf-8")
     assert f"    source: https://pypi.org/project/paramiko/{metadata.version('paramiko')}/#files" in text
+
+
+def test_notices_carry_the_front_end_libraries_copied_into_the_app(tmp_path):
+    """static/vendor (ECharts) isn't a pip package: its licence, NOTICE and d3's licence still go into the notices."""
+    out = tmp_path / "THIRD_PARTY_NOTICES.txt"
+    notices.main(out)
+    text = out.read_text(encoding="utf-8")
+    assert "Apache ECharts 6.1.0 (the app's charts; with code from d3): Apache-2.0, d3: BSD-3-Clause" in text
+    for f in ("echarts.LICENSE", "echarts.NOTICE", "echarts.LICENSE-d3"):
+        assert f"- {f}\n" in text
+    assert "The Apache Software Foundation" in text and "Mike Bostock" in text

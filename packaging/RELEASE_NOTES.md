@@ -1,22 +1,18 @@
-## goodpush 0.2.0
+## goodpush 0.3.0
 
 Analyse your cycling training and plan the next weeks, on your own computer, from your Strava / Garmin exports
 and the Garmin Personal API.
 
-### New in 0.2.0
+### New in 0.3.0
 
-- **Heart-rate recovery after each interval:** a ride's interval table shows how far your heart rate fell in the
-  minute after each interval, at what power, and how much of the way down to your steady heart rate for that
-  power it got ("Recovered").
-- **Workouts on your watch:** the guide and Settings walk you through sending your plan to intervals.icu, which
-  passes it on to Garmin, Wahoo, Zwift or MyWhoosh.
-- **Quit button** in the top bar: stop goodpush without hunting for the tray icon.
-- **Move an athlete's folder** from the app (📁 in the logo's menu) or with `goodpush athlete move`.
-- **Settings in your system's usual place** (Windows: `%LOCALAPPDATA%\goodpush`, Mac: `~/Library/Application
-  Support/goodpush`, Linux: `~/.config/goodpush`) instead of `~/.goodpush`. They move there by themselves the first
-  time 0.2.0 starts; an older goodpush on the same computer won't find them afterwards.
-- Smoother charts (no time shift or overshoot), a calendar lock you can always reach, and the page now picks up a
-  finished ride even when the browser paused the tab.
+- **New charts** on every page, drawn with Apache ECharts. They zoom the same way everywhere: Ctrl + wheel or a
+  pinch, or drag the ends of the bar under a chart. Once zoomed, drag the chart (or Shift + wheel) to move along;
+  double-click to see it all. Hovering one chart shows the same day on the charts that share its time axis.
+- **Changed:** dragging across a chart no longer zooms into that stretch; use Ctrl + wheel, a pinch or the bar.
+  Selecting a stretch on the load chart and on a ride works as before: drag across it, drag its edges to move them,
+  double-click to clear it.
+- **Settings are saved more carefully:** a few numbers could be written as text, and accented names now stay as you
+  typed them in `goodpush.toml`.
 
 ### What goodpush does
 

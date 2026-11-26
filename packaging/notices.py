@@ -29,6 +29,10 @@ ALSO = [("Qt (in PySide6 / shiboken6: the ride window and the tray icon)", "PySi
         ("libusb (in libusb-package: the ANT+ USB stick)", "libusb-package", "LGPL-2.1-or-later",
          "https://github.com/libusb/libusb/releases/tag/v{v3} (a separate library file in the app; it can be "
          "replaced)", ["LGPL-2.1.txt"])]
+# front-end libraries copied into the app (app/static/vendor), not pip packages: (what, licence, their files there)
+VENDOR = Path(__file__).resolve().parents[1] / "src" / "goodpush" / "app" / "static" / "vendor"
+VENDORED = [("Apache ECharts 6.1.0 (the app's charts; with code from d3)", "Apache-2.0, d3: BSD-3-Clause",
+             ["echarts.LICENSE", "echarts.NOTICE", "echarts.LICENSE-d3"])]
 
 
 def key(name: str) -> str:
@@ -109,6 +113,7 @@ def main(out: Path) -> None:
     head += [f"Python {sys.version.split()[0]}: PSF License"]
     for what, lic, src, _ in also:
         head += [f"{what}: {lic}", f"    source: {src}"]
+    head += [f"{what}: {lic}" for what, lic, _ in VENDORED]
     head += [""]
     body = []
     for d in dists:
@@ -120,6 +125,9 @@ def main(out: Path) -> None:
     for what, lic, src, files in also:
         body += ["=" * 79, f"{what}: {lic}", f"Source: {src}", "=" * 79]
         body += [(LICENSES / f).read_text(encoding="utf-8").strip() + "\n" for f in files]
+    for what, lic, files in VENDORED:
+        for f in files:
+            body += ["=" * 79, f"{what} - {f}", "=" * 79, (VENDOR / f).read_text(encoding="utf-8").strip(), ""]
     out.write_text("\n".join(head + body), encoding="utf-8")
     print(f"{out.name}: {len(dists)} packages")
 

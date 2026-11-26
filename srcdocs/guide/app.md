@@ -82,9 +82,11 @@ FTP, the model, the trainer, and **Rebuild everything** (after importing an expo
 
 ## Charts
 
-Every chart over time zooms: drag across it to zoom into that stretch, Ctrl + wheel (or pinch) to zoom; once
-zoomed, drag it (or Shift + wheel, a sideways swipe, the scrollbar) to move along. Double-click or **Reset zoom** to
-see it all. Charts that share a crosshair zoom together. On a ride, where a drag selects, Shift + drag moves.
+Every chart over time zooms: Ctrl + wheel (or pinch) zooms, and so does dragging the ends of the bar under the
+chart. Once zoomed, drag the chart (or Shift + wheel, or the bar) to move along. Double-click to see it all. Charts
+that share a time axis zoom together and show the same day when you hover one. On the load chart and on a ride, where
+a drag selects a stretch, Shift + drag moves along, double-click clears the stretch, and **All** / **Whole ride**
+shows it all.
 
 ## On your phone
 
