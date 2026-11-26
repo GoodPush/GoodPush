@@ -1,4 +1,5 @@
-// The SVG chart engine (drawChart, hover groups, selection) and TimeWindow (zoom / pan for every time axis).
+// The charts: EChart (a chart spec drawn by Apache ECharts), TimeWindow (zoom / pan for every time axis),
+// SelectionPanel, and small SVG helpers (el, niceTicks) for the app's own drawings (calendar, map, profiles).
 import {css, esc, fmt} from "./util.js";
 import {niceDate} from "./widgets.js";
 import {router} from "./main.js";
@@ -6,11 +7,8 @@ import {rideMap} from "./ride_map.js";
 import {calendarPage} from "./calendar/calendar.js";
 import {init} from "../vendor/echarts.esm.min.js";
 
-// charts (small SVG library, no CDN)
 const SVGNS = "http://www.w3.org/2000/svg";
 export const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-export const charts = {};   // id -> spec, redrawn on resize
-const hoverGroups = {};   // charts that share a crosshair
 export const selectGroups = {};  // charts that share a selection band
 export function niceTicks(lo, hi, n = 5) {
   if (lo === hi) { lo -= 1; hi += 1; }
@@ -20,25 +18,6 @@ export function niceTicks(lo, hi, n = 5) {
   for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(10));
   return t;
 }
-function dateTicks(t0, t1) {
-  const days = (t1 - t0) / 864e5, out = [];
-  const d = new Date(t0); d.setHours(12, 0, 0, 0);
-  if (days > 900) {            // years
-    for (let y = d.getFullYear() + 1; ; y++) { const t = new Date(y, 0, 1).getTime(); if (t > t1) break; out.push([t, String(y)]); }
-    const step = Math.ceil(out.length / 7);
-    return out.filter((_, i) => i % step === 0);
-  }
-  if (days > 75) {             // months
-    d.setDate(1); d.setMonth(d.getMonth() + 1);
-    const step = days > 400 ? 3 : days > 200 ? 2 : 1;
-    while (d.getTime() <= t1) { out.push([d.getTime(), MON[d.getMonth()] + (d.getMonth() === 0 ? " " + String(d.getFullYear()).slice(2) : "")]); d.setMonth(d.getMonth() + step); }
-    return out;
-  }
-  const step = days > 35 ? 14 : 7;   // weeks
-  d.setDate(d.getDate() + ((8 - d.getDay()) % 7));
-  while (d.getTime() <= t1) { out.push([d.getTime(), `${d.getDate()} ${MON[d.getMonth()]}`]); d.setDate(d.getDate() + step); }
-  return out;
-}
 export function el(tag, attrs, parent) {
   const e = document.createElementNS(SVGNS, tag);
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
@@ -46,9 +25,9 @@ export function el(tag, attrs, parent) {
   return e;
 }
 // A zoomable x range: one per chart, or one per group of charts on the same axis (they zoom together); all
-// forgotten on a page change. extent = all the data, view = what's shown (null = all of it). Every time chart
-// uses it - drawChart, the power-curve heatmap, the ride page (which fetches finer data for what it shows) - so
-// zoom, pan, wheel, grab-and-drag and the scrollbar behave the same everywhere.
+// forgotten on a page change. extent = all the data, view = what's shown (null = all of it). EChart keeps its zoom
+// here (range buttons and redraws keep it); the power-curve heatmap, drawn by the page, also uses the wheel,
+// grab-and-drag and scrollbar here.
 export class TimeWindow {
   static windows = {};           // key (chart id or group) -> window
   static dragging = null;        // a window being dragged (its scrollbar thumb, or the chart grabbed)
@@ -62,7 +41,7 @@ export class TimeWindow {
     this.extent = null;          // [x0, x1] of all the data
     this.view = null;            // [x0, x1] shown, null = everything
     this.opened = false;         // its opening window (a chart's spec.view) was applied: "Reset zoom" then shows all
-    this.redraw = null;          // for a chart drawn outside drawChart (the heatmap)
+    this.redraw = null;          // for a chart the page draws itself (the heatmap)
   }
 
   shown() { return this.view || this.extent; }
@@ -98,15 +77,11 @@ export class TimeWindow {
   }
 
   changed() {                    // redraw what shows it (or let it redraw itself, e.g. the ride page with finer data)
-    const mine = Object.entries(charts).filter(([cid, sp]) => (sp.group || cid) === this.key);
-    const ech = Object.entries(EChart.live).filter(([cid, c]) => (c.spec.group || cid) === this.key);
-    const hook = mine.find(([, sp]) => sp.onView)?.[1] || ech.find(([, c]) => c.spec.onView)?.[1].spec;
+    const mine = Object.entries(EChart.live).filter(([cid, c]) => (c.spec.group || cid) === this.key);
+    const hook = mine.find(([, c]) => c.spec.onView)?.[1].spec;
     if (this.redraw) this.redraw();
     else if (hook) hook.onView(this.view);
-    else {
-      mine.forEach(([cid, sp]) => { if (document.getElementById(cid)) drawChart(cid, sp); });
-      ech.forEach(([cid, c]) => EChart.draw(cid, c.spec));
-    }
+    else mine.forEach(([cid, c]) => EChart.draw(cid, c.spec));
   }
 
   wheel(ev, at) {                // Ctrl + wheel / pinch zooms around x = at, Shift + wheel / a sideways swipe pans
@@ -183,266 +158,14 @@ export class SelectionPanel {
     this.sel.onChange(null);
   }
 }
-// spec: {x:[...], xType:"date"|"log", series:[{y, kind:"line"|"bar"|"dots"|"band", y2 (band top), color, name, fmt, dash, x,
-//   range (false: doesn't set the y axis), opacity (bands), hollow / alpha [per point] / lo, hi [per point bar] (dots)}], yUnit, zero}
-// Date / number charts zoom (per chart, or together with their group): drag = zoom to that stretch,
-// Ctrl + wheel / pinch = zoom, Shift + wheel / sideways swipe = pan, double-click or "Reset zoom" = all.
-// Zoomed in, a drag pans and Shift + drag zooms; with select, drag selects and Shift + drag pans.
-// Every zoomable chart: a scrollbar once zoomed (a group: on the chart with scrollbar: true), and a strip at the
-// top for band labels and "Reset zoom". view [a, b]: the window it opens on (e.g. the last months of a long history).
-// optional: yExtra [arrays on x] (also set the y axis, not drawn: e.g. series not shown, so it holds still), xAxis false (no x labels: for charts stacked above one that has them), xDomain [a, b] (the full x range, when it isn't just the data's), onView(range | null) (called
-// instead of the redraw after each zoom), select {range, onChange(range)} (drag selects a stretch instead of zooming; double-click clears).
-export function drawChart(id, spec) {
-  const box = document.getElementById(id);
-  if (!box) return;
-  charts[id] = spec;
-  box.innerHTML = "";
-  box.style.position = "relative";
-  const W = box.clientWidth || 600, H = box.clientHeight || 260;
-  const labelled = (spec.bands || []).some((b) => b[3]);
-  const svg = el("svg", {width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img"}, box);
-  const xv = (spec.x || []).map((v) => spec.xType === "date" ? new Date(v + "T12:00:00").getTime() : v);
-  const xs = (s) => s.x ? s.x : xv;
-  const allX = spec.series.flatMap((s) => xs(s)).filter((v) => v != null);
-  const zoomable = (spec.xType === "date" || spec.xType === "num") && allX.length > 1;
-  const m = {l: 44, r: 10, t: zoomable || labelled ? 20 : 6, b: spec.xAxis === false ? 4 : 22};
-  const zkey = spec.group || id;
-  const tw = zoomable ? TimeWindow.of(zkey) : null;
-  if (tw && spec.view && !tw.view && !tw.opened) { tw.view = spec.view; tw.opened = true; }
-  if (tw) tw.widen(spec.xDomain || [Math.min(...allX), Math.max(...allX)]);
-  const win = tw?.view || spec.xDomain || null;   // fixed x window, if any
-  const seen = (x) => !win || (x != null && x >= win[0] && x <= win[1]);
-  let all = [];
-  for (const s of spec.series) {                // y range from what is visible (not from series with range: false)
-    if (s.range === false) continue;
-    const X = xs(s);
-    all = all.concat((s.y || []).filter((v, i) => v != null && seen(X[i])));
-    if (s.y2) all = all.concat(s.y2.filter((v, i) => v != null && seen(X[i])));
-  }
-  for (const y of spec.yExtra || []) all = all.concat(y.filter((v, i) => v != null && seen(xv[i])));
-  if (!all.length) { box.innerHTML = '<div class="muted small" style="padding:30px 0;text-align:center">No data yet</div>'; return; }
-  let y0 = Math.min(...all), y1 = Math.max(...all);
-  if (spec.zero || spec.series.some((s) => s.kind === "bar")) { y0 = Math.min(0, y0); y1 = Math.max(0, y1); }
-  const pad = (y1 - y0) * 0.06 || 1; if (!(spec.zero && y0 === 0)) y0 -= pad; y1 += pad;
-  const yt = niceTicks(y0, y1, H < 260 ? 4 : 5); y0 = Math.min(y0, yt[0]); y1 = Math.max(y1, yt[yt.length - 1]);
-  let x0 = Math.min(...allX), x1 = Math.max(...allX);
-  if (win) [x0, x1] = win;
-  const log = spec.xType === "log";
-  const fx = log ? (v) => m.l + (Math.log(v) - Math.log(x0)) / (Math.log(x1) - Math.log(x0) || 1) * (W - m.l - m.r)
-                 : (v) => m.l + (v - x0) / (x1 - x0 || 1) * (W - m.l - m.r);
-  const fy = (v) => m.t + (1 - (v - y0) / (y1 - y0)) * (H - m.t - m.b);
-  spec.yScale = {y0, y1, top: m.t, bottom: H - m.b, H};       // for a histogram beside it (sideHist)
-  const ink2 = css("--ink2"), grid = css("--grid");
-  // grid + y labels
-  for (const t of yt) {
-    el("line", {x1: m.l, x2: W - m.r, y1: fy(t), y2: fy(t), stroke: grid, "stroke-width": 1}, svg);
-    const tx = el("text", {x: m.l - 6, y: fy(t) + 4, "text-anchor": "end", "font-size": 11, fill: ink2}, svg);
-    tx.textContent = (spec.yFmt || ((v) => v))(t);
-  }
-  // x labels
-  const xt = spec.xType === "date" ? dateTicks(x0, x1)
-    : spec.xType === "num" && spec.xStep ? stepTicks(x0, x1, spec.xStep(x1 - x0, Math.max(4, Math.floor((W - m.l - m.r) / 90))), spec.xTickFmt)
-    : spec.xType === "num" ? niceTicks(x0, x1, Math.max(4, Math.floor((W - m.l - m.r) / 90))).map((t) => [t, (spec.xTickFmt || ((v) => v))(t)])
-    : (spec.xTicks || []);
-  for (const [t, lab] of spec.xAxis === false ? [] : xt) {
-    const x = fx(t); if (x < m.l - 1 || x > W - m.r + 1) continue;
-    const tx = el("text", {x, y: H - 6, "text-anchor": "middle", "font-size": 11, fill: ink2}, svg);
-    tx.textContent = lab;
-  }
-  // shaded x ranges: `shade` [from, to] (faint), `bands` [[from, to, colour, label?, opacity?, inside?], ...]
-  // (intervals; gains and breaks), at bandOpacity unless their own; a label sits at the band's top left when it
-  // fits, above the plot (inside: just inside its top, so two overlapping bands' labels don't overprint)
-  const bandOp = spec.bandOpacity ?? 0.22;
-  for (const [b0, b1, c, op, label, inside] of [...(spec.shade ? [[...spec.shade, css("--ink"), 0.06]] : []),
-    ...(spec.bands || []).map(([a, b, col, lab, o, ins]) => [a, b, col, o ?? bandOp, lab, ins])]) {
-    if (b1 < x0 || b0 > x1) continue;
-    const [a0, a1] = [b0, b1].map((v) => fx(Math.max(x0, Math.min(x1, v))));
-    el("rect", {x: Math.min(a0, a1), y: m.t, width: Math.max(Math.abs(a1 - a0), 2), height: H - m.t - m.b, fill: c, "fill-opacity": op}, svg);
-    if (label && Math.abs(a1 - a0) >= 7 * label.length) {
-      const t = el("text", {x: Math.min(a0, a1) + 4, y: inside ? m.t + 13 : m.t - 6, "font-size": 10.5, "font-weight": 600, fill: inside ? css("--ink") : c}, svg);
-      t.textContent = label;
-    }
-  }
-  if (spec.vline != null) el("line", {x1: fx(spec.vline), x2: fx(spec.vline), y1: m.t, y2: H - m.b, stroke: css("--ink2"), "stroke-width": 1, "stroke-dasharray": "2 3"}, svg);
-  if (spec.hline != null && spec.hline >= y0 && spec.hline <= y1) el("line", {x1: m.l, x2: W - m.r, y1: fy(spec.hline), y2: fy(spec.hline), stroke: css("--ink2"), "stroke-width": 1}, svg);
-  // marks (clipped to the plot area when the x window is fixed)
-  const n = win ? xv.filter(seen).length : xv.length, bw = Math.max(1, (W - m.l - m.r) / Math.max(n, 1) * 0.8);
-  let plot = svg;
-  if (win) {
-    el("rect", {x: m.l, y: 0, width: W - m.l - m.r, height: H}, el("clipPath", {id: `clip-${id}`}, el("defs", {}, svg)));
-    plot = el("g", {"clip-path": `url(#clip-${id})`}, svg);
-  }
-  for (const s of spec.series) {
-    const X = xs(s), col = s.color;
-    if (s.kind === "band") {
-      let d = "", seg = [];
-      const fyc = (v) => fy(Math.max(y0, Math.min(y1, v)));          // cut at the plot's edges
-      const flush = () => {
-        if (seg.length > 1) d += "M" + seg.map((i) => `${fx(X[i]).toFixed(1)},${fyc(s.y[i]).toFixed(1)}`).join("L") + "L" +
-          seg.slice().reverse().map((i) => `${fx(X[i]).toFixed(1)},${fyc(s.y2[i]).toFixed(1)}`).join("L") + "Z";
-        seg = [];
-      };
-      X.forEach((_, i) => { if (s.y[i] != null && s.y2[i] != null) seg.push(i); else flush(); }); flush();
-      el("path", {d, fill: col, "fill-opacity": s.opacity ?? 0.16, stroke: "none"}, plot);
-    } else if (s.kind === "bar") {
-      const z = fy(Math.max(0, y0));
-      X.forEach((xx, i) => {
-        const v = s.y[i]; if (v == null || !seen(xx)) return;
-        const yv = fy(v), h = Math.abs(yv - z);
-        el("rect", {x: fx(xx) - bw / 2, y: Math.min(yv, z), width: bw, height: Math.max(h, 0.5), fill: col, "fill-opacity": s.opacity ?? 0.85, rx: Math.min(2, bw / 3)}, plot);
-      });
-    } else if (s.kind === "dots") {             // r: a smaller dot for many points (no outline); hollow: rings;
-      X.forEach((xx, i) => { const v = s.y[i]; if (v == null || !seen(xx)) return;   // alpha: each point's opacity; lo / hi: a bar each
-        const op = s.alpha ? s.alpha[i] : s.r ? 0.75 : 1;
-        if (s.lo && s.lo[i] != null) el("line", {x1: fx(xx), x2: fx(xx), y1: fy(s.lo[i]), y2: fy(s.hi[i]), stroke: col, "stroke-width": 1.2, "stroke-opacity": op}, plot);
-        el("circle", s.hollow ? {cx: fx(xx), cy: fy(v), r: s.r || 4, fill: "none", stroke: col, "stroke-opacity": op, "stroke-width": 1.2}
-          : {cx: fx(xx), cy: fy(v), r: s.r || 4, fill: col, "fill-opacity": op, stroke: s.r ? "none" : css("--surface"), "stroke-width": 1.5}, plot); });
-    } else {
-      let d = "", pen = false;
-      X.forEach((xx, i) => { const v = s.y[i]; if (v == null) { if (!s.connect) pen = false; return; }
-        d += (pen ? "L" : "M") + fx(xx).toFixed(1) + "," + fy(v).toFixed(1); pen = true; });
-      if (s.area && d) {
-        const base = fy(Math.max(y0, 0)).toFixed(1);
-        const area = d.split("M").filter((q) => q.includes("L")).map((q) => {
-          const pts = q.split("L"), first = pts[0].split(",")[0], last = pts[pts.length - 1].split(",")[0];
-          return `M${first},${base}L${q}L${last},${base}Z`;
-        }).join("");
-        if (area) el("path", {d: area, fill: col, "fill-opacity": 0.14, stroke: "none"}, plot);
-      }
-      el("path", {d, fill: "none", stroke: col, "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round",
-        "stroke-dasharray": s.dash ? "5 4" : "none"}, plot);
-      if (s.markers && (W - m.l - m.r) / Math.max(X.length, 1) > 4) X.forEach((xx, i) => { const v = s.y[i]; if (v == null) return;
-        el("circle", {cx: fx(xx), cy: fy(v), r: 2.6, fill: col}, plot); });
-    }
-  }
-  // hover: crosshair + tooltip (mouse and touch)
-  const cross = el("line", {y1: m.t, y2: H - m.b, stroke: css("--muted"), "stroke-width": 1, "stroke-dasharray": "3 3", visibility: "hidden"}, svg);
-  const tip = document.createElement("div");
-  tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
-  const nearest = (X, px) => { let bi = -1, bd = 1e9; X.forEach((xx, i) => { if (xx == null) return; const d = Math.abs(fx(xx) - px); if (d < bd) { bd = d; bi = i; } }); return bi; };
-  const base = spec.series.find((q) => q.kind !== "band") || spec.series[0];
-  const showAt = (px) => {
-    if (px < m.l || px > W - m.r) { hide(); return; }
-    const i = nearest(xs(base), px); if (i < 0) return;
-    const xx = xs(base)[i], cx = fx(xx);
-    cross.setAttribute("x1", cx); cross.setAttribute("x2", cx); cross.setAttribute("visibility", "visible");
-    const head = spec.xType === "date" ? niceDate(spec.x[i], {weekday: "short", day: "numeric", month: "short", year: "numeric"}) : (spec.xLabel ? spec.xLabel(xx) : xx);
-    // planFrom: the last day of data; after it the day is "planned" (once, by the date) and the planned series
-    // (planned: true; legend "X, planned") show as plain "X" - before it they're left out (they only join on)
-    const ahead = spec.planFrom != null && xx > spec.planFrom;
-    const shown = spec.series.filter((q) => q.name && q.kind !== "band" && (!q.planned || ahead));
-    const lines = (spec.tipReverse ? shown.reverse() : shown).map((q) => {
-      const j = q.x ? nearest(q.x, cx) : i; const v = q.y[j];
-      const name = q.tipName || (q.planned ? q.name.replace(/, planned$/, "") : q.name);
-      return v == null ? "" : `<div><i style="background:${q.color}"></i>${esc(name)} <b>${esc((q.fmt || ((z) => fmt(z)))(v))}</b></div>`;
-    }).join("");
-    if (!lines) { hide(); return; }
-    tip.innerHTML = `<div class="th">${esc(head)}${ahead ? ' <span class="muted">· planned</span>' : ""}</div>${lines}${spec.tipNote ? spec.tipNote(xx) : ""}`;   // tipNote: extra html line
-    tip.hidden = false;
-    const tw = tip.offsetWidth;
-    tip.style.left = Math.min(Math.max(cx - tw / 2, 0), W - tw) + "px";
-    tip.style.top = "0px";
-    if (spec.onHover) spec.onHover(xx);
-  };
-  const toPx = (ev) => (ev.touches ? ev.touches[0].clientX : ev.clientX) - svg.getBoundingClientRect().left;
-  const xAtPx = (px) => log ? Math.exp(Math.log(x0) + (px - m.l) / (W - m.l - m.r) * (Math.log(x1) - Math.log(x0)))
-                            : x0 + (px - m.l) / (W - m.l - m.r) * (x1 - x0);
-  const move = (ev) => {
-    const px = toPx(ev);
-    if (spec.group) { const xval = xAtPx(px); (hoverGroups[spec.group] || []).forEach((h) => h.at(xval)); }
-    else showAt(px);
-  };
-  const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
-  if (spec.group) {
-    const g = (hoverGroups[spec.group] = (hoverGroups[spec.group] || []).filter((h) => h.id !== id && document.getElementById(h.id)));
-    g.push({id, at: (xval) => showAt(fx(xval)), hide});
-  }
-  const leave = () => { if (spec.group) (hoverGroups[spec.group] || []).forEach((h) => h.hide()); else hide(); if (spec.onHover) spec.onHover(null); };
-  svg.addEventListener("pointermove", move);
-  svg.addEventListener("pointerdown", move);
-  svg.addEventListener("pointerleave", leave);
-  svg.addEventListener("touchmove", move, {passive: true});
-  const geo = {m, W, H, x0, x1, fx, xAtPx, toPx};
-  if (tw && (spec.scrollbar || (!spec.group && tw.view))) tw.scrollbar(id, box, m, W);
-  else box.parentNode?.querySelector(`.cscroll[data-for="${id}"]`)?.remove();
-  if (spec.select) chartSelect(id, spec, svg, geo);
-  if (zoomable) {
-    if (!spec.select) chartSelect(id, {...spec, zoomDrag: true, select: {range: null, onChange: (r) => tw.zoomTo(r)}}, svg, geo);
-    svg.addEventListener("wheel", (ev) => tw.wheel(ev, xAtPx(toPx(ev))), {passive: false});
-    if (tw.view) {
-      const b = document.createElement("button");
-      b.className = "zoomreset"; b.textContent = "Reset zoom";
-      b.addEventListener("click", () => tw.zoomTo(null));
-      box.appendChild(b);
-    }
-  }
-}
-function stepTicks(x0, x1, step, label) {   // every whole `step` in [x0, x1]
-  const out = [];
-  for (let t = Math.ceil(x0 / step - 1e-9) * step; t <= x1 + 1e-9; t += step) out.push([t, label(t, step)]);
-  return out;
-}
-const DBLCLICK_MS = 300;   // a click waits this long in case it is the first of a double-click
-function chartSelect(id, spec, svg, {m, W, H, x0, x1, fx, xAtPx, toPx}) {
-  // drag across the chart to select; drag an edge of the selection to move it
-  const sel = spec.select, key = spec.group || id, EDGE = 6;
-  const band = el("rect", {y: m.t, height: H - m.t - m.b, fill: css("--accent"), "fill-opacity": 0.14,
-    stroke: css("--accent"), "stroke-width": 1, visibility: "hidden", "pointer-events": "none"}, svg);
-  const show = (r) => {
-    if (!r || r[1] < x0 || r[0] > x1) { band.setAttribute("visibility", "hidden"); return; }
-    const a = fx(Math.max(x0, r[0])), b = fx(Math.min(x1, r[1]));
-    band.setAttribute("x", a); band.setAttribute("width", Math.max(b - a, 1)); band.setAttribute("visibility", "visible");
-  };
-  show(sel.range);
-  selectGroups[key] = (selectGroups[key] || []).filter((h) => h.id !== id && document.getElementById(h.id));
-  selectGroups[key].push({id, show});
-  const edgeAt = (px) => sel.range && [0, 1].find((k) => Math.abs(fx(sel.range[k]) - px) <= EDGE);
-  let drag = null, pickT = 0;
-  svg.style.touchAction = "pan-y";
-  // zoomed in, a drag pans (Shift + drag zooms further); on a chart whose drag selects, Shift + drag pans
-  const pans = (ev) => !!TimeWindow.of(key).view && (spec.zoomDrag ? !ev.shiftKey : ev.shiftKey);
-  svg.addEventListener("pointerdown", (ev) => {
-    if (ev.button > 0) return;
-    clearTimeout(pickT);
-    if (ev.pointerType === "mouse") ev.preventDefault();   // no text selection flashing while dragging (macOS)
-    const px = toPx(ev), k = edgeAt(px);
-    if (k == null && pans(ev)) {   // grab the chart: the window follows the pointer (the scrollbar's drag, reversed)
-      const tw = TimeWindow.of(key);
-      tw.grab(ev, tw.view[1] - tw.view[0], -(W - m.l - m.r));
-      svg.style.cursor = "grabbing";
-      return;
-    }
-    drag = {fixed: k != null ? sel.range[1 - k] : xAtPx(px), px0: px, edge: k != null, moved: false};
-    try { svg.setPointerCapture(ev.pointerId); } catch (e) { /* synthetic pointer */ }
-  });
-  svg.addEventListener("pointermove", (ev) => {
-    const px = toPx(ev);
-    if (!drag) { svg.style.cursor = edgeAt(px) != null ? "ew-resize" : TimeWindow.dragging ? "grabbing" : pans(ev) ? "grab" : "crosshair"; return; }
-    if (!drag.edge && Math.abs(px - drag.px0) < 4) return;   // a click, not a drag
-    const v = Math.max(x0, Math.min(x1, xAtPx(px)));
-    sel.range = [Math.min(drag.fixed, v), Math.max(drag.fixed, v)];
-    drag.moved = true;
-    selectGroups[key].forEach((h) => h.show(sel.range));
-  });
-  const stop = () => { drag = null; };
-  svg.addEventListener("pointerup", () => {
-    if (drag?.moved) sel.onChange(sel.range);
-    else if (drag && !drag.edge && spec.onPick) {   // a click: what's at that x, unless it becomes a double-click
-      const at = drag.fixed;
-      pickT = setTimeout(() => spec.onPick(at), DBLCLICK_MS);
-    }
-    stop();
-  });
-  svg.addEventListener("pointercancel", stop);
-  svg.addEventListener("dblclick", () => {
-    clearTimeout(pickT);
-    sel.range = null;
-    selectGroups[key].forEach((h) => h.show(null));
-    sel.onChange(null);
-  });
-}
-// drawChart's spec drawn by Apache ECharts (static/vendor): pages move to EChart.draw one at a time, then drawChart
-// goes. ECharts does the axes, ticks, marks, crosshair, tooltip box, zoom / pan (dataZoom: Ctrl + wheel / pinch zooms,
+// EChart.draw(id, spec): spec {x:[...], xType:"date"|"num"|"log", series:[{y, kind:"line"|"bar"|"dots"|"band", y2 (band
+//   top), color, name, fmt, dash, x, width, area, markers, connect, range (false: doesn't set the y axis), opacity (bands),
+//   hollow / alpha [per point] / lo, hi [per point bar] (dots), planned, tipName}], zero, yFmt, xTickFmt, xLabel, xTicks}
+// optional: group (charts sharing zoom, crosshair and selection), scrollbar, view [a, b] (the window it opens on),
+// yExtra [arrays on x] (also set the y axis, not drawn), xAxis false (no x labels: for charts stacked above one that
+// has them), xDomain [a, b] (the full x range, when it isn't just the data's), vline / hline, shade, bands, planFrom,
+// tipNote(x), tipReverse, onPick(x), onHover(x), onView, select, xStep.
+// Drawn by Apache ECharts (static/vendor), which does the axes, ticks, marks, crosshair, tooltip box, zoom / pan (dataZoom: Ctrl + wheel / pinch zooms,
 // drag or Shift + wheel pans, the slider is the scrollbar, double-click shows all). A group's charts (spec.group) share
 // their x range, zoom and crosshair: passed on here (pointer, zoomed), not by ECharts' connect, which shows a pointer only
 // in a chart the mouse is in. The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and
@@ -829,7 +552,6 @@ window.addEventListener("pointermove", (ev) => EChart.selFollow(ev), true);
 window.addEventListener("pointerup", () => EChart.selDrop(), true);
 
 window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => {
-  Object.entries(charts).forEach(([id, sp]) => document.getElementById(id) && drawChart(id, sp));
   EChart.resizeAll();
   if (router.route() === "ride" && document.getElementById("rmap")) rideMap.drawMap();
   if (calendarPage.calResize) calendarPage.calResize();
