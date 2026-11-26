@@ -542,7 +542,7 @@ export class EChart {
         axisLabel: {show: spec.xAxis !== false, color: ink2, fontSize: 11, hideOverlap: true,
           ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v)} : {})}},
       yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
-        splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
+        axisLine: {show: false}, axisTick: {show: false}, splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
       tooltip: {trigger: "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
         backgroundColor: css("--surface"), borderColor: css("--line"), borderWidth: 1, textStyle: {color: css("--ink"), fontSize: 12.5},
         extraCssText: "border-radius:9px;box-shadow:none;white-space:nowrap",

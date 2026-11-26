@@ -5,7 +5,7 @@ import {css, esc, fmt} from "./util.js";
 import {niceDate} from "./widgets.js";
 import {router} from "./main.js";
 import {fitnessPage} from "./pages/fitness.js";
-import {drawChart} from "./charts.js";
+import {EChart} from "./charts.js";
 
 // training breaks: cause -> [label, colour] (models.dips CAUSES)
 export const CAUSE = {illness: ["Illness", "--s2"], overreaching: ["Overreaching / burnout", "--s7"], travel: ["Travel", "--s1"],
@@ -114,7 +114,7 @@ class DipsSection {
     const P = this.drops.data && this.drops.data.profile; if (!P || !P.causes) return;
     const lab = (o) => (o === 0 ? "day 0" : `${o > 0 ? "+" : ""}${o} d`);
     for (const m of ["rhr_d", "hrv_z", "sleep_d", "load7"]) {
-      drawChart("pf_" + m, {x: P.offset, xType: "num", xTickFmt: (v) => `${v > 0 ? "+" : ""}${v}`, xLabel: lab, vline: 0, hline: m === "load7" ? null : 0,
+      EChart.draw("pf_" + m, {x: P.offset, xType: "num", xTickFmt: (v) => `${v > 0 ? "+" : ""}${v}`, xLabel: lab, vline: 0, hline: m === "load7" ? null : 0,
         group: "pf", yFmt: (v) => v, series: Object.entries(P.causes).map(([c, v]) => ({kind: "line", y: m === "load7" ? v[m] : this.smoothC(v[m], 5), color: css((CAUSE[c] || ["", "--line"])[1]),
           name: (CAUSE[c] || [c])[0], fmt: (q) => fmt(q, m === "load7" ? 0 : 1), width: 2, connect: true}))});
     }
@@ -124,10 +124,10 @@ class DipsSection {
     const d = (this.drops.data.dips || []).find((x) => x.start === start); if (!d || !d.around) return;
     const off = this.drops.data.profile.offset, lab = (o) => (o === 0 ? "day 0" : `${o > 0 ? "+" : ""}${o} d`);
     const common = {x: off, xType: "num", xTickFmt: (v) => `${v > 0 ? "+" : ""}${v}`, xLabel: lab, vline: 0, shade: [0, d.days - 1], group: "dip_" + start};
-    drawChart("dr_" + start, {...common, hline: 0, series: [{kind: "line", y: d.around.rhr_d, color: css("--s2"), name: "Resting HR", fmt: (v) => (v > 0 ? "+" : "") + fmt(v, 1) + " bpm", markers: true}]});
-    drawChart("dh_" + start, {...common, hline: 0, series: [{kind: "line", y: d.around.hrv_z, color: css("--s1"), name: "HRV", fmt: (v) => fmt(v, 1) + " SD", markers: true}]});
-    drawChart("ds_" + start, {...common, hline: 0, series: [{kind: "bar", y: d.around.sleep_d, color: css("--s7"), name: "Sleep", fmt: (v) => (v > 0 ? "+" : "") + fmt(v, 1) + " h"}]});
-    drawChart("dl_" + start, {...common, zero: true, series: [{kind: "line", y: d.around.load7, color: css("--s3"), name: "7-day load", fmt: (v) => fmt(v) + " TSS", area: true}]});
+    EChart.draw("dr_" + start, {...common, hline: 0, series: [{kind: "line", y: d.around.rhr_d, color: css("--s2"), name: "Resting HR", fmt: (v) => (v > 0 ? "+" : "") + fmt(v, 1) + " bpm", markers: true}]});
+    EChart.draw("dh_" + start, {...common, hline: 0, series: [{kind: "line", y: d.around.hrv_z, color: css("--s1"), name: "HRV", fmt: (v) => fmt(v, 1) + " SD", markers: true}]});
+    EChart.draw("ds_" + start, {...common, hline: 0, series: [{kind: "bar", y: d.around.sleep_d, color: css("--s7"), name: "Sleep", fmt: (v) => (v > 0 ? "+" : "") + fmt(v, 1) + " h"}]});
+    EChart.draw("dl_" + start, {...common, zero: true, series: [{kind: "line", y: d.around.load7, color: css("--s3"), name: "7-day load", fmt: (v) => fmt(v) + " TSS", area: true}]});
   }
 }
 export const dips = new DipsSection();
