@@ -9,7 +9,7 @@ import {router} from "../main.js";
 import {dips} from "../dips.js";
 import {markers} from "../markers.js";
 import {ZOOM_HELP} from "./fitness.js";
-import {drawChart, tail} from "../charts.js";
+import {EChart, tail} from "../charts.js";
 
 const NIGHTS = 7;                 // the HRV chart's bold line: the mean of this many nights' medians
 
@@ -50,21 +50,21 @@ class RecoveryPage extends Page {
     const n = s.date.length, d = s.date, group = "recovery";   // all of it, opening on 6 months
     const view = n ? [new Date(d[Math.max(0, n - 182)] + "T12:00:00").getTime(), new Date(d[n - 1] + "T12:00:00").getTime()] : null;
     const q = (k) => tail(s[k] || [], n), ms = (v) => fmt(v) + " ms", c = css("--s1");
-    drawChart("hrv", {x: d, xType: "date", group, view, yFmt: (v) => v, series: [
+    EChart.draw("hrv", {x: d, xType: "date", group, view, yFmt: (v) => v, series: [
       {kind: "band", y: q("hrv_base_low"), y2: q("hrv_base_high"), color: css("--muted")},
       {kind: "band", y: q("hrv_q25"), y2: q("hrv_q75"), color: c},
       {kind: "line", y: this.trailingMean(q("hrv_median"), NIGHTS), color: c, width: 2.6, name: `${NIGHTS}-night mean`, fmt: ms},
       {kind: "line", y: q("hrv_median"), color: c, width: 1, name: "That night", fmt: ms}]});
-    drawChart("rhr", {x: d, xType: "date", group, view, yFmt: (v) => v, series: [
+    EChart.draw("rhr", {x: d, xType: "date", group, view, yFmt: (v) => v, series: [
       {kind: "line", y: tail(s.rhr_base, n), color: css("--muted"), dash: true, name: "Baseline", fmt: (v) => fmt(v) + " bpm"},
       {kind: "line", y: tail(s.rhr, n), color: css("--s2"), name: "Resting HR", markers: true, fmt: (v) => fmt(v) + " bpm"}]});
     const R = (S.alpha && S.alpha.rides) || [];
-    drawChart("sleep", {x: d, xType: "date", group, view, scrollbar: !R.length, zero: true, yFmt: (v) => v + " h", series: [
+    EChart.draw("sleep", {x: d, xType: "date", group, view, scrollbar: !R.length, zero: true, yFmt: (v) => v + " h", series: [
       {kind: "bar", y: tail(s.sleep_h, n), color: css("--s7"), opacity: 0.75, name: "Asleep", fmt: (v) => hhmm(v * 60)},
       {kind: "line", y: tail(s.sleep_h_base, n), color: css("--muted"), dash: true, name: "Usual", fmt: (v) => hhmm(v * 60)}]});
     if (R.length && $("#a1z")) {
       const a = R.map((r) => r.date);
-      drawChart("a1z", {x: a, xType: "date", group, view, scrollbar: true, yFmt: (v) => v, hline: 0, series: [
+      EChart.draw("a1z", {x: a, xType: "date", group, view, scrollbar: true, yFmt: (v) => v, hline: 0, series: [
         {kind: "band", y: a.map(() => -2), y2: a.map(() => 2), color: css("--muted")},
         {kind: "dots", y: R.map((r) => r.a1_warm_z), color: css("--s7"), name: "Warm-up alpha1", fmt: (v) => (v > 0 ? "+" : "") + fmt(v, 1) + " SD"}]});
     }

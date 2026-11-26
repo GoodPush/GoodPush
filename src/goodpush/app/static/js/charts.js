@@ -4,7 +4,7 @@ import {niceDate} from "./widgets.js";
 import {router} from "./main.js";
 import {rideMap} from "./ride_map.js";
 import {calendarPage} from "./calendar/calendar.js";
-import {connect, init} from "../vendor/echarts.esm.min.js";
+import {init} from "../vendor/echarts.esm.min.js";
 
 // charts (small SVG library, no CDN)
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -440,12 +440,15 @@ function chartSelect(id, spec, svg, {m, W, H, x0, x1, fx, xAtPx, toPx}) {
 }
 // drawChart's spec drawn by Apache ECharts (static/vendor): pages move to EChart.draw one at a time, then drawChart
 // goes. ECharts does the axes, ticks, marks, crosshair, tooltip box, zoom / pan (dataZoom: Ctrl + wheel / pinch zooms,
-// drag or Shift + wheel pans, the slider is the scrollbar, double-click shows all) and a group's shared crosshair and
-// zoom (connect). The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and redraws keep it.
+// drag or Shift + wheel pans, the slider is the scrollbar, double-click shows all). A group's charts (spec.group) share
+// their x range, zoom and crosshair: passed on here (pointer, zoomed), not by ECharts' connect, which shows a pointer only
+// in a chart the mouse is in. The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and
+// redraws keep it.
 // Not yet: select (stretch selection), range: false, xStep, xTicks, yScale (the ride page's side histogram).
 export class EChart {
   static live = {};              // id -> EChart drawn (disposed once its box has left the page)
   static PICK_MS = 300;          // a click waits this long in case it is the first of a double-click
+  static echo = false;           // a group's charts are following one of them (pointer, zoom): not passed on again
 
   static draw(id, spec) {
     const box = document.getElementById(id);
@@ -471,8 +474,8 @@ export class EChart {
     zr.on("mousedown", (e) => { this.downX = e.offsetX; });
     zr.on("click", (e) => this.click(e));
     zr.on("dblclick", () => this.showAll());
-    this.chart.on("updateAxisPointer", (e) => this.spec.onHover?.(e.axesInfo?.[0]?.value ?? null));
-    zr.on("globalout", () => this.spec.onHover?.(null));
+    this.chart.on("updateAxisPointer", (e) => this.pointer(e.axesInfo?.[0]?.value ?? null));
+    zr.on("globalout", () => this.pointer(null));
     this.update(spec);
   }
 
@@ -486,10 +489,32 @@ export class EChart {
     this.zoomable = (spec.xType === "date" || spec.xType === "num") && allX.length > 1;
     this.tw = this.zoomable ? TimeWindow.of(spec.group || this.box.id) : null;
     if (this.tw && spec.view && !this.tw.view && !this.tw.opened) { this.tw.view = spec.view; this.tw.opened = true; }
+    const before = this.tw?.extent?.join();
     if (this.tw) this.tw.widen(spec.xDomain || [Math.min(...allX), Math.max(...allX)]);
-    this.chart.group = spec.group || "";
-    if (spec.group) connect(spec.group);
     this.chart.setOption(this.option(allX), {notMerge: true});
+    if (spec.group && before !== this.tw?.extent?.join()) this.widenGroup();
+  }
+
+  // a group's charts share one x range (the TimeWindow's extent), so stacked charts line up: one drawn later with
+  // more data widens the ones already drawn
+  widenGroup() {
+    const [min, max] = this.tw.extent;
+    this.others().filter((c) => c.tw).forEach((c) => c.chart.setOption({xAxis: {min, max}}));
+  }
+
+  others() {                     // the other charts of this one's group
+    return this.spec.group ? Object.values(EChart.live).filter((c) => c !== this && c.spec.group === this.spec.group) : [];
+  }
+
+  // run fn on the group's other charts once: what they do in turn (their own events) isn't passed on again
+  toGroup(fn) {
+    if (EChart.echo) return;
+    EChart.echo = true;
+    try {
+      this.others().forEach(fn);
+    } finally {
+      EChart.echo = false;
+    }
   }
 
   empty(on) {
@@ -503,7 +528,7 @@ export class EChart {
     const spec = this.spec, ink2 = css("--ink2"), grid = css("--grid");
     const slider = this.zoomable && (spec.scrollbar || !spec.group);
     const labelled = (spec.bands || []).some((b) => b[3]);
-    const dom = spec.xDomain || [Math.min(...allX), Math.max(...allX)];
+    const dom = this.tw?.extent || spec.xDomain || [Math.min(...allX), Math.max(...allX)];
     const series = spec.series.flatMap((s) => this.series(s));
     (spec.yExtra || []).forEach((y) => series.push({type: "line", data: this.pairs(this.xv, y), symbol: "none", silent: true,
       lineStyle: {opacity: 0}, tooltip: {show: false}}));
@@ -622,6 +647,18 @@ export class EChart {
     const dz = this.chart.getOption().dataZoom?.[0], e = this.tw.extent;
     if (!dz || !e) return;
     this.tw.view = dz.startValue <= e[0] && dz.endValue >= e[1] ? null : [dz.startValue, dz.endValue];
+    this.toGroup((c) => c.chart.dispatchAction({type: "dataZoom", startValue: dz.startValue, endValue: dz.endValue}));
+  }
+
+  // the crosshair at x (null: gone): onHover(x), and the group's other charts show theirs and their tooltip there
+  pointer(x) {
+    this.spec.onHover?.(x);
+    this.toGroup((c) => c.showAt(x));
+  }
+
+  showAt(x) {
+    if (x == null) { this.chart.dispatchAction({type: "hideTip"}); return; }
+    this.chart.dispatchAction({type: "showTip", x: this.chart.convertToPixel({xAxisIndex: 0}, x), y: this.chart.getHeight() / 2});
   }
 
   // a plain wheel scrolls the page: ECharts' inside zoom takes every wheel over the plot (also with zoomOnMouseWheel
