@@ -158,8 +158,9 @@ class App:
 class AppWindow:
     """Spike (branch spike/qt-webengine): the page in a window of its own (Qt WebEngine) instead of a browser tab.
     A profile that keeps localStorage, links to other sites in your browser, downloads into Downloads with a notice
-    at the bottom (Show in folder). With GOODPUSH_WEBVIEW_CHECK=<file> it loads the page, downloads a file next to
-    <file>, writes what it found as JSON and quits (the build check)."""
+    at the bottom (Show in folder), reload with the platform's key (Cmd+R, F5) as in a browser. With
+    GOODPUSH_WEBVIEW_CHECK=<file> it loads the page, downloads a file next to <file>, writes what it found as JSON
+    and quits (the build check)."""
     ENV = "GOODPUSH_WEBVIEW"
     CHECK = "GOODPUSH_WEBVIEW_CHECK"
     CHECK_S = 60                                 # the check gives up after this long
@@ -190,6 +191,7 @@ class AppWindow:
         self.view.page().newWindowRequested.connect(self.elsewhere)
         self.view.setWindowTitle("goodpush")
         self.view.resize(1280, 860)
+        self.shortcuts()
         self.notice_bar()
         if os.environ.get(self.CHECK):
             self.view.loadFinished.connect(self.loaded)
@@ -197,6 +199,12 @@ class AppWindow:
         self.view.load(self.url)
         self.view.show()
         app.exec()
+
+    def shortcuts(self) -> None:
+        """what a browser tab would let you do: reload the page (Cmd+R on a Mac, F5 / Ctrl+R elsewhere)."""
+        from PySide6.QtGui import QKeySequence, QShortcut
+        for keys in QKeySequence.keyBindings(QKeySequence.StandardKey.Refresh):
+            QShortcut(keys, self.view, self.view.reload)
 
     def elsewhere(self, request) -> None:
         """a link to another site (target=_blank): in your browser."""
