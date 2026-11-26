@@ -1730,6 +1730,48 @@ def test_interval_log_rows_and_keys():
     assert list(IntervalLog.stale(np.array(["a", "b", "c", "d"]), knots, old)) == [1, 2, 3]   # old method, new ride
 
 
+def test_interval_heart_rate_recovery(monkeypatch):
+    from goodpush.io import streamstore
+    from goodpush.models.intervals import IntervalLog, RideIntervals
+    from goodpush.planning.intensity import IntensityMap
+    on = lambda s, w: np.full(s, float(w))                       # noqa: E731
+    p = np.concatenate([on(600, 150), *[np.r_[on(180, 250), on(60, 100)] for _ in range(4)], on(600, 120)])
+    hr = np.concatenate([on(600, 120), *[np.r_[on(180, 165), on(60, 130)] for _ in range(4)], on(600, 115)])
+    rows = IntervalLog.rows(RideIntervals(p, IntensityMap.ftp_knots(230.0), hr))
+    assert [(r["hr_end"], r["hrr_60"], r["rec_watts"]) for r in rows] == [(165, 35, 100)] * 4
+    # the next interval sooner than a minute, a missing reading, no heart rate at all
+    rec = RideIntervals.recovery(p, np.where(np.arange(p.size) == 1158, np.nan, hr), [600, 840, 1060], [780, 1020, 1100])
+    assert np.isnan(rec["hrr_60"]).tolist() == [False, True, True] and np.isnan(rec["rec_watts"]).tolist() == [False, True, False]
+    assert np.isnan(RideIntervals.recovery(p, None, [600], [780])["hrr_60"]).all()
+    # a table stored before: filled from the streams, intervals as they were
+    old = pd.DataFrame({"id": ["a"] * 4 + ["b"], "start": [600, 840, 1080, 1320, -1], "seconds": [180] * 4 + [0]})
+    monkeypatch.setattr(streamstore, "read_many", lambda pr, ids, g, ch: {"a": {"power": p, "heart_rate": hr}})
+    t = IntervalLog.add_recovery(None, old)
+    assert t["hrr_60"].tolist()[:4] == [35] * 4 and np.isnan(t["hrr_60"].iloc[4])
+
+
+def test_interval_recovery_share():
+    from goodpush.models.intervals import IntervalLog, RideIntervals
+    from goodpush.planning.intensity import IntensityMap
+    # steady HR at 100 W: 50 + (170 - 50) x 100 / 250 = 98; from 165, 33.5 bpm is half the way; 5 bpm above it: none
+    s = RideIntervals.share([165.0, 103.0, np.nan], [33.5, 2.0, 30.0], [100.0, 100.0, 100.0], 250.0, 50.0, 170.0)
+    assert s[0] == 0.5 and np.isnan(s[1:]).all()
+    daily = pd.DataFrame({"rhr_base": [50.0, np.nan, 48.0]}, index=pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-05"]))
+    assert IntervalLog.rest_hr(daily, ["2025-12-30", "2026-01-03", "2026-01-03", "2026-01-06"]).tolist() == [50, 50, 50, 48]
+    assert np.isnan(IntervalLog.rest_hr(None, ["2026-01-01"])).all()
+    t = pd.DataFrame({"date": pd.to_datetime(["2026-01-01"]), "watts": [300.0], "pct_cp": [120.0], "hr_end": [165.0],
+                      "hrr_60": [33.5], "rec_watts": [100.0]})
+    assert IntervalLog.with_share(t, daily, 170.0)["hrr_share"].tolist() == [0.5]
+    # on the ride page, given resting HR and LTHR
+    on = lambda s, w: np.full(s, float(w))                       # noqa: E731
+    p = np.concatenate([on(600, 150), *[np.r_[on(180, 250), on(60, 100)] for _ in range(4)], on(600, 120)])
+    hr = np.concatenate([on(600, 120), *[np.r_[on(180, 165), on(60, 130)] for _ in range(4)], on(600, 115)])
+    r = RideIntervals(p, IntensityMap.ftp_knots(230.0), hr)
+    want = round(35 / (165 - (50 + 120 * 100 / r.cp)), 3)
+    assert [x["hrr_share"] for x in r.summary(50.0, 170.0)["intervals"]] == [want] * 4
+    assert "hrr_share" not in r.summary()["intervals"][0]
+
+
 def fit_with_file_id(kind: int, created_unix: int) -> bytes:
     """a minimal FIT file: just its file_id (type, time_created)."""
     from goodpush.io import fit

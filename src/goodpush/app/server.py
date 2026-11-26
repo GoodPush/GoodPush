@@ -615,10 +615,13 @@ def activity_detail(proj, acts: pd.DataFrame, aid: str, res: dict) -> dict:
                                       stamina=RideStamina.for_day(proj.processed, x.get("date"), p))
         run = np.flatnonzero(np.diff(np.r_[0, stopped.astype(int), 0])).reshape(-1, 2)
         out["stops"] = [[int(a), int(b - a)] for a, b in run]      # [ride second, seconds]: the charts leave them out
-        from ..models.intervals import RideIntervals
+        from ..io import store
+        from ..models.intervals import IntervalLog, RideIntervals
         from ..planning.intensity import IntensityMap
         knots, w_prime = IntensityMap.for_day(proj.processed, x.get("date"), ftp)   # your LT1 / CP / MAP that day
-        out["intervals"] = {**RideIntervals(p, knots, z["heart_rate"], w_prime).summary(),         # steps, efforts, sets
+        rhr = float(IntervalLog.rest_hr(store.load(proj.processed, "daily"), [x.get("date")])[0]) if lthr else None
+        out["intervals"] = {**RideIntervals(p, knots, z["heart_rate"], w_prime).summary(  # steps, efforts, sets
+                                rhr if rhr == rhr else None, lthr),
                             "anchors": {k: round(float(v)) for k, v in zip(("lt1", "cp", "map"), knots[1:4])},
                             "w_prime": round(w_prime) if w_prime else None}
         out["lthr"] = lthr
