@@ -7,7 +7,7 @@ import {$, css, esc, fmt} from "../util.js";
 import {hint, niceDate, tile} from "../widgets.js";
 import {router} from "../main.js";
 import {DOMAIN, DOMAIN_ORDER, riderPage} from "./rider.js";
-import {drawChart, TimeWindow} from "../charts.js";
+import {EChart, TimeWindow} from "../charts.js";
 import {GUIDE} from "./help.js";
 
 const MODEL_Q = {cp: ["CP", "W", "--s1"], map: ["MAP (5 min)", "W", "--s2"], ftp: ["FTP (1-hour power)", "W", "--s4"], lt1: ["LT1", "W", "--s3"],
@@ -187,8 +187,8 @@ class ModelPage extends Page {
     const G = this.model.data?.sampling;
     if (!G || !$("#mdTraceLp")) return;
     const tr = G.trace, chainSeries = (k, f) => tr[k].map((y, c) => ({kind: "line", y, color: css(CHAIN_COL[c % 5]), name: `Chain ${c + 1}`, fmt: f, width: 1.2}));
-    drawChart("mdTraceLp", {x: tr.draw, xType: "num", xLabel: (v) => `draw ${v}`, xAxis: false, yFmt: (v) => fmt(v), series: chainSeries("log_post", (v) => fmt(v, 1))});
-    drawChart("mdTraceCp", {x: tr.draw, xType: "num", xLabel: (v) => `draw ${v}`, yFmt: (v) => v + " W", series: chainSeries("cp", (v) => fmt(v) + " W")});
+    EChart.draw("mdTraceLp", {x: tr.draw, xType: "num", xLabel: (v) => `draw ${v}`, xAxis: false, yFmt: (v) => fmt(v), series: chainSeries("log_post", (v) => fmt(v, 1))});
+    EChart.draw("mdTraceCp", {x: tr.draw, xType: "num", xLabel: (v) => `draw ${v}`, yFmt: (v) => v + " W", series: chainSeries("cp", (v) => fmt(v) + " W")});
   }
 
   // how many parameters have how many effective draws, in plain bands (from the log10 histogram's bin centres)
@@ -238,7 +238,7 @@ class ModelPage extends Page {
     const x = d.concat(fut.map(([q]) => q)), ms = (q) => new Date(q + "T12:00:00").getTime(), f1 = (v) => fmt(v, 1);
     const ahead = d.map((_, i) => (i === d.length - 1 ? P.fatigue[i] : null)).concat(fut.map(([, i]) => F.fatigue[i]));
     TimeWindow.of("mdFatigue").showLast(365, ms(last), ms(x[x.length - 1]), 365);
-    drawChart("mdFatigue", {x, xType: "date", yFmt: f1, scrollbar: true, vline: fut.length ? ms(last) : null, planFrom: ms(last), hline: P.fatigue_cap, series: [
+    EChart.draw("mdFatigue", {x, xType: "date", yFmt: f1, scrollbar: true, vline: fut.length ? ms(last) : null, planFrom: ms(last), hline: P.fatigue_cap, series: [
       {kind: "line", y: P.fatigue.concat(fut.map(() => null)), color: css("--s2"), name: "Fatigue", fmt: f1},
       {kind: "line", y: ahead, color: css("--s2"), dash: true, name: "Fatigue, planned", planned: true, fmt: f1}]});
   }
@@ -350,7 +350,7 @@ class ModelPage extends Page {
       .filter((i) => this.showEasy.value || E.kind[i] !== "easy");
     if (!pick.length) return;
     const lo = Math.min(...pick.map((i) => E.predicted[i])), hi = Math.max(...pick.map((i) => E.predicted[i]));
-    drawChart("mdEffort", {x: [lo, hi], xType: "num", xLabel: (v) => `model ${fmt(v)} W`, xTickFmt: (v) => fmt(v) + " W", yFmt: (v) => v + " W",
+    EChart.draw("mdEffort", {x: [lo, hi], xType: "num", xLabel: (v) => `model ${fmt(v)} W`, xTickFmt: (v) => fmt(v) + " W", yFmt: (v) => v + " W",
       series: [...Object.entries(KIND_COL).map(([k, [n, c]]) => {    // the dots first: hover follows the first series
           const ix = pick.filter((i) => E.kind[i] === k);
           return {kind: "dots", r: k === "easy" ? 2 : 3, x: ix.map((i) => E.predicted[i]), y: ix.map((i) => E.observed[i]), color: css(c), name: n, fmt: (v) => fmt(v) + " W"};
@@ -368,7 +368,7 @@ class ModelPage extends Page {
     const D = R.model, ms = (v) => new Date(v + "T12:00:00").getTime();
     $("#mdReadLegend").innerHTML = `<span><i style="background:var(${qCol})"></i>Model ${qName}</span>` +
       names.map((n, j) => `<span><i class="dot" style="background:var(${cols[j % cols.length]})"></i>${esc(n.replace(/_/g, " "))}</span>`).join("");
-    drawChart("mdRead", {x: D.date, xType: "date", yFmt: (v) => v + " W", series: [
+    EChart.draw("mdRead", {x: D.date, xType: "date", yFmt: (v) => v + " W", series: [
       {kind: "line", y: D[q] || [], color: css(qCol), name: `Model ${qName}`, fmt: (v) => fmt(v) + " W", width: 1.6},
       ...names.map((n, j) => { const ix = R.source.map((s, i) => s === n ? i : -1).filter((i) => i >= 0);
         return {kind: "dots", r: 3, x: ix.map((i) => ms(R.date[i])), y: ix.map((i) => R.observed[i]), color: css(cols[j % cols.length]), name: n.replace(/_/g, " "), fmt: (v) => fmt(v) + " W"}; })]});

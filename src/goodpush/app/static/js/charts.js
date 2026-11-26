@@ -444,7 +444,7 @@ function chartSelect(id, spec, svg, {m, W, H, x0, x1, fx, xAtPx, toPx}) {
 // their x range, zoom and crosshair: passed on here (pointer, zoomed), not by ECharts' connect, which shows a pointer only
 // in a chart the mouse is in. The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and
 // redraws keep it.
-// Not yet: select (stretch selection), range: false, xStep, xTicks, yScale (the ride page's side histogram).
+// Not yet: select (stretch selection), xStep, xTicks, yScale (the ride page's side histogram).
 export class EChart {
   static live = {};              // id -> EChart drawn (disposed once its box has left the page)
   static PICK_MS = 300;          // a click waits this long in case it is the first of a double-click
@@ -526,7 +526,7 @@ export class EChart {
 
   option(allX) {
     const spec = this.spec, ink2 = css("--ink2"), grid = css("--grid");
-    const slider = this.zoomable && (spec.scrollbar || !spec.group);
+    const slider = this.hasSlider();
     const labelled = (spec.bands || []).some((b) => b[3]);
     const dom = this.tw?.extent || spec.xDomain || [Math.min(...allX), Math.max(...allX)];
     const series = spec.series.flatMap((s) => this.series(s));
@@ -541,7 +541,7 @@ export class EChart {
         axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
         axisLabel: {show: spec.xAxis !== false, color: ink2, fontSize: 11, hideOverlap: true,
           ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v)} : {})}},
-      yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")),
+      yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
         splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
       tooltip: {trigger: "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
         backgroundColor: css("--surface"), borderColor: css("--line"), borderWidth: 1, textStyle: {color: css("--ink"), fontSize: 12.5},
@@ -557,7 +557,35 @@ export class EChart {
     };
   }
 
+  // the scrollbar (slider): always with spec.scrollbar, else on a chart of its own once it is zoomed
+  hasSlider() {
+    return this.zoomable && (!!this.spec.scrollbar || (!this.spec.group && !!this.tw?.view));
+  }
+
   pairs(X, y) { return X.map((x, i) => [x, y?.[i] ?? null]); }
+
+  // {min, max} of the y axis when a series has range: false (ECharts can't leave one out): from the other series
+  // and yExtra in the x window shown, padded and rounded out to whole ticks as drawChart did; {} = ECharts' own
+  yRange(view) {
+    const spec = this.spec;
+    if (!spec.series.some((s) => s.range === false)) return {};
+    const seen = (x) => !view || (x != null && x >= view[0] && x <= view[1]);
+    const ys = [];
+    for (const s of spec.series) {
+      if (s.range === false) continue;
+      const X = this.xs(s);
+      for (const y of [s.y, s.y2]) (y || []).forEach((v, i) => { if (v != null && seen(X[i])) ys.push(v); });
+    }
+    (spec.yExtra || []).forEach((y) => y.forEach((v, i) => { if (v != null && seen(this.xv[i])) ys.push(v); }));
+    if (!ys.length) return {};
+    let y0 = Math.min(...ys), y1 = Math.max(...ys);
+    if (spec.zero || spec.series.some((s) => s.kind === "bar")) { y0 = Math.min(0, y0); y1 = Math.max(0, y1); }
+    const pad = (y1 - y0) * 0.06 || 1;
+    if (!(spec.zero && y0 === 0)) y0 -= pad;
+    y1 += pad;
+    const t = niceTicks(y0, y1, 5), step = t.length > 1 ? t[1] - t[0] : 1;
+    return {min: Math.floor(y0 / step) * step, max: Math.ceil(y1 / step) * step};   // whole ticks at both ends
+  }
 
   // one spec series as ECharts series: line (area, dash, markers, connect), bar, dots (hollow, alpha, lo / hi bars),
   // band (y .. y2 filled: a transparent lower line with the gap stacked on it)
@@ -646,7 +674,11 @@ export class EChart {
     if (!this.tw) return;
     const dz = this.chart.getOption().dataZoom?.[0], e = this.tw.extent;
     if (!dz || !e) return;
+    const had = this.hasSlider();
     this.tw.view = dz.startValue <= e[0] && dz.endValue >= e[1] ? null : [dz.startValue, dz.endValue];
+    if (had !== this.hasSlider()) { setTimeout(() => this.update(this.spec)); return; }   // the scrollbar comes or goes
+    const y = this.yRange(this.tw.view);
+    if (y.min != null) this.chart.setOption({yAxis: y});
     this.toGroup((c) => c.chart.dispatchAction({type: "dataZoom", startValue: dz.startValue, endValue: dz.endValue}));
   }
 
