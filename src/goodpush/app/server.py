@@ -76,12 +76,23 @@ class Data:
         self.proj = proj
         self._cache = {}
 
+    TABLES = ("daily.parquet", "daily.csv.gz", "activities.parquet", "activities.csv.gz")
+
+    def stamp(self) -> tuple:
+        """the tables' file times: they change on every analysis (rides, days)"""
+        return tuple(_mtime(self.proj.processed / f) for f in self.TABLES)
+
+    def versions(self, stamp: tuple | None = None) -> dict:
+        """what a page compares to know its data is old (a ride added, a re-plan): cheap, so /api/job sends it
+        on every poll and a page that missed a job's end (a window macOS throttled, ...) still catches up.
+        `stamp`: the tables a state was made from (not newer ones written since)."""
+        return {"plan_version": _mtime(self.proj.processed / "plan_state.json"),   # changes on every re-plan
+                "data_version": max(stamp or self.stamp())}   # ... and on every analysis (rides, days)
+
     def _tables(self):
         from ..io import store
         base = self.proj.processed
-        stamp = tuple((base / f).stat().st_mtime if (base / f).exists() else 0
-                      for f in ("daily.parquet", "daily.csv.gz", "activities.parquet",
-                                "activities.csv.gz"))
+        stamp = self.stamp()
         if self._cache.get("stamp") != stamp:
             daily = store.load(base, "daily")
             acts = store.load(base, "activities")
@@ -109,8 +120,7 @@ class Data:
                "season_meta": {"types": {k: {"label": v[0], "build_weeks": v[1], "about": v[2]}
                                          for k, v in PHASE_TYPES.items()}, "kinds": EVENT_KINDS},
                "insights": _insights(res), "notes": res.get("notes", []),
-               "plan_version": _mtime(proj.processed / "plan_state.json"),   # changes on every re-plan
-               "data_version": max(self._cache["stamp"]),    # ... and on every analysis (rides, days): not always after it
+               **self.versions(self._cache["stamp"]),
                "about": {"version": __version__, "installed": bool(getattr(sys, "frozen", False))}}   # Help: issue forms
         season = Season.load(proj.root)            # what you entered, even before the plan has caught up
         day = pd.Timestamp.now(tz=proj.tz).tz_localize(None).normalize()
@@ -2245,6 +2255,7 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
                 if u.path == "/api/job":
                     from ..launcher import App
                     return self._json(dict(jobs.status(), build=App.build(), code_stale=code_stale(), started=run_id,
+                                           **data.versions(),
                                            peer_waiting=hub.server.pairing.waiting()
                                            if self.client_address[0] in ("127.0.0.1", "::1") else None))
                 if u.path == "/api/snippet":
