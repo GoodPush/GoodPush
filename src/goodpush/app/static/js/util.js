@@ -9,22 +9,27 @@ export const mmss = (sec) => { sec = Math.round(sec); const h = Math.floor(sec /
   return h ? `${h}:${String(m).padStart(2, "0")} h` : `${m}:${String(s2).padStart(2, "0")}`; };
 export const hhmm = (min, unit = true) => { if (min == null || min !== min) return "–"; min = Math.round(min);
   return min < 60 && unit ? `${min} min` : `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}${unit ? " h" : ""}`; };
-// Symmetric box filter (no time shift): the mean over i - h .. i + h, h a real half-width in samples - the samples
-// h - floor(h) past the integer half-width count with that weight, so the width varies smoothly (total 2h + 1).
-// O(n) at any width via running sums. Gaps (null) stay gaps; windows touching a gap or an end average what is there.
-export function boxSmooth(arr, h) {
-  const n = arr.length; if (!(h > 0) || n < 2) return arr;
-  const m = Math.floor(h), f = h - m, val = new Float64Array(n + 1), has = new Float64Array(n + 1);
-  for (let i = 0; i < n; i++) { const ok = arr[i] != null; val[i + 1] = val[i] + (ok ? arr[i] : 0); has[i + 1] = has[i] + ok; }
-  const lo = (i) => Math.max(i, 0), hi = (i) => Math.min(i, n);          // prefix-sum indices, clamped to the ends
-  return Array.from(arr, (v, i) => {
-    if (v == null) return null;
-    const a = lo(i - m), b = hi(i + m + 1), a2 = lo(i - m - 1), b2 = hi(i + m + 2);
-    const s = val[b] - val[a] + f * (val[a] - val[a2] + val[b2] - val[b]);
-    const w = has[b] - has[a] + f * (has[a] - has[a2] + has[b2] - has[b]);
-    return s / w;
-  });
+// Dave Hale's two-sided recursive exponential filter (Mines JTK RecursiveExponentialFilter): a causal then an
+// anti-causal first-order pass, y = (1 - a)^2 / ((1 - a/z)(1 - a z)) x. Bell-shaped, no time shift, no ringing,
+// O(n) at any width. a gives the impulse response the variance sigma^2 (samples); a box of w samples has
+// sigma^2 = (w^2 - 1) / 12 (boxSigma). Ends: the input continued flat. Gaps (null) stay gaps; each stretch between
+// them is filtered on its own.
+export function expSmooth(arr, sigma) {
+  const n = arr.length; if (!(sigma > 0) || n < 2) return arr;
+  const ss = sigma * sigma, a = (1 + ss - Math.sqrt(1 + 2 * ss)) / ss, b = 1 - a, y = Array.from(arr);
+  for (let i0 = 0; i0 < n; ) {
+    if (arr[i0] == null) { i0++; continue; }
+    let i1 = i0; while (i1 + 1 < n && arr[i1 + 1] != null) i1++;
+    let u = arr[i0];                                                        // causal pass, started in steady state
+    for (let i = i0; i <= i1; i++) y[i] = u = a * u + b * arr[i];
+    const xe = arr[i1]; let z = xe + (y[i1] - xe) / (1 + a);               // anti-causal pass: exact flat-end state
+    y[i1] = z;
+    for (let i = i1 - 1; i >= i0; i--) y[i] = z = a * z + b * y[i];
+    i0 = i1 + 1;
+  }
+  return y;
 }
+export const boxSigma = (w) => Math.sqrt(Math.max(0, w * w - 1) / 12);   // the sigma that smooths like a w-sample box
 export function addDays(ds, n) {
   const d = new Date(ds + "T12:00:00"); d.setDate(d.getDate() + n);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
