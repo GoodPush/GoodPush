@@ -15,8 +15,17 @@ def modules() -> list[Path]:
     return sorted(JS.rglob("*.js"))
 
 
+def vendored() -> dict[Path, set[str]]:
+    """static/vendor: third-party ES modules (minified); their names from the closing export{a as name, ...}."""
+    out = {}
+    for p in (STATIC / "vendor").glob("*.js"):
+        block = p.read_text(encoding="utf-8").rsplit("export{", 1)[-1]
+        out[p.resolve()] = {part.split(" as ")[-1].strip(" };\n") for part in block.split(",")}
+    return out
+
+
 def test_every_import_names_an_export_of_an_existing_module():
-    exports = {p.resolve(): set(EXPORT.findall(p.read_text(encoding="utf-8"))) for p in modules()}
+    exports = {p.resolve(): set(EXPORT.findall(p.read_text(encoding="utf-8"))) for p in modules()} | vendored()
     problems = []
     for p in modules():
         for names, target in IMPORT.findall(p.read_text(encoding="utf-8")):
@@ -28,6 +37,16 @@ def test_every_import_names_an_export_of_an_existing_module():
                 if n not in exports[t]:
                     problems.append(f"{p.relative_to(JS)}: {target} doesn't export {n}")
     assert not problems, problems
+
+
+def test_vendored_libraries_are_the_released_files():
+    """static/vendor is skipped by the pre-commit hooks: its files must stay byte for byte what was released
+    (ECharts 6.1.0, dist/echarts.esm.min.js of the npm package; update the hash together with the file)."""
+    import hashlib
+    js = (STATIC / "vendor" / "echarts.esm.min.js").read_bytes()
+    released = "28515f26aa57f87eb1e4ed4eb446927eaf329b5f5e02b4bfd4b0264fea40d1da"  # pragma: allowlist secret
+    assert hashlib.sha256(js).hexdigest() == released
+    assert (STATIC / "vendor" / "echarts.LICENSE").is_file() and (STATIC / "vendor" / "echarts.NOTICE").is_file()
 
 
 def test_page_loads_the_entry_module_and_no_single_script_is_left():

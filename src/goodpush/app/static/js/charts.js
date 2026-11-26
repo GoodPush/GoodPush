@@ -4,6 +4,7 @@ import {niceDate} from "./widgets.js";
 import {router} from "./main.js";
 import {rideMap} from "./ride_map.js";
 import {calendarPage} from "./calendar/calendar.js";
+import {connect, init} from "../vendor/echarts.esm.min.js";
 
 // charts (small SVG library, no CDN)
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -102,6 +103,7 @@ export class TimeWindow {
     if (this.redraw) this.redraw();
     else if (hook) hook[1].onView(this.view);
     else mine.forEach(([cid, sp]) => { if (document.getElementById(cid)) drawChart(cid, sp); });
+    Object.entries(EChart.live).filter(([cid, c]) => (c.spec.group || cid) === this.key).forEach(([cid, c]) => EChart.draw(cid, c.spec));
   }
 
   wheel(ev, at) {                // Ctrl + wheel / pinch zooms around x = at, Shift + wheel / a sideways swipe pans
@@ -436,6 +438,211 @@ function chartSelect(id, spec, svg, {m, W, H, x0, x1, fx, xAtPx, toPx}) {
     sel.onChange(null);
   });
 }
+// drawChart's spec drawn by Apache ECharts (static/vendor): pages move to EChart.draw one at a time, then drawChart
+// goes. ECharts does the axes, ticks, marks, crosshair, tooltip box, zoom / pan (dataZoom: Ctrl + wheel / pinch zooms,
+// drag or Shift + wheel pans, the slider is the scrollbar, double-click shows all) and a group's shared crosshair and
+// zoom (connect). The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and redraws keep it.
+// Not yet: select (stretch selection), range: false, xStep, xTicks, yScale (the ride page's side histogram).
+export class EChart {
+  static live = {};              // id -> EChart drawn (disposed once its box has left the page)
+  static PICK_MS = 300;          // a click waits this long in case it is the first of a double-click
+
+  static draw(id, spec) {
+    const box = document.getElementById(id);
+    if (!box) return;
+    for (const [k, c] of Object.entries(EChart.live)) if (!c.chart.getDom().isConnected) { c.chart.dispose(); delete EChart.live[k]; }
+    const c = EChart.live[id];
+    if (c && c.chart.getDom() === box) c.update(spec);
+    else { c?.chart.dispose(); EChart.live[id] = new EChart(box, spec); }
+  }
+
+  static resizeAll() { Object.values(EChart.live).forEach((c) => c.chart.resize()); }
+
+  constructor(box, spec) {
+    this.box = box;
+    this.downX = null;
+    this.pickT = 0;
+    box.innerHTML = "";
+    box.style.position = "relative";
+    this.chart = init(box, null, {renderer: "svg"});
+    box.addEventListener("wheel", (ev) => this.wheel(ev), {capture: true});
+    this.chart.on("datazoom", () => this.zoomed());
+    const zr = this.chart.getZr();
+    zr.on("mousedown", (e) => { this.downX = e.offsetX; });
+    zr.on("click", (e) => this.click(e));
+    zr.on("dblclick", () => this.showAll());
+    this.chart.on("updateAxisPointer", (e) => this.spec.onHover?.(e.axesInfo?.[0]?.value ?? null));
+    zr.on("globalout", () => this.spec.onHover?.(null));
+    this.update(spec);
+  }
+
+  update(spec) {
+    this.spec = spec;
+    this.xv = (spec.x || []).map((v) => spec.xType === "date" ? new Date(v + "T12:00:00").getTime() : v);
+    const allX = spec.series.flatMap((s) => this.xs(s)).filter((v) => v != null);
+    const has = spec.series.some((s) => (s.y || []).some((v) => v != null));
+    if (!has) { this.chart.clear(); this.empty(true); return; }
+    this.empty(false);
+    this.zoomable = (spec.xType === "date" || spec.xType === "num") && allX.length > 1;
+    this.tw = this.zoomable ? TimeWindow.of(spec.group || this.box.id) : null;
+    if (this.tw && spec.view && !this.tw.view && !this.tw.opened) { this.tw.view = spec.view; this.tw.opened = true; }
+    if (this.tw) this.tw.widen(spec.xDomain || [Math.min(...allX), Math.max(...allX)]);
+    this.chart.group = spec.group || "";
+    if (spec.group) connect(spec.group);
+    this.chart.setOption(this.option(allX), {notMerge: true});
+  }
+
+  empty(on) {
+    this.box.querySelector(".nodata")?.remove();
+    if (on) this.box.insertAdjacentHTML("beforeend", '<div class="nodata muted small" style="position:absolute;inset:0;padding:30px 0;text-align:center">No data yet</div>');
+  }
+
+  xs(s) { return s.x || this.xv; }
+
+  option(allX) {
+    const spec = this.spec, ink2 = css("--ink2"), grid = css("--grid");
+    const slider = this.zoomable && (spec.scrollbar || !spec.group);
+    const labelled = (spec.bands || []).some((b) => b[3]);
+    const dom = spec.xDomain || [Math.min(...allX), Math.max(...allX)];
+    const series = spec.series.flatMap((s) => this.series(s));
+    (spec.yExtra || []).forEach((y) => series.push({type: "line", data: this.pairs(this.xv, y), symbol: "none", silent: true,
+      lineStyle: {opacity: 0}, tooltip: {show: false}}));
+    if (series.length) Object.assign(series[0], this.marks());
+    const view = this.tw?.view;
+    return {
+      animation: false,
+      grid: {left: 44, right: 10, top: this.zoomable || labelled ? 20 : 6, bottom: (spec.xAxis === false ? 4 : 22) + (slider ? 24 : 0)},
+      xAxis: {type: spec.xType === "date" ? "time" : spec.xType === "log" ? "log" : "value", min: dom[0], max: dom[1],
+        axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
+        axisLabel: {show: spec.xAxis !== false, color: ink2, fontSize: 11, hideOverlap: true,
+          ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v)} : {})}},
+      yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")),
+        splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
+      tooltip: {trigger: "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
+        backgroundColor: css("--surface"), borderColor: css("--line"), borderWidth: 1, textStyle: {color: css("--ink"), fontSize: 12.5},
+        extraCssText: "border-radius:9px;box-shadow:none;white-space:nowrap",
+        axisPointer: {type: "line", lineStyle: {color: css("--muted"), type: [3, 3]}}, formatter: (p) => this.tip(p)},
+      dataZoom: this.zoomable ? [
+        {type: "inside", xAxisIndex: 0, zoomOnMouseWheel: "ctrl", moveOnMouseWheel: "shift", moveOnMouseMove: true,
+          startValue: view?.[0], endValue: view?.[1]},
+        ...(slider ? [{type: "slider", xAxisIndex: 0, height: 12, bottom: 4, showDetail: false, brushSelect: false,
+          borderColor: "transparent", backgroundColor: css("--surface2"), fillerColor: css("--line"),
+          dataBackground: {lineStyle: {opacity: 0}, areaStyle: {opacity: 0}}, startValue: view?.[0], endValue: view?.[1]}] : [])] : [],
+      series,
+    };
+  }
+
+  pairs(X, y) { return X.map((x, i) => [x, y?.[i] ?? null]); }
+
+  // one spec series as ECharts series: line (area, dash, markers, connect), bar, dots (hollow, alpha, lo / hi bars),
+  // band (y .. y2 filled: a transparent lower line with the gap stacked on it)
+  series(s) {
+    const X = this.xs(s), col = s.color;
+    if (s.kind === "band") {
+      const stack = "band" + Math.random();
+      const lo = X.map((x, i) => [x, s.y[i] != null && s.y2[i] != null ? s.y[i] : null]);
+      const gap = X.map((x, i) => [x, s.y[i] != null && s.y2[i] != null ? s.y2[i] - s.y[i] : null]);
+      const quiet = {type: "line", symbol: "none", silent: true, stack, stackStrategy: "all", tooltip: {show: false}, lineStyle: {opacity: 0}};
+      return [{...quiet, data: lo}, {...quiet, data: gap, areaStyle: {color: col, opacity: s.opacity ?? 0.16}}];
+    }
+    if (s.kind === "bar") {
+      return [{type: "bar", data: this.pairs(X, s.y), barMaxWidth: 24,
+        itemStyle: {color: col, opacity: s.opacity ?? 0.85, borderRadius: 2}}];
+    }
+    if (s.kind === "dots") {
+      const data = X.flatMap((x, i) => s.y[i] == null ? [] : [{value: [x, s.y[i]],
+        itemStyle: {opacity: s.alpha ? s.alpha[i] : s.r ? 0.75 : 1}}]);
+      const out = [{type: "scatter", data, symbolSize: 2 * (s.r || 4), itemStyle: s.hollow
+        ? {color: "transparent", borderColor: col, borderWidth: 1.2}
+        : {color: col, borderColor: s.r ? "transparent" : css("--surface"), borderWidth: s.r ? 0 : 1.5}}];
+      if (s.lo) {
+        const bars = X.flatMap((x, i) => s.y[i] == null || s.lo[i] == null ? [] : [[x, s.lo[i], s.hi[i], s.alpha ? s.alpha[i] : 1]]);
+        out.push({type: "custom", data: bars, encode: {x: 0, y: [1, 2]}, silent: true, tooltip: {show: false},
+          renderItem: (_, api) => this.errorBar(api, col)});
+      }
+      return out;
+    }
+    return [{type: "line", data: this.pairs(X, s.y), connectNulls: !!s.connect, showSymbol: !!s.markers, symbolSize: 5,
+      itemStyle: {color: col}, lineStyle: {color: col, width: s.width || 2, type: s.dash ? [5, 4] : "solid"},
+      ...(s.area ? {areaStyle: {color: col, opacity: 0.14}} : {})}];
+  }
+
+  errorBar(api, col) {
+    const x = api.value(0), a = api.coord([x, api.value(1)]), b = api.coord([x, api.value(2)]);
+    return {type: "line", shape: {x1: a[0], y1: a[1], x2: b[0], y2: b[1]}, style: {stroke: col, lineWidth: 1.2, opacity: api.value(3)}};
+  }
+
+  // vline / hline, shade [from, to] and bands [[from, to, colour, label?, opacity?, inside?], ...] on the first series
+  marks() {
+    const spec = this.spec, ink2 = css("--ink2"), bandOp = spec.bandOpacity ?? 0.22;
+    const lines = [];
+    if (spec.vline != null) lines.push({xAxis: spec.vline, lineStyle: {color: ink2, width: 1, type: [2, 3]}});
+    if (spec.hline != null) lines.push({yAxis: spec.hline, lineStyle: {color: ink2, width: 1, type: "solid"}});
+    const areas = [...(spec.shade ? [[...spec.shade, css("--ink"), null, 0.06]] : []), ...(spec.bands || [])].map(([a, b, col, label, op, inside]) => [
+      {xAxis: a, itemStyle: {color: col, opacity: op ?? bandOp},
+        label: {show: !!label, formatter: label || "", position: inside ? "insideTopLeft" : "top", align: "left", fontSize: 10.5,
+          fontWeight: 600, color: inside ? css("--ink") : col}},
+      {xAxis: b}]);
+    return {
+      ...(lines.length ? {markLine: {silent: true, symbol: "none", label: {show: false}, animation: false, data: lines}} : {}),
+      ...(areas.length ? {markArea: {silent: true, animation: false, data: areas}} : {}),
+    };
+  }
+
+  nearest(X, x) {
+    const f = this.spec.xType === "log" ? Math.log : (v) => v;
+    let bi = -1, bd = Infinity;
+    X.forEach((v, i) => { if (v == null) return; const d = Math.abs(f(v) - f(x)); if (d < bd) { bd = d; bi = i; } });
+    return bi;
+  }
+
+  // the tooltip: the date (or x), then each named series at that x (planFrom: after the last day of data the planned
+  // series show as plain "X" - before it they're left out), then tipNote(x)
+  tip(params) {
+    const spec = this.spec, at = params?.[0]?.axisValue;
+    const base = spec.series.find((q) => q.kind !== "band") || spec.series[0], BX = this.xs(base);
+    const i = at == null ? -1 : this.nearest(BX, at);
+    if (i < 0) return "";
+    const xx = BX[i];
+    const head = spec.xType === "date" ? niceDate(spec.x[i], {weekday: "short", day: "numeric", month: "short", year: "numeric"}) : (spec.xLabel ? spec.xLabel(xx) : xx);
+    const ahead = spec.planFrom != null && xx > spec.planFrom;
+    const shown = spec.series.filter((q) => q.name && q.kind !== "band" && (!q.planned || ahead));
+    const lines = (spec.tipReverse ? shown.reverse() : shown).map((q) => {
+      const j = q.x ? this.nearest(q.x, xx) : i, v = q.y[j];
+      const name = q.tipName || (q.planned ? q.name.replace(/, planned$/, "") : q.name);
+      return v == null ? "" : `<div><i style="background:${q.color}"></i>${esc(name)} <b>${esc((q.fmt || ((z) => fmt(z)))(v))}</b></div>`;
+    }).join("");
+    const note = spec.tipNote ? spec.tipNote(xx) : "";
+    if (!lines && !note) return "";
+    return `<div class="th">${esc(head)}${ahead ? ' <span class="muted">· planned</span>' : ""}</div>${lines}${note}`;
+  }
+
+  zoomed() {                     // the zoom ECharts shows -> the TimeWindow (null: all of it)
+    if (!this.tw) return;
+    const dz = this.chart.getOption().dataZoom?.[0], e = this.tw.extent;
+    if (!dz || !e) return;
+    this.tw.view = dz.startValue <= e[0] && dz.endValue >= e[1] ? null : [dz.startValue, dz.endValue];
+  }
+
+  // a plain wheel scrolls the page: ECharts' inside zoom takes every wheel over the plot (also with zoomOnMouseWheel
+  // "ctrl"), so it never sees one without Ctrl (pinch) or Shift
+  wheel(ev) {
+    if (!(ev.ctrlKey || ev.shiftKey)) ev.stopPropagation();
+  }
+
+  showAll() {
+    clearTimeout(this.pickT);
+    if (this.zoomable) this.chart.dispatchAction({type: "dataZoom", start: 0, end: 100});
+  }
+
+  click(e) {                     // a click (not a drag) in the plot: onPick(x), unless it becomes a double-click
+    if (!this.spec.onPick || this.downX == null || Math.abs(e.offsetX - this.downX) > 4) return;
+    if (!this.chart.containPixel({gridIndex: 0}, [e.offsetX, e.offsetY])) return;
+    const x = this.chart.convertFromPixel({xAxisIndex: 0}, e.offsetX);
+    clearTimeout(this.pickT);
+    this.pickT = setTimeout(() => this.spec.onPick(x), EChart.PICK_MS);
+  }
+}
 let rsT;
 export const tail = (arr, n) => (arr || []).slice(Math.max(0, (arr || []).length - n));
 
@@ -444,6 +651,7 @@ window.addEventListener("pointerup", () => TimeWindow.drop());
 
 window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => {
   Object.entries(charts).forEach(([id, sp]) => document.getElementById(id) && drawChart(id, sp));
+  EChart.resizeAll();
   if (router.route() === "ride" && document.getElementById("rmap")) rideMap.drawMap();
   if (calendarPage.calResize) calendarPage.calResize();
 }, 150); });

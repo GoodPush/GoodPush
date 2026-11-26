@@ -7,7 +7,7 @@ import {$, css, esc, fmt} from "../util.js";
 import {hint, niceDate, tile} from "../widgets.js";
 import {router} from "../main.js";
 import {ZOOM_HELP} from "./fitness.js";
-import {drawChart, TimeWindow} from "../charts.js";
+import {EChart, TimeWindow} from "../charts.js";
 
 const HEAT_RAMP = ["#00224e" , "#2a3f6d" , "#575d6d", "#7d7c78" , "#a59c74" , "#d2c060" , "#fee838"];   // cividis, dark -> bright
 // observed as % of predicted (the curve heatmap's third view): diverging, centred on 100 %, clamped to lo..hi
@@ -158,7 +158,7 @@ class RiderPage extends Page {
       const d = dayAt(x);
       for (const [, j] of on) { const q = pts[j].effort.get(d), id = q == null ? null : P.observed[j].id[q]; if (id) { location.hash = "#ride/" + encodeURIComponent(id); return; } }
     };
-    drawChart("powerChart", {x: P.date, xType: "date", yFmt: (v) => v + " W", group: "power", scrollbar: true, yExtra,
+    EChart.draw("powerChart", {x: P.date, xType: "date", yFmt: (v) => v + " W", group: "power", scrollbar: true, yExtra,
       vline: P.forecast.length ? ms(P.today) : null, planFrom: ms(P.today), series: lines.concat(dots), tipNote, onPick});
   }
 
@@ -376,7 +376,7 @@ class RiderPage extends Page {
     lines.forEach(([k, c, n]) => series.push({kind: "line", y: pad(P[k]), color: css(c), name: n, fmt: W},
                                              {kind: "line", y: ahead(k), color: css(c), dash: true, name: n + ", planned", planned: true, fmt: W}));
     // hover: highest first (MAP ... LT1), as they sit on the chart
-    drawChart("phycap", {x, xType: "date", yFmt: (v) => v + " W", group: "physio", scrollbar: true, vline, planFrom: ms(last), tipReverse: true, series});
+    EChart.draw("phycap", {x, xType: "date", yFmt: (v) => v + " W", group: "physio", scrollbar: true, vline, planFrom: ms(last), tipReverse: true, series});
   }
 
   wire() {
