@@ -63,6 +63,11 @@ Developers: [install from source](https://goodpush.github.io/GoodPush/start/inst
    Today page. Your thresholds and plan get much better with years of rides.
 3. **Set up your plan**: on **Plan**, add your phases (base, build...) and races, and your hours per weekday in
    **Settings**.
+4. **Get your workouts onto your watch and apps**: GoodPush sends your plan to
+   [intervals.icu](https://intervals.icu) (free account), and intervals.icu passes it on. In intervals.icu, under
+   **Settings > Connections**, connect your Garmin, Wahoo, Zwift or MyWhoosh account and switch on sending planned
+   workouts to it. Then paste your intervals.icu API key in GoodPush (**Settings > API keys**) and press
+   **Send plan now** under **Settings > intervals.icu**, again whenever the plan changes.
 
 No Garmin? A Strava export works too. Details:
 [Getting your data in](https://goodpush.github.io/GoodPush/start/data.html).
@@ -94,8 +99,8 @@ rely on it.
 ## Privacy
 
 All processing is on your computer. GoodPush only goes online to download your own data (Garmin, Strava, Google
-Health), for map tiles when you open a ride, to sync with your own other computers if you pair them, and when you
-click a link to GitHub. Details: [Privacy](https://goodpush.github.io/GoodPush/guide/privacy.html).
+Health), to send your planned workouts to intervals.icu when you press Send plan, for map tiles when you open a
+ride, to sync with your own other computers if you pair them, and when you click a link to GitHub. Details: [Privacy](https://goodpush.github.io/GoodPush/guide/privacy.html).
 
 ## License
 
