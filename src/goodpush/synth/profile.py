@@ -6,7 +6,9 @@ import tomllib
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
-from ..app.tomledit import _fmt
+import tomlkit
+
+from ..app.tomledit import TomlEdit
 
 DAY_NAMES = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 
@@ -88,4 +90,4 @@ class RiderProfile:
 
     def text(self) -> str:
         """the profile as TOML (kept with the rider, so it can be made again)."""
-        return "".join(f"{k} = {_fmt(v)}\n" for k, v in asdict(self).items())
+        return tomlkit.dumps({k: TomlEdit.value(v) for k, v in asdict(self).items()})

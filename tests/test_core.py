@@ -524,6 +524,29 @@ def test_tomledit(tmp_path: Path):
     assert load_project(tmp_path).cfg["brand_new"]["a"] == 1
 
 
+def test_tomledit_tables_numbers_and_text(tmp_path: Path):
+    """tomlkit keeps a changed line's comment, a section's sub-tables, numpy numbers as numbers, text as UTF-8"""
+    import tomllib
+    import numpy as np
+    from goodpush.app.tomledit import set_table, set_tables, set_values
+    p = tmp_path / "goodpush.toml"
+    p.write_text('[ftp]\nmode = "auto"  # how FTP is set\nold = 1\n\n[ftp.history]\n"2026-10-22" = 250\n\n'
+                 '[[events]]\ndate = "2026-01-01"\nnote = "x"\n', encoding="utf-8")
+    set_values(p, "ftp", {"mode": "manual", "days": np.int64(60), "w": np.float64(1 / 3)})
+    set_table(p, "ftp", {"mode": "manual", "days": 60})          # "old" and "w" go, [ftp.history] stays
+    set_tables(p, "events", [{"date": "2026-03-01", "note": "Grippe – fièvre"}, {"date": "2026-04-01", "note": "y"}])
+    set_values(p, "ftp.history", {"2026-10-30": 243})
+    txt = p.read_text(encoding="utf-8")
+    cfg = tomllib.loads(txt)
+    assert cfg["ftp"] == {"mode": "manual", "days": 60, "history": {"2026-10-22": 250, "2026-10-30": 243}}
+    assert [e["note"] for e in cfg["events"]] == ["Grippe – fièvre", "y"]
+    assert 'mode = "manual"  # how FTP is set' in txt and '"2026-10-30" = 243' in txt
+    set_values(p, "ftp", {"w": np.float64(1 / 3)})
+    assert tomllib.loads(p.read_text(encoding="utf-8"))["ftp"]["w"] == 0.333
+    set_tables(p, "events", [])
+    assert "events" not in tomllib.loads(p.read_text(encoding="utf-8"))
+
+
 def test_app_server_auth_and_state(tmp_path: Path):
     import json
     import threading
