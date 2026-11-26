@@ -9,7 +9,7 @@ import {markers} from "../markers.js";
 import {HR_ZONE_NAMES, ZONE_NAMES} from "./rides.js";
 import {rideMap} from "../ride_map.js";
 import {calendarPage} from "../calendar/calendar.js";
-import {charts, drawChart, el, niceTicks, selectGroups, SelectionPanel, TimeWindow} from "../charts.js";
+import {EChart, el, niceTicks, selectGroups, SelectionPanel, TimeWindow} from "../charts.js";
 
 // interval zones (models/intervals.py): label and colour
 const IZONE = {recovery: ["Recovery", "--z1"], endurance_low: ["Lower endurance", "--z2"], endurance_high: ["Upper endurance", "--z3"],
@@ -486,7 +486,7 @@ class RidePage extends Page {
   // time at each value beside a chart (#<id>H), on that chart's y axis: bars of `bin` wide, length = time (each
   // value `secs` seconds); hovering a bar's row shows its range, time and share of the stretch
   sideHist(id, vals, bin, secs, colour, f) {
-    const box = document.getElementById(id + "H"), Y = charts[id]?.yScale;
+    const box = document.getElementById(id + "H"), Y = EChart.live[id]?.spec.yScale;
     if (!box) return;
     box.innerHTML = "";
     if (!Y || !vals.length) return;
@@ -544,11 +544,11 @@ class RidePage extends Page {
       const flat = (v) => st.t_min.map(() => v);
       const common = {x: st.t_min, xType: "num", xTickFmt: tick, xLabel: tl, onHover, ...view, bands: this.rideIv.value ? this.rideBands(a.intervals) : [],
         tipNote: (t) => (this.rideIv.value ? this.rideTipNote(a.intervals, t) : "") + this.ridePlanNote(a.plan, t)};
-      drawChart("rpow", {...common, ...axis("rpow"), yFmt: (v) => v + " W", zero: true, series: [
+      EChart.draw("rpow", {...common, ...axis("rpow"), yFmt: (v) => v + " W", zero: true, series: [
         ...this.ridePlanBands(a.plan, a.intervals),
         {kind: "line", y: boxSmooth(st.power, half(this.rideSmooth)), color: css("--s1"), name: "Power", fmt: (v) => fmt(v) + " W", width: 1.6, area: true},
         {kind: "line", y: flat(a.ftp), color: css("--muted"), dash: true, name: "FTP", fmt: (v) => fmt(v) + " W", width: 1}]});
-      drawChart("rhr2", {...common, ...axis("rhr2"), yFmt: (v) => v, series: [
+      EChart.draw("rhr2", {...common, ...axis("rhr2"), yFmt: (v) => v, series: [
         {kind: "line", y: boxSmooth(st.hr, half(10)), color: css("--s2"), name: "Heart rate", fmt: (v) => fmt(v) + " bpm", width: 1.6},
         ...(a.lthr ? [{kind: "line", y: flat(a.lthr), color: css("--muted"), dash: true, name: "Threshold HR", fmt: (v) => fmt(v) + " bpm", width: 1}] : [])]});
       const shown = (z || [0, Infinity]), secs = st.bucket_s || 1;
@@ -556,20 +556,20 @@ class RidePage extends Page {
       this.sideHist("rpow", inView(st.power).filter((v) => v > 0), 10, secs, css("--s1"), (v) => fmt(v) + " W");
       this.sideHist("rhr2", inView(st.hr), 2, secs, css("--s2"), (v) => fmt(v) + " bpm");
       const pct = (v) => fmt(v) + " %";
-      if (document.getElementById("rsta") && st.stamina) drawChart("rsta", {...common, ...axis("rsta"), yFmt: pct,
+      if (document.getElementById("rsta") && st.stamina) EChart.draw("rsta", {...common, ...axis("rsta"), yFmt: pct,
         zero: true, yExtra: [flat(100)], series: [
           {kind: "line", y: st.potential, color: css("--muted"), dash: true, name: "Potential", fmt: pct, width: 1.2},
           {kind: "line", y: st.stamina, color: css("--s3"), name: "Stamina", fmt: pct, width: 1.6, area: true}]});
       if (st.stamina) this.sideHist("rsta", inView(st.stamina), 5, secs, css("--s3"), pct);
-      if (document.getElementById("ralt")) drawChart("ralt", {...common, ...axis("ralt"), yFmt: (v) => v + " m", series: [
+      if (document.getElementById("ralt")) EChart.draw("ralt", {...common, ...axis("ralt"), yFmt: (v) => v + " m", series: [
         {kind: "line", y: st.altitude, color: css("--s3"), name: "Elevation", fmt: (v) => fmt(v) + " m", width: 1.6, area: true}]});
-      if (document.getElementById("rcad")) drawChart("rcad", {...common, ...axis("rcad"), yFmt: (v) => v, series: [
+      if (document.getElementById("rcad")) EChart.draw("rcad", {...common, ...axis("rcad"), yFmt: (v) => v, series: [
         {kind: "line", y: boxSmooth(st.cadence, half(10)), color: css("--s7"), name: "Cadence", fmt: (v) => fmt(v) + " rpm", width: 1.4}]});
       this.sideHist("rcad", inView(st.cadence || []).filter((v) => v > 0), 5, secs, css("--s7"), (v) => fmt(v) + " rpm");
     }
     if (a.alpha && document.getElementById("ra1")) {
       const al = a.alpha, flat = (v) => al.t_min.map(() => v), x = al.t_min.map((m) => this.rideT(m * 60) / 60);
-      drawChart("ra1", {x, xType: "num", xTickFmt: tick, ...view, ...axis("ra1"),
+      EChart.draw("ra1", {x, xType: "num", xTickFmt: tick, ...view, ...axis("ra1"),
         xLabel: (t) => mmss(t * 60), yFmt: (v) => v, shade: [5, 20], bands: this.rideIv.value ? this.rideBands(a.intervals) : [], series: [
           {kind: "line", y: flat(0.75), color: css("--muted"), dash: true, width: 1},
           {kind: "line", y: flat(0.5), color: css("--muted"), dash: true, width: 1},
@@ -580,7 +580,7 @@ class RidePage extends Page {
     const pts = (o) => Object.entries(o || {}).map(([k, v]) => [Number(k), v]).filter(([k, v]) => v && k >= 5).sort((p, q) => p[0] - q[0]);
     const r = pts(a.mmp), b = pts(a.mmp_90d);
     const lab = (x) => x < 60 ? `${x} s` : x < 3600 ? `${Math.round(x / 60)} min` : hhmm(x / 60);
-    if (r.length) drawChart("rpdc", {xType: "log", yFmt: (v) => v + " W", xLabel: lab,
+    if (r.length) EChart.draw("rpdc", {xType: "log", yFmt: (v) => v + " W", xLabel: lab,
       xTicks: [[5, "5s"], [15, "15s"], [60, "1m"], [300, "5m"], [1200, "20m"], [3600, "1h"], [7200, "2h"]], series: [
         {kind: "line", x: b.map((q) => q[0]), y: b.map((q) => q[1]), color: css("--muted"), dash: true, name: "90-day best", fmt: (v) => fmt(v) + " W"},
         {kind: "line", x: r.map((q) => q[0]), y: r.map((q) => q[1]), color: css("--s1"), name: "This ride", fmt: (v) => fmt(v) + " W"}]});

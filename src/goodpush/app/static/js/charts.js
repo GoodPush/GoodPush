@@ -99,11 +99,14 @@ export class TimeWindow {
 
   changed() {                    // redraw what shows it (or let it redraw itself, e.g. the ride page with finer data)
     const mine = Object.entries(charts).filter(([cid, sp]) => (sp.group || cid) === this.key);
-    const hook = mine.find(([, sp]) => sp.onView);
+    const ech = Object.entries(EChart.live).filter(([cid, c]) => (c.spec.group || cid) === this.key);
+    const hook = mine.find(([, sp]) => sp.onView)?.[1] || ech.find(([, c]) => c.spec.onView)?.[1].spec;
     if (this.redraw) this.redraw();
-    else if (hook) hook[1].onView(this.view);
-    else mine.forEach(([cid, sp]) => { if (document.getElementById(cid)) drawChart(cid, sp); });
-    Object.entries(EChart.live).filter(([cid, c]) => (c.spec.group || cid) === this.key).forEach(([cid, c]) => EChart.draw(cid, c.spec));
+    else if (hook) hook.onView(this.view);
+    else {
+      mine.forEach(([cid, sp]) => { if (document.getElementById(cid)) drawChart(cid, sp); });
+      ech.forEach(([cid, c]) => EChart.draw(cid, c.spec));
+    }
   }
 
   wheel(ev, at) {                // Ctrl + wheel / pinch zooms around x = at, Shift + wheel / a sideways swipe pans
@@ -445,10 +448,14 @@ function chartSelect(id, spec, svg, {m, W, H, x0, x1, fx, xAtPx, toPx}) {
 // in a chart the mouse is in. The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and
 // redraws keep it. select {range, onChange}: drag across selects a stretch (drag an edge to move it, Shift + drag pans,
 // double-click clears it), shown on the group's charts (selectGroups) as an overlay box.
-// Not yet: xStep, yScale (the ride page's side histogram).
+// onView(range | null): called once a zoom has settled (the ride page redraws with finer data); xStep(span, n): the
+// x tick step for the span shown, about n ticks (xTickFmt gets it too); spec.yScale {y0, y1, top, bottom, H}: the y
+// axis and plot as drawn, for a histogram beside the chart (the ride page's sideHist).
 export class EChart {
   static live = {};              // id -> EChart drawn (disposed once its box has left the page)
   static PICK_MS = 300;          // a click waits this long in case it is the first of a double-click
+  static VIEW_MS = 150;          // onView waits this long after the last zoom step
+  static viewT = 0;
   static EDGE = 6;               // px from a selection's edge that grab the edge
   static echo = false;           // a group's charts are following one of them (pointer, zoom): not passed on again
   static selDrag = null;         // a selection being dragged: {chart, fixed, px0, edge, moved} (followed on the window)
@@ -517,6 +524,8 @@ export class EChart {
     if (this.tw) this.tw.widen(spec.xDomain || [Math.min(...allX), Math.max(...allX)]);
     this.chart.setOption(this.option(allX), {notMerge: true});
     if (spec.group && before !== this.tw?.extent?.join()) this.widenGroup();
+    const H = this.chart.getHeight(), top = this.gridBox.top, bottom = H - this.gridBox.bottom;
+    spec.yScale = {y0: this.chart.convertFromPixel({yAxisIndex: 0}, bottom), y1: this.chart.convertFromPixel({yAxisIndex: 0}, top), top, bottom, H};
     if (spec.select) {
       const key = spec.group || this.box.id;
       selectGroups[key] = (selectGroups[key] || []).filter((h) => h.id !== this.box.id && document.getElementById(h.id));
@@ -566,15 +575,19 @@ export class EChart {
     if (series.length) Object.assign(series[0], this.marks(view || dom));
     this.gridBox = {top: this.zoomable || labelled ? 20 : 6, bottom: (spec.xAxis === false ? 4 : 22) + (slider ? 24 : 0)};
     const ticks = spec.xTicks ? new Map(spec.xTicks) : null;    // fixed ticks [[x, label], ...]
+    const win = view || dom, step = spec.xStep ? spec.xStep(win[1] - win[0], Math.max(4, Math.floor((this.chart.getWidth() - 54) / 90))) : undefined;
+    const H = this.chart.getHeight();
     return {
       animation: false,
       grid: {left: 44, right: 10, ...this.gridBox},
       xAxis: {type: spec.xType === "date" ? "time" : spec.xType === "log" ? "log" : "value", min: dom[0], max: dom[1],
         axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
         axisLabel: {show: spec.xAxis !== false, color: ink2, fontSize: 11, hideOverlap: true,
-          ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v)} : {}),
+          ...(step ? {customValues: this.stepValues(dom, step)} : {}),
+          ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v, step)} : {}),
           ...(ticks ? {customValues: [...ticks.keys()], formatter: (v) => ticks.get(v) ?? ""} : {})}},
       yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
+        splitNumber: H < 150 ? 3 : H < 260 ? 4 : 5,             // fewer y ticks on a short chart
         axisLine: {show: false}, axisTick: {show: false}, splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
       tooltip: {trigger: "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
         backgroundColor: css("--surface"), borderColor: css("--line"), borderWidth: 1, textStyle: {color: css("--ink"), fontSize: 12.5},
@@ -588,6 +601,13 @@ export class EChart {
           dataBackground: {lineStyle: {opacity: 0}, areaStyle: {opacity: 0}}, startValue: view?.[0], endValue: view?.[1]}] : [])] : [],
       series,
     };
+  }
+
+  // every whole `step` across the axis [a, b] (xStep's ticks): exact, so ECharts adds none at the ends
+  stepValues([a, b], step) {
+    const out = [];
+    for (let t = Math.ceil(a / step - 1e-9) * step; t <= b + 1e-9 && out.length < 5000; t += step) out.push(+t.toFixed(6));
+    return out;
   }
 
   // the scrollbar (slider): always with spec.scrollbar, else on a chart of its own once it is zoomed
@@ -717,7 +737,12 @@ export class EChart {
     if (y.min != null) this.chart.setOption({yAxis: y});
     if ((this.spec.bands || []).some((b) => b[3])) this.chart.setOption({series: [{markArea: this.marks(this.shownX()).markArea}]});
     this.selShow(this.spec.select?.range);
+    if (EChart.echo) return;                      // following another chart: it calls onView
     this.toGroup((c) => c.chart.dispatchAction({type: "dataZoom", startValue: dz.startValue, endValue: dz.endValue}));
+    if (this.spec.onView) {
+      clearTimeout(EChart.viewT);
+      EChart.viewT = setTimeout(() => this.spec.onView(this.tw.view), EChart.VIEW_MS);
+    }
   }
 
   // the crosshair at x (null: gone): onHover(x), and the group's other charts show theirs and their tooltip there
