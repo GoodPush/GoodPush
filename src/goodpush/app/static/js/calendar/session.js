@@ -223,9 +223,9 @@ class SessionModal {
   }
 
   // a day's session from today on, one button through its states: the plan's 🔓 -> 🔒 -> 🔓; your change (blue 🔓)
-  // -> 🔒 -> back to the plan's version
+  // -> 🔒 -> back to the plan's version. A day with a ride (today) shows it only while locked, so you can unlock it
   lockButton(p, key) {
-    if (key.length !== 10 || key < calendarPage.CAL.today || p.ride || p.compliance?.ride) return "";
+    if (key.length !== 10 || key < calendarPage.CAL.today || ((p.ride || p.compliance?.ride) && !p.locked)) return "";
     const [tip, label] = p.locked && p.custom ? ["Locked, your version: the plan keeps it exactly as it is. "
       + "Click to go back to the plan's version", "Back to the plan's version"]
       : p.locked ? ["Locked: the plan keeps it exactly as it is. Click to unlock", "Unlock this day"]
@@ -269,7 +269,7 @@ class SessionModal {
     const drop = ds <= calendarPage.CAL.today ? ` drop" data-date="${key}` : "";
     const pending = p.pending ? ` <span class="chip">${esc(p.pending)}…</span>` : "";
     return `<div class="pl${p.status === "done" || p.ride ? " done" : ""}${p.pending ? " pending" : ""}${drop}" data-ds="${key}" style="--c:${typeColor(p.type)}" title="Click to open, drag to move: ${esc(p.workout || p.title)}">
-    <div class="nm">${lock}${esc(p.title)}${mine}</div>
+    <div class="nm"><span class="tt">${esc(p.title)}</span>${mine}${lock}</div>
     <div class="mt">${hhmm(p.minutes)}${p.tss != null ? ` · ${fmt(p.tss)} TSS` : ""}${st}${pending}</div>
     ${p.steps?.length ? profileSVG(p, "calprof") : ""}${via}</div>${main ? this.calProposed(ds) : ""}`;
   }
