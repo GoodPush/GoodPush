@@ -1,7 +1,24 @@
-## goodpush 0.1.0: the first release
+## goodpush 0.2.0
 
 Analyse your cycling training and plan the next weeks, on your own computer, from your Strava / Garmin exports
 and the Garmin Personal API.
+
+### New in 0.2.0
+
+- **Heart-rate recovery after each interval:** a ride's interval table shows how far your heart rate fell in the
+  minute after each interval, at what power, and how much of the way down to your steady heart rate for that
+  power it got ("Recovered").
+- **Workouts on your watch:** the guide and Settings walk you through sending your plan to intervals.icu, which
+  passes it on to Garmin, Wahoo, Zwift or MyWhoosh.
+- **Quit button** in the top bar: stop goodpush without hunting for the tray icon.
+- **Move an athlete's folder** from the app (📁 in the logo's menu) or with `goodpush athlete move`.
+- **Settings in your system's usual place** (Windows: `%LOCALAPPDATA%\goodpush`, Mac: `~/Library/Application
+  Support/goodpush`, Linux: `~/.config/goodpush`) instead of `~/.goodpush`. They move there by themselves the first
+  time 0.2.0 starts; an older goodpush on the same computer won't find them afterwards.
+- Smoother charts (no time shift or overshoot), a calendar lock you can always reach, and the page now picks up a
+  finished ride even when the browser paused the tab.
+
+### What goodpush does
 
 - **Fitness:** training load, FTP, thresholds (LT1 / LT2 from alpha1), power curve, a physiological model of how
   your fitness changes with training.
