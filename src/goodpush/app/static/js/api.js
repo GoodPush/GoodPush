@@ -89,14 +89,22 @@ class JobWatch {
         chip.hidden = true;
         const lg = $("#joblog");
         if (lg && j.log.length) { lg.hidden = false; lg.textContent = j.log.join("\n"); }
-        if (j.name && j.t && Date.now() / 1000 - j.t < 900 && j.ok !== null && !this.pollJob.seen?.[j.t]) {
+        const ended = j.name && j.t && Date.now() / 1000 - j.t < 900 && j.ok !== null && !this.pollJob.seen?.[j.t];
+        if (ended) {
           this.pollJob.seen = {...(this.pollJob.seen || {}), [j.t]: true};
           toast.show(j.ok ? "Updated" : `Failed: ${j.log.at(-1)?.replace(/^failed: /, "") || "no details"} – the log is on the Today page`);
-          dips.drops.forget(); modelPage.model.forget(); calendarPage.calKey = ""; api.load();   // the calendar re-reads the new plan too; a refit: the Model page
         }
+        // a job's end, or newer rides / plan than this page has (it missed that end: a throttled window, a sync)
+        // (an app not restarted since an update doesn't send them: no reload every poll)
+        const newer = S && "data_version" in j && (j.data_version !== S.data_version || j.plan_version !== S.plan_version);
+        if (ended || newer) this.reload();
         this.pollIdle();
       }
     }).catch(this.pollIdle);                                   // the app restarting: keep trying
+  }
+
+  reload() {                                   // everything again: the calendar re-reads the new plan too; a refit: the Model page
+    dips.drops.forget(); modelPage.model.forget(); calendarPage.calKey = ""; api.load();
   }
 
   jobLog() {                                   // the last job's log (kept across redraws)

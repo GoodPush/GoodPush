@@ -546,9 +546,18 @@ def test_app_server_auth_and_state(tmp_path: Path):
         code, server.CODE = server.CODE, "0"             # goodpush updated on disk since the app started
         try:
             with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/job") as r:
-                assert json.loads(r.read())["code_stale"] is True       # the page polls this: it says so at once
+                job = json.loads(r.read())
+            assert job["code_stale"] is True                             # the page polls this: it says so at once
         finally:
             server.CODE = code
+        # the poll also says how new the rides and plan are: a page that missed a job's end compares and reloads
+        assert (job["data_version"], job["plan_version"]) == (js["data_version"], js["plan_version"])
+        import os
+        ps = proj.processed / "plan_state.json"
+        ps.write_text("{}", encoding="utf-8")
+        os.utime(ps, (1e9, 1e9))
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/job") as r:
+            assert json.loads(r.read())["plan_version"] == 1e9 != js["plan_version"]
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/") as r:
             assert b"goodpush" in r.read()
         # POST without the custom header is refused (CSRF guard)
