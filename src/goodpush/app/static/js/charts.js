@@ -443,12 +443,15 @@ function chartSelect(id, spec, svg, {m, W, H, x0, x1, fx, xAtPx, toPx}) {
 // drag or Shift + wheel pans, the slider is the scrollbar, double-click shows all). A group's charts (spec.group) share
 // their x range, zoom and crosshair: passed on here (pointer, zoomed), not by ECharts' connect, which shows a pointer only
 // in a chart the mouse is in. The zoom is kept in the TimeWindow of the chart (or its group), so range buttons and
-// redraws keep it.
-// Not yet: select (stretch selection), xStep, xTicks, yScale (the ride page's side histogram).
+// redraws keep it. select {range, onChange}: drag across selects a stretch (drag an edge to move it, Shift + drag pans,
+// double-click clears it), shown on the group's charts (selectGroups) as an overlay box.
+// Not yet: xStep, yScale (the ride page's side histogram).
 export class EChart {
   static live = {};              // id -> EChart drawn (disposed once its box has left the page)
   static PICK_MS = 300;          // a click waits this long in case it is the first of a double-click
+  static EDGE = 6;               // px from a selection's edge that grab the edge
   static echo = false;           // a group's charts are following one of them (pointer, zoom): not passed on again
+  static selDrag = null;         // a selection being dragged: {chart, fixed, px0, edge, moved} (followed on the window)
 
   static draw(id, spec) {
     const box = document.getElementById(id);
@@ -459,7 +462,24 @@ export class EChart {
     else { c?.chart.dispose(); EChart.live[id] = new EChart(box, spec); }
   }
 
-  static resizeAll() { Object.values(EChart.live).forEach((c) => c.chart.resize()); }
+  static resizeAll() { Object.values(EChart.live).forEach((c) => { c.chart.resize(); c.selShow(c.spec.select?.range); }); }
+
+  static selFollow(ev) {         // a selection drag: the stretch from where it began (or the edge held) to the pointer
+    const g = EChart.selDrag;
+    if (!g) return;
+    const c = g.chart, sel = c.spec.select, px = ev.clientX - c.box.getBoundingClientRect().left;
+    if (!g.edge && Math.abs(px - g.px0) < 4) return;   // a click, not a drag
+    const [x0, x1] = c.shownX(), v = Math.max(x0, Math.min(x1, c.xAt(px)));
+    sel.range = [Math.min(g.fixed, v), Math.max(g.fixed, v)];
+    g.moved = true;
+    c.selAll(sel.range);
+  }
+
+  static selDrop() {
+    const g = EChart.selDrag;
+    EChart.selDrag = null;
+    if (g?.moved) g.chart.spec.select.onChange(g.chart.spec.select.range);
+  }
 
   constructor(box, spec) {
     this.box = box;
@@ -468,12 +488,16 @@ export class EChart {
     box.innerHTML = "";
     box.style.position = "relative";
     this.chart = init(box, null, {renderer: "svg"});
+    this.selBox = box.appendChild(document.createElement("div"));
+    this.selBox.className = "esel";
+    this.selBox.hidden = true;
     box.addEventListener("wheel", (ev) => this.wheel(ev), {capture: true});
     this.chart.on("datazoom", () => this.zoomed());
     const zr = this.chart.getZr();
-    zr.on("mousedown", (e) => { this.downX = e.offsetX; });
+    zr.on("mousedown", (e) => this.down(e));
+    zr.on("mousemove", (e) => this.hover(e));
     zr.on("click", (e) => this.click(e));
-    zr.on("dblclick", () => this.showAll());
+    zr.on("dblclick", () => this.dblclick());
     this.chart.on("updateAxisPointer", (e) => this.pointer(e.axesInfo?.[0]?.value ?? null));
     zr.on("globalout", () => this.pointer(null));
     this.update(spec);
@@ -493,6 +517,12 @@ export class EChart {
     if (this.tw) this.tw.widen(spec.xDomain || [Math.min(...allX), Math.max(...allX)]);
     this.chart.setOption(this.option(allX), {notMerge: true});
     if (spec.group && before !== this.tw?.extent?.join()) this.widenGroup();
+    if (spec.select) {
+      const key = spec.group || this.box.id;
+      selectGroups[key] = (selectGroups[key] || []).filter((h) => h.id !== this.box.id && document.getElementById(h.id));
+      selectGroups[key].push({id: this.box.id, show: (r) => this.selShow(r)});
+    }
+    this.selShow(spec.select?.range);
   }
 
   // a group's charts share one x range (the TimeWindow's extent), so stacked charts line up: one drawn later with
@@ -532,15 +562,18 @@ export class EChart {
     const series = spec.series.flatMap((s) => this.series(s));
     (spec.yExtra || []).forEach((y) => series.push({type: "line", data: this.pairs(this.xv, y), symbol: "none", silent: true,
       lineStyle: {opacity: 0}, tooltip: {show: false}}));
-    if (series.length) Object.assign(series[0], this.marks());
     const view = this.tw?.view;
+    if (series.length) Object.assign(series[0], this.marks(view || dom));
+    this.gridBox = {top: this.zoomable || labelled ? 20 : 6, bottom: (spec.xAxis === false ? 4 : 22) + (slider ? 24 : 0)};
+    const ticks = spec.xTicks ? new Map(spec.xTicks) : null;    // fixed ticks [[x, label], ...]
     return {
       animation: false,
-      grid: {left: 44, right: 10, top: this.zoomable || labelled ? 20 : 6, bottom: (spec.xAxis === false ? 4 : 22) + (slider ? 24 : 0)},
+      grid: {left: 44, right: 10, ...this.gridBox},
       xAxis: {type: spec.xType === "date" ? "time" : spec.xType === "log" ? "log" : "value", min: dom[0], max: dom[1],
         axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
         axisLabel: {show: spec.xAxis !== false, color: ink2, fontSize: 11, hideOverlap: true,
-          ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v)} : {})}},
+          ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v)} : {}),
+          ...(ticks ? {customValues: [...ticks.keys()], formatter: (v) => ticks.get(v) ?? ""} : {})}},
       yAxis: {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
         axisLine: {show: false}, axisTick: {show: false}, splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
       tooltip: {trigger: "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
@@ -548,7 +581,7 @@ export class EChart {
         extraCssText: "border-radius:9px;box-shadow:none;white-space:nowrap",
         axisPointer: {type: "line", lineStyle: {color: css("--muted"), type: [3, 3]}}, formatter: (p) => this.tip(p)},
       dataZoom: this.zoomable ? [
-        {type: "inside", xAxisIndex: 0, zoomOnMouseWheel: "ctrl", moveOnMouseWheel: "shift", moveOnMouseMove: true,
+        {type: "inside", xAxisIndex: 0, zoomOnMouseWheel: "ctrl", moveOnMouseWheel: "shift", moveOnMouseMove: spec.select ? "shift" : true,
           startValue: view?.[0], endValue: view?.[1]},
         ...(slider ? [{type: "slider", xAxisIndex: 0, height: 12, bottom: 4, showDetail: false, brushSelect: false,
           borderColor: "transparent", backgroundColor: css("--surface2"), fillerColor: css("--line"),
@@ -625,15 +658,18 @@ export class EChart {
     return {type: "line", shape: {x1: a[0], y1: a[1], x2: b[0], y2: b[1]}, style: {stroke: col, lineWidth: 1.2, opacity: api.value(3)}};
   }
 
-  // vline / hline, shade [from, to] and bands [[from, to, colour, label?, opacity?, inside?], ...] on the first series
-  marks() {
+  // vline / hline, shade [from, to] and bands [[from, to, colour, label?, opacity?, inside?], ...] on the first series;
+  // a band's label only where it fits in the x window `win` shown (about 7 px a letter)
+  marks(win) {
     const spec = this.spec, ink2 = css("--ink2"), bandOp = spec.bandOpacity ?? 0.22;
+    const perX = (this.chart.getWidth() - 54) / (win[1] - win[0] || 1);
+    const fits = (a, b, label) => !!label && (Math.min(b, win[1]) - Math.max(a, win[0])) * perX >= 7 * label.length;
     const lines = [];
     if (spec.vline != null) lines.push({xAxis: spec.vline, lineStyle: {color: ink2, width: 1, type: [2, 3]}});
     if (spec.hline != null) lines.push({yAxis: spec.hline, lineStyle: {color: ink2, width: 1, type: "solid"}});
     const areas = [...(spec.shade ? [[...spec.shade, css("--ink"), null, 0.06]] : []), ...(spec.bands || [])].map(([a, b, col, label, op, inside]) => [
       {xAxis: a, itemStyle: {color: col, opacity: op ?? bandOp},
-        label: {show: !!label, formatter: label || "", position: inside ? "insideTopLeft" : "top", align: "left", fontSize: 10.5,
+        label: {show: fits(a, b, label), formatter: label || "", position: inside ? "insideTopLeft" : "top", align: "left", fontSize: 10.5,
           fontWeight: 600, color: inside ? css("--ink") : col}},
       {xAxis: b}]);
     return {
@@ -679,6 +715,8 @@ export class EChart {
     if (had !== this.hasSlider()) { setTimeout(() => this.update(this.spec)); return; }   // the scrollbar comes or goes
     const y = this.yRange(this.tw.view);
     if (y.min != null) this.chart.setOption({yAxis: y});
+    if ((this.spec.bands || []).some((b) => b[3])) this.chart.setOption({series: [{markArea: this.marks(this.shownX()).markArea}]});
+    this.selShow(this.spec.select?.range);
     this.toGroup((c) => c.chart.dispatchAction({type: "dataZoom", startValue: dz.startValue, endValue: dz.endValue}));
   }
 
@@ -704,6 +742,50 @@ export class EChart {
     if (this.zoomable) this.chart.dispatchAction({type: "dataZoom", start: 0, end: 100});
   }
 
+  shownX() { return this.tw?.view || this.tw?.extent || [0, 1]; }
+
+  xAt(px) { return this.chart.convertFromPixel({xAxisIndex: 0}, px); }
+
+  dblclick() {                   // clears the selection (with select), else shows it all
+    const sel = this.spec.select;
+    if (!sel) { this.showAll(); return; }
+    clearTimeout(this.pickT);
+    sel.range = null;
+    this.selAll(null);
+    sel.onChange(null);
+  }
+
+  selAll(r) { (selectGroups[this.spec.group || this.box.id] || []).forEach((h) => h.show(r)); }
+
+  selShow(r) {                   // the selected stretch [a, b] as a box over the plot (null: none)
+    const [x0, x1] = this.shownX();
+    if (!r || !this.spec.select || !this.gridBox || r[1] < x0 || r[0] > x1) { this.selBox.hidden = true; return; }
+    const a = this.chart.convertToPixel({xAxisIndex: 0}, Math.max(x0, r[0]));
+    const b = this.chart.convertToPixel({xAxisIndex: 0}, Math.min(x1, r[1]));
+    Object.assign(this.selBox.style, {left: a + "px", width: Math.max(b - a, 1) + "px", top: this.gridBox.top + "px",
+      height: (this.chart.getHeight() - this.gridBox.top - this.gridBox.bottom) + "px"});
+    this.selBox.hidden = false;
+  }
+
+  edgeAt(px) {                   // 0 / 1: the selection's start / end edge is under px
+    const r = this.spec.select?.range;
+    return r ? [0, 1].find((k) => Math.abs(this.chart.convertToPixel({xAxisIndex: 0}, r[k]) - px) <= EChart.EDGE) : undefined;
+  }
+
+  down(e) {                      // a press: remembered for click vs drag; with select, a selection drag begins
+    this.downX = e.offsetX;
+    const sel = this.spec.select;
+    if (!sel || e.event.button > 0 || e.event.shiftKey) return;     // Shift + drag: ECharts pans
+    if (!this.chart.containPixel({gridIndex: 0}, [e.offsetX, e.offsetY])) return;
+    const k = this.edgeAt(e.offsetX);
+    EChart.selDrag = {chart: this, fixed: k != null ? sel.range[1 - k] : this.xAt(e.offsetX), px0: e.offsetX, edge: k != null, moved: false};
+  }
+
+  hover(e) {                     // the cursor: resize at a selection's edge, a crosshair where a drag selects
+    if (!this.spec.select || EChart.selDrag) return;
+    this.chart.getZr().setCursorStyle(this.edgeAt(e.offsetX) != null ? "ew-resize" : e.event.shiftKey ? "grab" : "crosshair");
+  }
+
   click(e) {                     // a click (not a drag) in the plot: onPick(x), unless it becomes a double-click
     if (!this.spec.onPick || this.downX == null || Math.abs(e.offsetX - this.downX) > 4) return;
     if (!this.chart.containPixel({gridIndex: 0}, [e.offsetX, e.offsetY])) return;
@@ -717,6 +799,9 @@ export const tail = (arr, n) => (arr || []).slice(Math.max(0, (arr || []).length
 
 window.addEventListener("pointermove", (ev) => TimeWindow.follow(ev));
 window.addEventListener("pointerup", () => TimeWindow.drop());
+// capture: ECharts' inside zoom stops the moves of every drag over a chart (also one it doesn't pan)
+window.addEventListener("pointermove", (ev) => EChart.selFollow(ev), true);
+window.addEventListener("pointerup", () => EChart.selDrop(), true);
 
 window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => {
   Object.entries(charts).forEach(([id, sp]) => document.getElementById(id) && drawChart(id, sp));

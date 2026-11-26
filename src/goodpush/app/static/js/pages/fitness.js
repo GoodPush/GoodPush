@@ -6,9 +6,9 @@ import {$, css, esc, fmt, hhmm} from "../util.js";
 import {hint, niceDate, tile, TYPE_LABEL} from "../widgets.js";
 import {CAUSE, dips, PERIOD} from "../dips.js";
 import {typeColor} from "../calendar/calendar.js";
-import {drawChart, SelectionPanel, TimeWindow} from "../charts.js";
+import {EChart, SelectionPanel, TimeWindow} from "../charts.js";
 
-export const ZOOM_HELP = "• Zoom: drag across, Ctrl + wheel or pinch\n• Zoomed in: drag or Shift + wheel moves sideways; Shift + drag zooms further\n• Double-click: show it all";
+export const ZOOM_HELP = "• Zoom: Ctrl + wheel or pinch, or drag the ends of the bar under the chart\n• Zoomed in: drag, Shift + wheel or the bar moves sideways\n• Double-click: show it all";
 // form (TSB) in words, the usual cut-offs: [lowest TSB, word], highest first
 const FORM_WORDS = [[5, "fresh"], [-10, "neutral"], [-30, "building"], [-Infinity, "very tired"]];
 
@@ -135,7 +135,7 @@ class FitnessPage extends Page {
     ${tile("Fatigue (ATL)", fmt(t.atl), "", t.atl != null ? `about ${fmt(t.atl)} TSS a day lately` : "")}
     ${tile("Form (TSB)", (t.tsb > 0 ? "+" : "") + fmt(t.tsb), "", this.formWord(t.tsb))}
   </div>
-  <h2>Load, fatigue and form${hint("• Load (CTL): training load over ~6 weeks · Fatigue (ATL): over ~1 week\n• Form (TSB) = load − fatigue: negative while building, positive when rested\n• A ride's load is TSS (an hour all-out = 100)\n• Shaded: breaks (illness, travel, time off) · dashed: the plan\n• Click a day: its ride · a break: say what it was · hover: titles and notes\n• Drag across a chart: that stretch's numbers and ramp rate\nMark periods:\n• Drag across the load chart to mark days (illness, travel, a gain …)\n• Click one of yours (✎) to change it; drag its edges to move it\n• Picking a found break as it is confirms it (✓)\n• Switching off (or leaving) learns from them once: illness / overreaching markers, Biggest gains\nZoom:\n• Ctrl + wheel, pinch, or Zoom to it on a stretch\n• Zoomed in: Shift + drag or Shift + wheel moves sideways; Reset zoom shows it all")}</h2>
+  <h2>Load, fatigue and form${hint("• Load (CTL): training load over ~6 weeks · Fatigue (ATL): over ~1 week\n• Form (TSB) = load − fatigue: negative while building, positive when rested\n• A ride's load is TSS (an hour all-out = 100)\n• Shaded: breaks (illness, travel, time off) · dashed: the plan\n• Click a day: its ride · a break: say what it was · hover: titles and notes\n• Drag across a chart: that stretch's numbers and ramp rate; double-click clears it\nMark periods:\n• Drag across the load chart to mark days (illness, travel, a gain …)\n• Click one of yours (✎) to change it; drag its edges to move it\n• Picking a found break as it is confirms it (✓)\n• Switching off (or leaving) learns from them once: illness / overreaching markers, Biggest gains\nZoom:\n• Ctrl + wheel, pinch, Zoom to it on a stretch, or the ends of the bar under the charts\n• Zoomed in: Shift + drag, Shift + wheel or the bar moves sideways; All shows it all")}</h2>
   <div class="card">
     <div class="row"><div class="legend"><span><i style="background:var(--s1)"></i>Load (CTL)</span><span><i style="background:var(--s2)"></i>Fatigue (ATL)</span><span><i class="dash" style="border-color:var(--muted)"></i>Planned (if you ride the plan)</span></div><span class="spacer"></span>
     <div class="seg"><button id="pmcgains" class="${this.showGains.value ? "on" : ""}" title="Shade the stretches where your FTP rose 4 % or more">Gains</button><button id="pmcmark" class="${this.marking ? "on" : ""}" title="Drag across the load chart to mark a period and say what it was">Mark periods</button></div>
@@ -199,7 +199,7 @@ class FitnessPage extends Page {
     }
     for (const [q] of fut) if (plan[q]) kinds.set(ms(q), "planned:" + plan[q].type);
     const vline = fut.length ? ms(last) : null, planFrom = ms(last);
-    drawChart("pmc", {x, xType: "date", group: "pmc", xAxis: false, yFmt: (v) => v, vline, onPick: pick, planFrom, bands, bandOpacity: 0.13,
+    EChart.draw("pmc", {x, xType: "date", group: "pmc", xAxis: false, yFmt: (v) => v, vline, onPick: pick, planFrom, bands, bandOpacity: 0.13,
       select: this.pmcSel,
       tipNote: (xv) => {                              // the day's workout type, its activities' titles and notes
         const k = kinds.get(xv), i = dayIx.get(xv), note = s.note?.[i];
@@ -213,7 +213,7 @@ class FitnessPage extends Page {
       {kind: "line", y: pad(s.atl), color: css("--s2"), name: "Fatigue (ATL)"},
       {kind: "line", y: ahead("ctl"), color: css("--s1"), dash: true, name: "Load, planned", tipName: "Load (CTL)", planned: true},
       {kind: "line", y: ahead("atl"), color: css("--s2"), dash: true, name: "Fatigue, planned", tipName: "Fatigue (ATL)", planned: true}]});
-    drawChart("pmcForm", {x, xType: "date", group: "pmc", scrollbar: true, select: this.pmcSel, yFmt: (v) => v, vline, onPick: pick, planFrom, series: [
+    EChart.draw("pmcForm", {x, xType: "date", group: "pmc", scrollbar: true, select: this.pmcSel, yFmt: (v) => v, vline, onPick: pick, planFrom, series: [
       {kind: "bar", y: pad(s.tsb), color: css("--s3"), opacity: 0.6, name: "Form (TSB)", fmt: sign},
       {kind: "bar", y: ahead("tsb"), color: css("--s3"), opacity: 0.25, name: "Form, planned", tipName: "Form (TSB)", planned: true, fmt: sign}]});
     const both = (k) => { const f = ahead(k); return pad(s[k]).map((v, i) => v ?? f[i]); };
@@ -224,7 +224,7 @@ class FitnessPage extends Page {
   chartFTP() {
     const h = S.history; if (!h) return;
     const W = (v) => fmt(v) + " W";
-    drawChart("ftph", {x: h.date, xType: "date", yFmt: (v) => v + " W", series: [
+    EChart.draw("ftph", {x: h.date, xType: "date", yFmt: (v) => v + " W", series: [
       {kind: "line", y: h.ftp, color: css("--s1"), name: "FTP", fmt: W},
       {kind: "dots", y: h.test, color: css("--s2"), name: "Best test", fmt: W}]});
   }
@@ -234,7 +234,7 @@ class FitnessPage extends Page {
     const pts = (o) => Object.entries(o || {}).map(([k, v]) => [Number(k), v && v.w]).filter(([k, w]) => w && k >= 5).sort((a, b) => a[0] - b[0]);
     const a = pts(p.bests_90d), b = pts(p.bests_all);
     const lab = (s) => s < 60 ? `${s} s` : s < 3600 ? `${Math.round(s / 60)} min` : hhmm(s / 60);
-    drawChart("pdc", {xType: "log", yFmt: (v) => v + " W", xLabel: lab,
+    EChart.draw("pdc", {xType: "log", yFmt: (v) => v + " W", xLabel: lab,
       xTicks: [[5, "5s"], [15, "15s"], [60, "1m"], [300, "5m"], [1200, "20m"], [3600, "1h"], [7200, "2h"]],
       series: [
         {kind: "line", x: b.map((q) => q[0]), y: b.map((q) => q[1]), color: css("--muted"), dash: true, name: "All-time", fmt: (v) => fmt(v) + " W"},
