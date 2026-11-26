@@ -7,15 +7,17 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import Qt  # noqa: E402
-from PySide6.QtGui import QGuiApplication, QImage, QPainter  # noqa: E402
+from PySide6.QtGui import QImage, QPainter  # noqa: E402
 from PySide6.QtSvg import QSvgRenderer  # noqa: E402
+from PySide6.QtWidgets import QApplication  # noqa: E402
 
 N = 1024
 SVG = Path(__file__).with_name("icon.svg")
 
 
 def main(out: Path) -> None:
-    app = QGuiApplication.instance() or QGuiApplication(sys.argv[:1])
+    # a QApplication (a QGuiApplication too): later widgets in the same process (the tests) need one
+    app = QApplication.instance() or QApplication(sys.argv[:1])
     img = QImage(N, N, QImage.Format_ARGB32)
     img.fill(Qt.transparent)
     p = QPainter(img)

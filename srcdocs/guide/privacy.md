@@ -7,6 +7,9 @@ server, account or tracking of its own. Nothing is sent anywhere unless you set 
 
 * **Your own data downloads**, straight from Garmin, Strava or Google Health to your computer, with the sign-ins you
   gave it.
+* **intervals.icu**, when you press *Send plan now* (Settings > intervals.icu): the planned workouts of the next two
+  weeks (date, name, steps) go to your own intervals.icu calendar, with the API key you gave it. From there
+  intervals.icu passes them to the accounts you connected in its settings (Garmin, Wahoo, Zwift, ...).
 * **Map tiles**: when you open a ride, its map comes from OpenStreetMap / CyclOSM (with Leaflet), so those servers
   see which area you're looking at. Nothing is stored; offline the route shows without a map.
 * **Your other computers**, if you pair them: only on your home network or Tailscale, encrypted

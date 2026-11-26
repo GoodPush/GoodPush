@@ -19,6 +19,11 @@
 5. Sets: efforts in a row of about the same length (+-20 %), close together, rests about as long as
    the set's earlier ones. Intervals: the efforts long enough for their zone (MIN_S), or the whole set
    when at least half of it is.
+6. Heart-rate recovery: per interval, heart rate over its last END_S less that over the last END_S of the
+   REC_S after it (hrr_60), with the average power in those REC_S (rec_watts) - when the next interval
+   starts later. How far it falls depends mostly on the power you drop to, so hrr_share (worked out when
+   read) is the part of the way to the steady heart rate at rec_watts it fell. A trend in it is a
+   hypothesis (faster with fitness, and with functional overreaching: Aubry et al. 2015).
 
 Each split is computed for the whole ride at once (cumulative sums); the loops run over splits and
 pieces (tens), not samples. A 4-h ride takes ~10 ms.
@@ -58,6 +63,9 @@ SET_GAP_REPS, SET_GAP_S = 4, 600                     # reps further apart than b
 SET_REST = 2.5, 60                                   # or a rest over both x / + the set's median rest so far
 SET_REPS = 3                                         # a set this long counts (steady power), its reps at
 SET_REP_SHARE = 1 / 6                                # least this share of MIN_S (tempo 50 s, VO2max 5 s)
+REC_S = 60                                           # heart-rate recovery: how far it fell this long after
+END_S = 5                                            # an interval; heart rate over the last END_S of each
+MIN_GAP_BPM = 10.0                                   # hrr_share: end HR at least this far above the steady HR
 
 
 class RideIntervals:
@@ -286,7 +294,41 @@ class RideIntervals:
             rep = [x["seconds"] >= SET_REP_SHARE * MIN_S[ZONE_NAMES.index(x["zone"])] for x in iv[a:b]]
             whole = 2 * sum(ok) >= len(ok) or (not self.bursty and len(ok) >= SET_REPS and all(rep))
             out += [x for x, k in zip(iv[a:b], ok) if k or whole]
+        rec = self.recovery(self.power, self.hr, [x["start"] for x in out], [x["end"] for x in out])
+        for i, x in enumerate(out):                        # intervals: tens
+            x.update({c: (None if np.isnan(v[i]) else float(v[i])) for c, v in rec.items()})
         return out
+
+    @staticmethod
+    def recovery(power, hr, start, end) -> dict[str, np.ndarray]:
+        """heart-rate recovery after each interval (start / end in s, in order): hr_end (heart rate over its last
+        END_S), hrr_60 (that less the heart rate over the last END_S of the REC_S after it) and rec_watts (average
+        power over those REC_S). NaN where the next interval starts sooner, the ride ends or heart rate is missing
+        (rec_watts: only the first two)."""
+        P = np.nan_to_num(np.asarray(power, float))
+        H = np.full(P.size, np.nan) if hr is None else np.asarray(hr, float)
+        H = np.where(H > 30, H, np.nan)
+        start, end = np.asarray(start, int), np.asarray(end, int)
+        ok = (np.r_[start[1:], P.size] - end >= REC_S) & (end >= END_S)
+        e = np.where(ok, end, END_S)
+        r = np.minimum(e + REC_S, P.size)
+        cp, ch = np.r_[0.0, np.cumsum(P)], np.r_[0.0, np.cumsum(np.nan_to_num(H))]
+        cn = np.r_[0, np.cumsum(np.isfinite(H))]
+        full = ok & (cn[e] - cn[e - END_S] == END_S) & (cn[r] - cn[r - END_S] == END_S)
+        hr_end = np.where(full, (ch[e] - ch[e - END_S]) / END_S, np.nan)
+        hr_rec = np.where(full, (ch[r] - ch[r - END_S]) / END_S, np.nan)
+        return {"hr_end": np.round(hr_end, 1), "hrr_60": np.round(hr_end - hr_rec, 1),
+                "rec_watts": np.round(np.where(ok, (cp[r] - cp[e]) / REC_S, np.nan))}
+
+    @staticmethod
+    def share(hr_end, hrr_60, rec_watts, cp, rhr, lthr) -> np.ndarray:
+        """hrr_share: the part of the way from hr_end down to the steady heart rate at rec_watts that heart rate
+        fell in REC_S (0: none, 1: all). Steady heart rate: the line from resting HR at no power to LTHR at CP (as
+        models.ftp_model.FtpModel.power_at_lthr). NaN where hr_end is within MIN_GAP_BPM of it."""
+        hr_end, hrr, w = (np.asarray(x, float) for x in (hr_end, hrr_60, rec_watts))
+        steady = rhr + (lthr - rhr) * np.maximum(w, 0.0) / cp
+        gap = hr_end - steady
+        return np.round(np.where(gap >= MIN_GAP_BPM, hrr / np.where(gap >= MIN_GAP_BPM, gap, 1.0), np.nan), 3)
 
     def sets(self, intervals: list[dict] | None = None) -> list[dict]:
         """the intervals in sets: {first, count, seconds (median), watts_lo / watts_hi, zone (of their
@@ -313,9 +355,16 @@ class RideIntervals:
         """seconds in each zone (ZONE_NAMES), second by second."""
         return np.bincount(self.zone(self.power), minlength=len(ZONE_NAMES)) if self.power.size else np.zeros(len(ZONE_NAMES), int)
 
-    def summary(self) -> dict:
-        """for the ride page: intervals, sets, the zones (names, floors in watts) and time in each."""
+    def summary(self, rhr: float | None = None, lthr: float | None = None) -> dict:
+        """for the ride page: intervals (with hrr_share given resting HR and LTHR), sets, the zones (names, floors
+        in watts) and time in each."""
         iv = self.intervals()
+        if rhr and lthr and iv:
+            nan = np.nan
+            s = self.share(*([nan if x[c] is None else x[c] for x in iv] for c in ("hr_end", "hrr_60", "rec_watts")),
+                           self.cp, rhr, lthr)
+            for x, v in zip(iv, s):                        # intervals: tens
+                x["hrr_share"] = None if np.isnan(v) else float(v)
         return {"intervals": iv, "sets": self.sets(iv), "bursty": self.bursty, "zones": list(ZONE_NAMES),
                 "zone_floors": np.round(self.edges).astype(int).tolist(), "zone_seconds": self.zone_seconds().tolist()}
 
@@ -331,6 +380,7 @@ class IntervalLog:
     VERSION = 3
     THRESHOLD_STEP = 5.0
     DROP = ("end", "steps", "long_enough")
+    BATCH = 40                                                     # rides read at a time (add_recovery)
 
     @classmethod
     def keys(cls, knots: np.ndarray) -> np.ndarray:
@@ -377,8 +427,14 @@ class IntervalLog:
             wp = np.full(len(rides), np.nan)
         keys = cls.keys(knots)
         old = store.load(processed, cls.NAME)
+        filled = old is not None and len(old) > 0 and "hrr_60" not in old.columns
+        if filled:
+            old = cls.add_recovery(processed, old)
+            progress("intervals: heart-rate recovery added to the stored intervals")
         todo = cls.stale(ids, knots, old)
         if not todo.size and old is not None:
+            if filled:
+                store.save(old, processed, cls.NAME)
             return old[old["id"].isin(ids)]
         streams = streamstore.read_many(processed, list(ids[todo]), "ride", ["power", "heart_rate"])
         rows = []
@@ -393,6 +449,46 @@ class IntervalLog:
         store.save(out.reset_index(drop=True), processed, cls.NAME)
         progress(f"intervals: {todo.size} rides looked at, {int((out['start'] >= 0).sum())} intervals in all")
         return out
+
+    @classmethod
+    def add_recovery(cls, processed, t: pd.DataFrame) -> pd.DataFrame:
+        """a table stored before heart-rate recovery was (RideIntervals.recovery) with it added from the streams,
+        the intervals as they were found (no new cuts: the physio model's readings stay), BATCH rides at a time."""
+        from ..io import streamstore
+        t = t.reset_index(drop=True)
+        cols = {c: np.full(len(t), np.nan) for c in ("hr_end", "hrr_60", "rec_watts")}
+        live = t[t["start"] >= 0]
+        ids = live["id"].unique()
+        for b in range(0, len(ids), cls.BATCH):                    # batches of rides
+            streams = streamstore.read_many(processed, list(ids[b:b + cls.BATCH]), "ride", ["power", "heart_rate"])
+            for aid, g in live[live["id"].isin(ids[b:b + cls.BATCH])].groupby("id"):    # rides: each vectorised
+                z = streams.get(aid)
+                if z is None:
+                    continue
+                g = g.sort_values("start")
+                s = g["start"].to_numpy(int)
+                rec = RideIntervals.recovery(z["power"], z["heart_rate"], s, s + g["seconds"].to_numpy(int))
+                for c, v in rec.items():
+                    cols[c][g.index.to_numpy()] = v
+        return t.assign(**cols)
+
+    @staticmethod
+    def rest_hr(daily: pd.DataFrame | None, dates) -> np.ndarray:
+        """resting heart rate (the daily table's baseline, rhr_base) on each of `dates`; NaN without one."""
+        dates = pd.DatetimeIndex(pd.to_datetime(dates)).normalize()
+        if daily is None or "rhr_base" not in daily or not daily["rhr_base"].notna().any():
+            return np.full(len(dates), np.nan)
+        b = daily["rhr_base"].dropna().sort_index()
+        i = b.index.searchsorted(dates, side="right") - 1          # the last baseline on or before the day
+        return b.to_numpy(float)[np.clip(i, 0, len(b) - 1)]       # before the first: the first
+
+    @classmethod
+    def with_share(cls, t: pd.DataFrame, daily: pd.DataFrame | None, lthr: float) -> pd.DataFrame:
+        """the table with hrr_share (RideIntervals.share), from resting HR on each ride's day and `lthr`: worked
+        out when read, so a new LTHR or resting HR leaves no stale values."""
+        cp = t["watts"].to_numpy(float) * 100 / t["pct_cp"].to_numpy(float)
+        return t.assign(hrr_share=RideIntervals.share(t["hr_end"], t["hrr_60"], t["rec_watts"], cp,
+                                                      cls.rest_hr(daily, t["date"]), lthr))
 
     @classmethod
     def load(cls, processed) -> pd.DataFrame | None:

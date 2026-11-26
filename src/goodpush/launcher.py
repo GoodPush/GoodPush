@@ -114,6 +114,10 @@ class App:
             self.open()
             return
         self.start()
+        if os.environ.get(AppWindow.ENV):        # spike: the app in its own window (Qt WebEngine)
+            AppWindow(self.url).run()
+            self.quit()
+            return
         self.handler.pages.open_unless_seen(self.url)   # a goodpush tab still open reloads itself instead
         if not self.tray():                      # no tray (some Linux desktops): until Quit in the page
             self.stopped.wait()
@@ -149,6 +153,155 @@ class App:
         from PySide6.QtWidgets import QSystemTrayIcon
         if reason == QSystemTrayIcon.ActivationReason.Trigger and sys.platform != "darwin":
             self.open()
+
+
+class AppWindow:
+    """Spike (branch spike/qt-webengine): the page in a window of its own (Qt WebEngine) instead of a browser tab.
+    A profile that keeps localStorage, links to other sites in your browser, downloads into Downloads with a notice
+    at the bottom (Show in folder), reload with the platform's key (Cmd+R, F5) as in a browser. With
+    GOODPUSH_WEBVIEW_CHECK=<file> it loads the page, downloads a file next to <file>, writes what it found as JSON
+    and quits (the build check)."""
+    ENV = "GOODPUSH_WEBVIEW"
+    CHECK = "GOODPUSH_WEBVIEW_CHECK"
+    CHECK_S = 60                                 # the check gives up after this long
+    NOTICE_S = 8                                 # a download's notice shows this long
+    NOTICE_CSS = ("QFrame#notice { background:#1f1f1d; border-radius:10px; } QLabel { color:#f0efec; font-size:13px; }"
+                  " QPushButton { color:#f0efec; background:#3a3a37; border:0; border-radius:6px; padding:5px 10px; }"
+                  " QPushButton:hover { background:#4a4a46; }")
+
+    def __init__(self, url: str):
+        self.url = url
+        self.found = {}
+        self.saved = None                        # the file the notice is about
+
+    def run(self) -> None:
+        from PySide6.QtCore import QStandardPaths, QTimer
+        from PySide6.QtWebEngineCore import QWebEngineProfile
+        from PySide6.QtWebEngineWidgets import QWebEngineView
+        from PySide6.QtWidgets import QApplication
+        from .folders import Folders
+        app = QApplication.instance() or QApplication([])
+        self.app = app
+        self.profile = QWebEngineProfile("goodpush", app)            # named: kept on disk (the default one isn't)
+        self.profile.setPersistentStoragePath(str(Folders.machine() / "webview"))   # this computer's, not an athlete's
+        self.profile.downloadRequested.connect(self.download)
+        self.downloads = str(Path(os.environ[self.CHECK]).parent) if os.environ.get(self.CHECK) else \
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation)
+        self.view = QWebEngineView(self.profile)
+        self.view.page().newWindowRequested.connect(self.elsewhere)
+        self.view.setWindowTitle("goodpush")
+        self.view.resize(1280, 860)
+        self.shortcuts()
+        self.notice_bar()
+        if os.environ.get(self.CHECK):
+            self.view.loadFinished.connect(self.loaded)
+            QTimer.singleShot(self.CHECK_S * 1000, self.report)
+        self.view.load(self.url)
+        self.view.show()
+        app.exec()
+
+    def shortcuts(self) -> None:
+        """what a browser tab would let you do: reload the page (Cmd+R on a Mac, F5 / Ctrl+R elsewhere)."""
+        from PySide6.QtGui import QKeySequence, QShortcut
+        for keys in QKeySequence.keyBindings(QKeySequence.StandardKey.Refresh):
+            QShortcut(keys, self.view, self.view.reload)
+
+    def elsewhere(self, request) -> None:
+        """a link to another site (target=_blank): in your browser."""
+        webbrowser.open(request.requestedUrl().toString())
+
+    def notice_bar(self) -> None:
+        """the bar a finished download shows at the bottom of the window (a browser would show it in its own)."""
+        from PySide6.QtCore import QTimer
+        from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
+        self.notice = QFrame(self.view)
+        self.notice.setObjectName("notice")
+        self.notice.setStyleSheet(self.NOTICE_CSS)
+        row = QHBoxLayout(self.notice)
+        row.setContentsMargins(14, 8, 8, 8)
+        self.notice_text, self.notice_show, close = QLabel(), QPushButton("Show in folder"), QPushButton("×")
+        self.notice_show.clicked.connect(self.reveal)
+        close.clicked.connect(self.notice.hide)
+        for w in (self.notice_text, self.notice_show, close):
+            row.addWidget(w)
+        self.notice.hide()
+        self.notice_timer = QTimer(self.notice)
+        self.notice_timer.setSingleShot(True)
+        self.notice_timer.timeout.connect(self.notice.hide)
+
+    def download(self, item) -> None:
+        from functools import partial
+        item.setDownloadDirectory(self.downloads)
+        item.isFinishedChanged.connect(partial(self.downloaded, item))
+        item.accept()
+
+    def downloaded(self, item) -> None:
+        """a download ended: say where it went (or that it failed)."""
+        from PySide6.QtWebEngineCore import QWebEngineDownloadRequest
+        name = item.downloadFileName()
+        if item.state() == QWebEngineDownloadRequest.DownloadState.DownloadCompleted:
+            self.show_notice(f"Saved to Downloads: {name}", Path(item.downloadDirectory()) / name)
+        else:
+            self.show_notice(f"Download failed: {name} ({item.interruptReasonString()})", None)
+        if os.environ.get(self.CHECK):
+            self.found.update(download=name, saved=bool(self.saved and self.saved.is_file()),
+                              notice=self.notice_text.text(), notice_shown=self.notice.isVisible())
+            self.report()
+
+    def show_notice(self, text: str, path: Path | None) -> None:
+        self.saved = path
+        self.notice_text.setText(text)
+        self.notice_show.setVisible(path is not None)
+        self.notice.adjustSize()
+        self.notice.move((self.view.width() - self.notice.width()) // 2, self.view.height() - self.notice.height() - 18)
+        self.notice.raise_()
+        self.notice.show()
+        self.notice_timer.start(self.NOTICE_S * 1000)
+
+    def reveal(self) -> None:
+        """the downloaded file selected in Explorer / Finder (StravaUpload.reveal)."""
+        from .io.strava import StravaUpload
+        if self.saved is not None:
+            StravaUpload.reveal(self.saved)
+        self.notice.hide()
+
+    def loaded(self, ok: bool) -> None:
+        """the check: the page loaded, the app's scripts ran (its tabs), localStorage works."""
+        self.found["loaded"] = ok
+        js = ("localStorage.setItem('gp_check', '1');"
+              "JSON.stringify({title: document.title, tabs: document.querySelectorAll('#tabs a').length,"
+              " storage: localStorage.getItem('gp_check'), agent: navigator.userAgent})")
+        self.view.page().runJavaScript(js, 0, self.scripted)
+
+    def scripted(self, result) -> None:
+        self.found.update(json.loads(result or "{}"))
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(3000, self.drawn)        # the app's first /api/state and render
+
+    def drawn(self) -> None:
+        self.view.page().runJavaScript("document.querySelector('#main')?.innerText.slice(0, 200) || ''", 0, self.content)
+
+    def content(self, text) -> None:
+        """the page drawn (more than its "Loading…"), else a second later again (report() ends it at CHECK_S)."""
+        self.found["main_text"] = text
+        if len(text or "") > 20:
+            js = "document.querySelector('link[rel=stylesheet]')?.href || ''"
+            self.view.page().runJavaScript(js, 0, self.fetch)       # then a download (downloaded reports)
+            return
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(1000, self.drawn)
+
+    def fetch(self, href) -> None:
+        """the check's download: the page's own stylesheet, a file the app always serves."""
+        from PySide6.QtCore import QUrl
+        if not href:
+            self.report()
+            return
+        self.view.page().download(QUrl(href), "")
+
+    def report(self) -> None:
+        Path(os.environ[self.CHECK]).write_text(json.dumps(self.found), encoding="utf-8")
+        self.app.quit()
 
 
 def main(argv: list[str] | None = None) -> None:

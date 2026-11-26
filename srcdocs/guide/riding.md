@@ -1,6 +1,25 @@
 # Riding the plan
 
-## On a Garmin watch or bike computer
+## Through intervals.icu (watch, bike computer, Zwift, MyWhoosh)
+
+GoodPush sends your planned workouts to [intervals.icu](https://intervals.icu), and intervals.icu passes them on to
+the devices and apps you connect there. GoodPush doesn't talk to Garmin, Wahoo or Zwift itself for this.
+
+1. Make a free intervals.icu account.
+2. In intervals.icu, **Settings > Connections**: connect your Garmin Connect, Wahoo, Zwift or MyWhoosh account and
+   switch on sending planned workouts to it. Garmin then puts each workout in its calendar and on your watch or
+   Edge after the next sync.
+3. In intervals.icu, **Settings > Developer Settings**: generate an API key and paste it into GoodPush under
+   **Settings > API keys**.
+4. In GoodPush, **Settings > intervals.icu > Send plan now**. It sends today and the next 13 days. Send again after
+   the plan changes: GoodPush's workouts there are updated, dropped ones removed, your own left alone.
+
+* Targets are % of FTP: keep your FTP in intervals.icu the same as in GoodPush.
+* MyWhoosh takes the next 7 days; ramps ride as a steady average, without cadence targets.
+* intervals.icu is free and paid for by the riders who support it. If it gets your plan to your watch, please
+  consider supporting it.
+
+## On a Garmin watch or bike computer, without intervals.icu
 
 Each session is written as a structured workout (`reports/plan/workouts/gp_*.fit`). Plug the watch in by USB and
 copy the files into `GARMIN/NewFiles`; after unplugging they appear under *Training > Workouts* (cycling). Pair a

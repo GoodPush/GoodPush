@@ -168,8 +168,13 @@ class SettingsPage extends Page {
       : `<p class="small muted" style="margin:0">Add your intervals.icu key under <i>API keys</i> above.</p>`;
     return `<div class="card">
     ${body}
-    <p class="small" style="margin:12px 0 0">Sends the next ${fmt(I.days || 14)} days of your plan to your intervals.icu calendar as planned workouts.
-      intervals.icu can pass them on to Garmin, Wahoo or Zwift (its own settings, under Connections).</p>
+    <p class="small" style="margin:12px 0 0">This is how your workouts get to your watch, bike computer and training apps: goodpush sends the next
+      ${fmt(I.days || 14)} days of your plan to your intervals.icu calendar, and intervals.icu passes them on.</p>
+    <ol class="small" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
+      <li>Make a free account at <a href="https://intervals.icu" target="_blank" rel="noopener">intervals.icu</a> and add its API key under <i>API keys</i> above.</li>
+      <li>In intervals.icu → <a href="https://intervals.icu/settings" target="_blank" rel="noopener">Settings</a> → <i>Connections</i>, connect your
+        Garmin, Wahoo, Zwift or MyWhoosh account and switch on sending planned workouts to it.</li>
+      <li>Press <b>Send plan now</b> here, and again after the plan changes.</li></ol>
     <ul class="reasons small" style="margin-top:8px">
       <li>Sending again updates goodpush's workouts there; ones the plan dropped are removed.</li>
       <li>Past days and workouts you made in intervals.icu yourself are left alone.</li>

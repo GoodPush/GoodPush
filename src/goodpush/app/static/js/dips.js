@@ -1,7 +1,7 @@
 // Training breaks (DipsSection): the list, causes, profiles; shown on Recovery (folded) and shaded on Fitness.
 import {Lazy} from "./controls.js";
 import {api, S} from "./api.js";
-import {css, esc, fmt} from "./util.js";
+import {boxSigma, css, esc, expSmooth, fmt} from "./util.js";
 import {niceDate} from "./widgets.js";
 import {router} from "./main.js";
 import {fitnessPage} from "./pages/fitness.js";
@@ -19,12 +19,6 @@ class DipsSection {
   drops = new Lazy("/api/dips", () => { if (["recovery", "fitness"].includes(router.route())) router.render(); });
   dipFilter = "";
   dipsOpen = false;   // the list of breaks starts folded
-
-  smoothC(arr, w) {   // centred moving average, keeps gaps where there is no data
-    const h = Math.floor(w / 2);
-    return arr.map((v, i) => { if (v == null) return null; let s2 = 0, n = 0;
-      for (let j = i - h; j <= i + h; j++) if (arr[j] != null) { s2 += arr[j]; n++; } return n ? s2 / n : null; });
-  }
 
   // a training break clicked on the load chart: pick what it was (your label wins and is what the markers learn from)
   lastPointer = {x: 0, y: 0};
@@ -115,7 +109,7 @@ class DipsSection {
     const lab = (o) => (o === 0 ? "day 0" : `${o > 0 ? "+" : ""}${o} d`);
     for (const m of ["rhr_d", "hrv_z", "sleep_d", "load7"]) {
       EChart.draw("pf_" + m, {x: P.offset, xType: "num", xTickFmt: (v) => `${v > 0 ? "+" : ""}${v}`, xLabel: lab, vline: 0, hline: m === "load7" ? null : 0,
-        group: "pf", yFmt: (v) => v, series: Object.entries(P.causes).map(([c, v]) => ({kind: "line", y: m === "load7" ? v[m] : this.smoothC(v[m], 5), color: css((CAUSE[c] || ["", "--line"])[1]),
+        group: "pf", yFmt: (v) => v, series: Object.entries(P.causes).map(([c, v]) => ({kind: "line", y: m === "load7" ? v[m] : expSmooth(v[m], boxSigma(5)), color: css((CAUSE[c] || ["", "--line"])[1]),
           name: (CAUSE[c] || [c])[0], fmt: (q) => fmt(q, m === "load7" ? 0 : 1), width: 2, connect: true}))});
     }
   }

@@ -78,6 +78,16 @@ def test_send_to_strava_copies_the_title_before_strava_opens():
     assert "return `GoodPush - ${" in ride.split("  stravaTitle(a) {")[1].split("\n  }\n")[0]
 
 
+def test_charts_smooth_with_the_recursive_exponential_filter_not_a_box():
+    util = (JS / "util.js").read_text(encoding="utf-8")
+    assert "export function expSmooth(arr, sigma)" in util and "export const boxSigma" in util
+    for path in modules():
+        text = path.read_text(encoding="utf-8")
+        assert "boxSmooth" not in text and "smoothC" not in text, path.name
+    for name in ("pages/ride.js", "dips.js"):
+        assert "expSmooth(" in (JS / name).read_text(encoding="utf-8"), name
+
+
 def test_ride_power_starts_raw_with_a_two_minute_smoothing_slider():
     ride = (JS / "pages" / "ride.js").read_text(encoding="utf-8")
     assert "  rideSmooth = 0;" in ride

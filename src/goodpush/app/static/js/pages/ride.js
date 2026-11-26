@@ -2,7 +2,7 @@
 import {Pref} from "../controls.js";
 import {Page} from "./page.js";
 import {api, S, toast} from "../api.js";
-import {$, boxSmooth, css, esc, fmt, hhmm, mmss} from "../util.js";
+import {$, boxSigma, css, expSmooth, esc, fmt, hhmm, mmss} from "../util.js";
 import {hint, niceDate, tile, zoneVar} from "../widgets.js";
 import {router} from "../main.js";
 import {markers} from "../markers.js";
@@ -181,7 +181,7 @@ class RidePage extends Page {
     const a = this.RIDE, st = a.streams;
     if (!st) return null;
     const W = 1200, H = 520, font = getComputedStyle(document.body).fontFamily;
-    const power = boxSmooth(st.power, Math.max(0, (10 / (st.bucket_s || 1) - 1) / 2));
+    const power = expSmooth(st.power, boxSigma(10 / (st.bucket_s || 1)));
     const steps = a.plan?.steps || [], ftp = a.ftp || 200;
     const top = Math.max(1.2 * ftp, ...steps.map((s) => s[3]), ...power.filter((v) => v != null)) * 1.05;
     const box = {l: 56, r: W - 20, t: 76, b: H - 30, x1: this.rideEnd(), y1: top};
@@ -279,7 +279,7 @@ class RidePage extends Page {
     const zoneRange = (i) => `${IV.zone_floors[i]}${i + 1 < IV.zone_floors.length ? `–${IV.zone_floors[i + 1]}` : "+"} W`;
     const setLines = IV.sets.map((x) => `<li><span class="sw" style="background:${zc(x.zone)}"></span><b>${x.count > 1 ? `${x.count} × ` : ""}${mmss(x.seconds)}</b> @ ${x.watts_hi - x.watts_lo < 6 ? x.watts_lo : `${x.watts_lo}–${x.watts_hi}`} W
     <span class="muted">${ZN[x.zone] || x.zone}${x.rest ? ` · ${mmss(x.rest)} between at ${x.rest_watts} W (${(ZN[x.rest_zone] || "").toLowerCase()})` : ""}</span></li>`).join("");
-    const eff = IV.intervals.map((e, i) => `<tr class="pick" data-a="${this.rideT(e.start) / 60}" data-b="${this.rideT(e.end) / 60}" title="Select this interval"><td class="n">${i + 1}</td><td class="n">${mmss(this.rideT(e.start))}</td><td class="n">${mmss(e.seconds)}</td><td class="n"><b>${fmt(e.watts)}</b> W</td><td class="n">${fmt(e.pct_cp)} %</td><td><span class="sw" style="background:${zc(e.zone)}"></span>${ZN[e.zone] || e.zone}</td><td class="small muted">${e.steps.map(([t, w]) => `${mmss(t)} @ ${w}`).join(" · ")}</td>${IV.w_prime ? `<td class="n">${e.w_prime_used > 0 ? fmt(e.w_prime_used) + " %" : "–"}</td>` : ""}<td class="n">${fmt(e.avg_hr)}</td><td class="n">${fmt(e.max_hr)}</td></tr>`).join("");
+    const eff = IV.intervals.map((e, i) => `<tr class="pick" data-a="${this.rideT(e.start) / 60}" data-b="${this.rideT(e.end) / 60}" title="Select this interval"><td class="n">${i + 1}</td><td class="n">${mmss(this.rideT(e.start))}</td><td class="n">${mmss(e.seconds)}</td><td class="n"><b>${fmt(e.watts)}</b> W</td><td class="n">${fmt(e.pct_cp)} %</td><td><span class="sw" style="background:${zc(e.zone)}"></span>${ZN[e.zone] || e.zone}</td><td class="small muted">${e.steps.map(([t, w]) => `${mmss(t)} @ ${w}`).join(" · ")}</td>${IV.w_prime ? `<td class="n">${e.w_prime_used > 0 ? fmt(e.w_prime_used) + " %" : "–"}</td>` : ""}<td class="n">${fmt(e.avg_hr)}</td><td class="n">${fmt(e.max_hr)}</td><td class="n">${e.hrr_60 != null ? `−${fmt(e.hrr_60)} <span class="small muted">at ${fmt(e.rec_watts)} W</span>` : "–"}</td><td class="n">${e.hrr_share != null ? `${fmt(e.hrr_share * 100)} %` : "–"}</td></tr>`).join("");
     const kmh = a.distance_m && a.moving_s ? a.distance_m / a.moving_s * 3.6 : null;
     const notes = [a.description, a.private_note].filter((x) => x).map((x) => `<p style="margin:6px 0 0">${esc(x)}</p>`).join("");
     return `
@@ -339,7 +339,7 @@ class RidePage extends Page {
     <p class="small muted">Found where the power steps up or down${IV.bursty ? " (on 30-s power: this ride's power is bursty, so short surges don't count)" : ""}; tempo and harder.
       Zones from your thresholds that day${IV.anchors ? ` (LT1 ${IV.anchors.lt1} W, CP ${IV.anchors.cp} W, MAP ${IV.anchors.map} W${IV.w_prime ? `, W′ ${fmt(IV.w_prime / 1000, 1)} kJ` : ""})` : ""}, as in your plan: threshold at CP, VO2max between CP and MAP, anaerobic above MAP.
       ${IV.w_prime ? "W′ used: the most of your W′ spent by the end of the interval (W′ balance, as in the stamina chart). " : ""}Click one to select it in the charts.</p>
-    <div class="tw"><table><thead><tr><th class="n">#</th><th class="n">At</th><th class="n">Duration</th><th class="n">Avg power</th><th class="n">of CP</th><th>Zone</th><th>Steps</th>${IV.w_prime ? '<th class="n">W′ used</th>' : ""}<th class="n">Avg HR</th><th class="n">Max HR</th></tr></thead><tbody>${eff}</tbody></table></div></div>` : ""}`;
+    <div class="tw"><table><thead><tr><th class="n">#</th><th class="n">At</th><th class="n">Duration</th><th class="n">Avg power</th><th class="n">of CP</th><th>Zone</th><th>Steps</th>${IV.w_prime ? '<th class="n">W′ used</th>' : ""}<th class="n">Avg HR</th><th class="n">Max HR</th><th class="n" title="How far your heart rate fell in the minute after the interval, and your average power in that minute (– when the next interval came sooner)">HR drop 1 min</th><th class="n" title="How much of the way down to your steady heart rate at that recovery power your heart rate fell in the minute: comparable across recovery powers. Steady heart rate: a straight line from your resting HR to your LTHR at CP">Recovered</th></tr></thead><tbody>${eff}</tbody></table></div></div>` : ""}`;
   }
 
   // a ramp test ridden from the plan (server ramp_test_detail): the top, max HR, recovery, HR at your thresholds,
@@ -540,16 +540,16 @@ class RidePage extends Page {
     const last = ["ra1", "rcad", "ralt", "rsta", "rhr2", "rpow"].find((k) => document.getElementById(k));
     const axis = (id) => ({xAxis: id === last});              // one shared time axis, at the bottom
     if (st) {
-      const half = (s) => (s / (st.bucket_s || 1) - 1) / 2;           // a smoothing window (s) as a box's half-width in samples
+      const sig = (s) => boxSigma(s / (st.bucket_s || 1));             // a smoothing window (s) as the filter's sigma in samples
       const flat = (v) => st.t_min.map(() => v);
       const common = {x: st.t_min, xType: "num", xTickFmt: tick, xLabel: tl, onHover, ...view, bands: this.rideIv.value ? this.rideBands(a.intervals) : [],
         tipNote: (t) => (this.rideIv.value ? this.rideTipNote(a.intervals, t) : "") + this.ridePlanNote(a.plan, t)};
       EChart.draw("rpow", {...common, ...axis("rpow"), yFmt: (v) => v + " W", zero: true, series: [
         ...this.ridePlanBands(a.plan, a.intervals),
-        {kind: "line", y: boxSmooth(st.power, half(this.rideSmooth)), color: css("--s1"), name: "Power", fmt: (v) => fmt(v) + " W", width: 1.6, area: true},
+        {kind: "line", y: expSmooth(st.power, sig(this.rideSmooth)), color: css("--s1"), name: "Power", fmt: (v) => fmt(v) + " W", width: 1.6, area: true},
         {kind: "line", y: flat(a.ftp), color: css("--muted"), dash: true, name: "FTP", fmt: (v) => fmt(v) + " W", width: 1}]});
       EChart.draw("rhr2", {...common, ...axis("rhr2"), yFmt: (v) => v, series: [
-        {kind: "line", y: boxSmooth(st.hr, half(10)), color: css("--s2"), name: "Heart rate", fmt: (v) => fmt(v) + " bpm", width: 1.6},
+        {kind: "line", y: expSmooth(st.hr, sig(10)), color: css("--s2"), name: "Heart rate", fmt: (v) => fmt(v) + " bpm", width: 1.6},
         ...(a.lthr ? [{kind: "line", y: flat(a.lthr), color: css("--muted"), dash: true, name: "Threshold HR", fmt: (v) => fmt(v) + " bpm", width: 1}] : [])]});
       const shown = (z || [0, Infinity]), secs = st.bucket_s || 1;
       const inView = (ys) => ys.filter((v, i) => v != null && st.t_min[i] >= shown[0] && st.t_min[i] <= shown[1]);
@@ -564,7 +564,7 @@ class RidePage extends Page {
       if (document.getElementById("ralt")) EChart.draw("ralt", {...common, ...axis("ralt"), yFmt: (v) => v + " m", series: [
         {kind: "line", y: st.altitude, color: css("--s3"), name: "Elevation", fmt: (v) => fmt(v) + " m", width: 1.6, area: true}]});
       if (document.getElementById("rcad")) EChart.draw("rcad", {...common, ...axis("rcad"), yFmt: (v) => v, series: [
-        {kind: "line", y: boxSmooth(st.cadence, half(10)), color: css("--s7"), name: "Cadence", fmt: (v) => fmt(v) + " rpm", width: 1.4}]});
+        {kind: "line", y: expSmooth(st.cadence, sig(10)), color: css("--s7"), name: "Cadence", fmt: (v) => fmt(v) + " rpm", width: 1.4}]});
       this.sideHist("rcad", inView(st.cadence || []).filter((v) => v > 0), 5, secs, css("--s7"), (v) => fmt(v) + " rpm");
     }
     if (a.alpha && document.getElementById("ra1")) {
@@ -573,7 +573,7 @@ class RidePage extends Page {
         xLabel: (t) => mmss(t * 60), yFmt: (v) => v, shade: [5, 20], bands: this.rideIv.value ? this.rideBands(a.intervals) : [], series: [
           {kind: "line", y: flat(0.75), color: css("--muted"), dash: true, width: 1},
           {kind: "line", y: flat(0.5), color: css("--muted"), dash: true, width: 1},
-          {kind: "line", y: boxSmooth(al.a1, 1), color: css("--s4"), name: "Alpha1", fmt: (v) => fmt(v, 2), width: 1.8}]});
+          {kind: "line", y: expSmooth(al.a1, boxSigma(3)), color: css("--s4"), name: "Alpha1", fmt: (v) => fmt(v, 2), width: 1.8}]});
       const [z0, z1] = z || [0, Infinity];
       this.sideHist("ra1", al.a1.filter((v, i) => v != null && x[i] >= z0 && x[i] <= z1), 0.05, al.bucket_s || 5, css("--s4"), (v) => fmt(v, 2));
     }
