@@ -699,13 +699,38 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">keep_compiled</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""JAX keeps its compiled code in `path`, so a new app or CLI process loads it instead of compiling</span>
 <span class="sd">        again. Specific to this machine and jax version (jax keys it by both), so never in git. A cache folder you set</span>
-<span class="sd">        yourself (JAX_COMPILATION_CACHE_DIR; the tests share one across runs) wins."""</span>
+<span class="sd">        yourself (JAX_COMPILATION_CACHE_DIR; the tests share one across runs) wins.</span>
+
+<span class="sd">        One subfolder per compression (`cache_codec`): jax names an entry the same whether it was compressed with</span>
+<span class="sd">        Python 3.14's zstd or with zlib, so the installed app (Python 3.12) and a checkout (3.14) sharing one folder</span>
+<span class="sd">        read each other's entries with the wrong one ("Unable to decompress Zstandard data"). Entries from before the</span>
+<span class="sd">        subfolders, a mix of both, are removed."""</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"JAX_COMPILATION_CACHE_DIR"</span><span class="p">):</span>
             <span class="k">return</span>
-        <span class="n">jax</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"jax_compilation_cache_dir"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">old</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*-cache"</span><span class="p">),</span> <span class="o">*</span><span class="n">path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*-atime"</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="n">old</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="n">old</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">jax</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"jax_compilation_cache_dir"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="n">PhysioRun</span><span class="o">.</span><span class="n">cache_codec</span><span class="p">()))</span>
         <span class="n">jax</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">"jax_persistent_cache_min_compile_time_secs"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>   <span class="c1"># the many small ones add up</span></div>
+
+
+<div class="viewcode-block" id="PhysioRun.cache_codec">
+<a class="viewcode-back" href="../../../api.html#goodpush.models.physio.PhysioRun.cache_codec">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cache_codec</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""What jax compresses its cache entries with, in its own order: Python 3.14's compression.zstd, else the</span>
+<span class="sd">        zstandard package, else zlib."""</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+        <span class="k">for</span> <span class="n">codec</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"zstd"</span><span class="p">,</span> <span class="s2">"compression.zstd"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"zstandard"</span><span class="p">,</span> <span class="s2">"zstandard"</span><span class="p">)):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">codec</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">continue</span>
+        <span class="k">return</span> <span class="s2">"zlib"</span></div>
 
 
 <div class="viewcode-block" id="PhysioRun.reset">

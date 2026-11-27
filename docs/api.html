@@ -2996,9 +2996,25 @@ only) and processed/physio_states.parquet (daily capacities; with draws also the
 <dd><p>JAX keeps its compiled code in <cite>path</cite>, so a new app or CLI process loads it instead of compiling
 again. Specific to this machine and jax version (jax keys it by both), so never in git. A cache folder you set
 yourself (JAX_COMPILATION_CACHE_DIR; the tests share one across runs) wins.</p>
+<p>One subfolder per compression (<cite>cache_codec</cite>): jax names an entry the same whether it was compressed with
+Python 3.14’s zstd or with zlib, so the installed app (Python 3.12) and a checkout (3.14) sharing one folder
+read each other’s entries with the wrong one (“Unable to decompress Zstandard data”). Entries from before the
+subfolders, a mix of both, are removed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="goodpush.models.physio.PhysioRun.cache_codec">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cache_codec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioRun.cache_codec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioRun.cache_codec" title="Link to this definition">¶</a></dt>
+<dd><p>What jax compresses its cache entries with, in its own order: Python 3.14’s compression.zstd, else the
+zstandard package, else zlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4542,6 +4558,7 @@ relative to it, as your past rides are to theirs).</p>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.FULL_RUN"><code class="docutils literal notranslate"><span class="pre">PhysioRun.FULL_RUN</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.ANALYSED"><code class="docutils literal notranslate"><span class="pre">PhysioRun.ANALYSED</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.keep_compiled"><code class="docutils literal notranslate"><span class="pre">PhysioRun.keep_compiled()</span></code></a></li>
+<li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.cache_codec"><code class="docutils literal notranslate"><span class="pre">PhysioRun.cache_codec()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.reset"><code class="docutils literal notranslate"><span class="pre">PhysioRun.reset()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.analysed"><code class="docutils literal notranslate"><span class="pre">PhysioRun.analysed()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.mark"><code class="docutils literal notranslate"><span class="pre">PhysioRun.mark()</span></code></a></li>

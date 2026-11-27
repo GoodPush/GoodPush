@@ -158,3 +158,40 @@ def test_questions_use_the_apps_dialog_not_the_browsers():
     assert "export const ask = new Ask();" in controls and "d.showModal();" in controls
     css = (STATIC / "app.css").read_text(encoding="utf-8")                       # its styles built in
     assert "dialog.ask{" in css and "dialog.ask::backdrop{" in css
+
+
+def test_the_sync_icon_is_two_arrows_not_a_cloud():
+    """goodpush keeps everything on your computer: nothing in the app or the guide may look like a cloud (2026-11-27,
+    the Today redesign's sync icon)."""
+    status = (JS / "status_bar.js").read_text(encoding="utf-8")
+    assert "export const syncIcon" in status and "const ARROWS" in status
+    code = "\n".join(re.sub(r"//.*$", "", p.read_text(encoding="utf-8"), flags=re.M) for p in modules())
+    words = re.findall(r"\bcloud\w*", re.sub(r"console\.cloud\.google\.com", "", code), flags=re.I)
+    assert not words, words
+    guide = Path(__file__).parents[1] / "srcdocs"
+    said = [p.name for p in guide.rglob("*.md") if re.search(r"cloud icon", p.read_text(encoding="utf-8"), re.I)]
+    assert not said, said
+
+
+def test_the_status_bar_sync_page_and_setup_checklist_are_wired():
+    """the top bar's sync icon and Setup pill (status_bar.js), the Sync page (#sync) and the links into Settings'
+    sections."""
+    main = (JS / "main.js").read_text(encoding="utf-8")
+    assert "sync: syncPage" in main and 'id="statusbar"' in (STATIC / "index.html").read_text(encoding="utf-8")
+    status = (JS / "status_bar.js").read_text(encoding="utf-8")
+    keys = re.findall(r'\{key: "(\w+)", title:', status)
+    assert keys == ["garmin", "history", "model", "rideapp"]
+    settings = (JS / "pages" / "settings.js").read_text(encoding="utf-8")
+    from goodpush.config import SETTINGS                                       # settingsCard: one section each
+    sections = set(re.findall(r'this\.section\("(\w+)"', settings)) | set(SETTINGS)
+    links = set(re.findall(r"#settings/(\w+)", "".join(p.read_text(encoding="utf-8") for p in modules())))
+    assert links and links <= sections, links - sections
+
+
+def test_today_steps_through_days_without_module_state():
+    """#today/YYYY-MM-DD shows that day; the arrow keys and a swipe step through days (DaySteps: its state on the
+    class, not a module-level variable)."""
+    today = (JS / "pages" / "today.js").read_text(encoding="utf-8")
+    assert "router.routeArg()" in today and "ISO_DAY.test(a)" in today
+    assert "class DaySteps" in today and "new DaySteps().listen();" in today
+    assert not re.findall(r"^(?:let|var) ", today, re.M)
