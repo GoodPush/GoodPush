@@ -73,6 +73,8 @@ Rebuild the guide after changing `srcdocs/` or the physio model's docstrings, an
 uv run --extra docs python -m sphinx -b html -d build/doctrees srcdocs docs
 ```
 
+A Windows build writes backslashes in `docs/searchindex.js`'s file names: put forward slashes back.
+
 Build the installed app (PyInstaller; on macOS `dist/goodpush.app`). uv runs the tools; it doesn't make the
 app itself (`uv build` only makes the Python wheel / sdist):
 
@@ -161,22 +163,14 @@ changing one; the reasons for most choices are written there.
   files whole (`PhysioRun.write_whole`): the app may read them while another process writes.
 - KISS / YAGNI: reuse established packages (scipy, tqdm, ...), and ask before adding a new public name or setting.
 
-## Git and releases
+## Planned modernization of the app (front end and its server)
 
-- Push only when the maintainer asks. **Never force-push.** Never skip the checks.
-- No AI attribution anywhere on GitHub: commit messages, tags, PR descriptions and release notes carry no
-  "Co-Authored-By" AI trailer, "Generated with" line or session link.
-- A release is a tag: update `packaging/RELEASE_NOTES.md`, rebuild `docs/` with the version
-  (`-D version=X.Y.Z -D release=X.Y.Z -D "html_title=GoodPush X.Y.Z"`), then push `vX.Y.Z`.
-  `.github/workflows/build.yml` builds every installer into that release.
-- A Windows Sphinx build writes backslashes in `docs/searchindex.js`'s file names: use forward slashes.
-
-## Planned modernization
-
-Done in this order, one PR each, each starting after the previous one is merged:
+For work on the app, not the analysis. One PR each, each starting after the previous one is merged:
 
 1. **Tailwind CSS v4 + daisyUI** restyle of the front end (done: see "Styles").
 2. **FastAPI** replacing the stdlib `http.server` backend in `app/server.py`, keeping the same URLs and JSON.
-3. **APScheduler** replacing the auto-sync loop and `Jobs` in `app/server.py`.
+
+Not decided: what replaces the auto-sync loop and `Jobs` in `app/server.py` (APScheduler was one idea). Don't
+start it without asking.
 
 Until each lands, work with the current code as described above.
