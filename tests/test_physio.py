@@ -1580,3 +1580,23 @@ def test_physio_load_chooses_key_sessions():
         assert set(picked) == set(slots) and set(picked.values()) <= set(MIX_TYPES)
         assert r.objective <= r.start
     assert PhysioLoad(m, m.spec.mean, 250.0).choose_sessions(wos, [], {}, {}) == ({}, None)
+
+
+def test_a_nuts_run_says_how_far_it_is_while_it_holds_the_lock(tmp_path):
+    """PhysioRun.tracked keeps PROGRESS up to date; nuts_progress reads it only while a run holds LOCK
+    (the Model page shows a run started from a terminal, or the weekly refresh)."""
+    from filelock import FileLock
+    from goodpush.models.physio import PhysioRun
+    run = PhysioRun.__new__(PhysioRun)
+    run.processed = tmp_path
+    said = []
+    with FileLock(str(tmp_path / PhysioRun.LOCK)):
+        say = run.tracked(said.append, "full")
+        say("NUTS: warm-up 1-40 of 400")
+        p = PhysioRun.nuts_progress(tmp_path)
+        assert p["kind"] == "full" and p["line"] == "NUTS: warm-up 1-40 of 400" and p["t"] >= p["started"]
+        run.untrack()
+        assert PhysioRun.nuts_progress(tmp_path) is None              # held, but nothing said: nothing to show
+    say("after the run")
+    assert PhysioRun.nuts_progress(tmp_path) is None                  # no run holds LOCK
+    assert said[-1] == "after the run" and said[0].startswith("physio model: starting")
