@@ -35,7 +35,7 @@ export function signsRow(rd) {
   return `<div class="signs">${G.map((g) => `<span class="status sm ${cls[Math.min(g.points, 2)]}" title="${esc(g.text)}">${esc(g.name)}</span>`).join("")}
     ${hint("This morning's signs against your usual (hover one for its numbers).\n• Green: normal · amber: a bit off (1 point) · red: well off (2 points)\n• 2 points together: an amber day; 4: red\n• One sign alone changes nothing\n• How you feel and your illness markers count on their own")}</div>`;
 }
-// the last 7 mornings' readiness, today last: one oval each in the colour-blind-safe status colours (--mgreen ...),
+// the last 7 mornings' readiness, today last: one oval each in the colour-blind-safe status colours (--good / --warn / --bad),
 // the day, verdict and reasons in its tooltip and label, so the colour never carries it alone
 export function morningsStrip(rd) {
   const M = rd.mornings;

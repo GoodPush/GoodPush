@@ -234,19 +234,35 @@ def oklab(hex_colour: str, sim=None):
     return np.asarray(OKLAB_LAB) @ np.cbrt(np.asarray(OKLAB_LMS) @ rgb)
 
 
-def test_the_morning_dots_are_colour_blind_safe():
-    """the last 7 mornings are ovals in --mgreen / --mamber / --mred (each theme): every pair stays apart for normal
-    vision (OKLab Delta E x100 >= 15) and for protan, deutan and tritan vision (>= 8); the verdict is also in each
-    oval's label."""
+def contrast(a: str, b: str) -> float:
+    """WCAG contrast ratio of two colours (#rrggbb)."""
+    import numpy as np
+    lum = []
+    for h in (a, b):
+        c = np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)]) / 255
+        lum.append(float(np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4) @ [0.2126, 0.7152, 0.0722]))
+    return (max(lum) + 0.05) / (min(lum) + 0.05)
+
+
+def test_red_amber_green_is_colour_blind_safe_everywhere():
+    """every red / amber / green in the app is --good / --warn / --bad (verdicts, chips, the morning ovals, the sync
+    icon and its lights; 2026-11-27). In each theme every pair stays apart for normal vision (OKLab Delta E x100 >= 15)
+    and for protan, deutan and tritan vision (>= 8), and as text each keeps 4.5:1 on its own tint (--good-bg ...).
+    The HTML report uses the same colours, and each morning oval carries its verdict in its label too."""
     import itertools
     import numpy as np
     css = (Path(__file__).parents[1] / "styles" / "app.css").read_text(encoding="utf-8")
-    themes = re.findall(r"--mgreen: (#\w{6}); --mamber: (#\w{6}); --mred: (#\w{6});", css)
-    assert len(themes) == 2
-    for cols in themes:
+    inks = re.findall(r"--good: (#\w{6}); --warn: (#\w{6}); --bad: (#\w{6});", css)
+    tints = re.findall(r"--good-bg: (#\w{6}); --warn-bg: (#\w{6}); --bad-bg: (#\w{6});", css)
+    assert len(inks) == len(tints) == 2
+    for cols, bgs in zip(inks, tints):
         for a, b in itertools.combinations(cols, 2):
             assert 100 * np.linalg.norm(oklab(a) - oklab(b)) >= 15, (a, b)
             for name, sim in CVD.items():
                 assert 100 * np.linalg.norm(oklab(a, sim) - oklab(b, sim)) >= 8, (name, a, b)
+        assert all(contrast(ink, bg) >= 4.5 for ink, bg in zip(cols, bgs)), (cols, bgs)
+    report = (Path(__file__).parents[1] / "src" / "goodpush" / "report" / "dashboard.py").read_text(encoding="utf-8")
+    assert set(re.findall(r"--good:(#\w{6}); --bad:(#\w{6});", report)) == {(c[0], c[2]) for c in inks}
+    assert "--mgreen" not in css and ".mdot7.green { background:var(--good) }" in css
     widgets = (JS / "widgets.js").read_text(encoding="utf-8")
     assert 'class="mdot7 ${esc(m.status)}" role="img" title="${esc(t)}" aria-label="${esc(t)}"' in widgets
