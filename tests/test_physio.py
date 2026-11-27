@@ -224,6 +224,37 @@ def test_run_warm_start_and_states(tmp_path):
     assert len(st) == len(m.data.days) and (st["cp_p05"] <= st["cp_p95"]).all()
 
 
+def stored_fit(folder, structure, derived):
+    """a stored fit of model `structure` and the files (`derived`) worked out from its states."""
+    from goodpush.models.physio import PhysioRun
+    from goodpush.physio.model import NOISE_WEEKS
+    np.savez_compressed(folder / PhysioRun.FIT, z=np.zeros(1), names=np.array(["a"]), noise_weeks=NOISE_WEEKS,
+                        states=structure)
+    for f in derived:
+        (folder / f).write_text("x", encoding="utf-8")
+
+
+def test_a_new_model_version_never_reads_the_old_fits_states(tmp_path):
+    """2026-11-27: inputs worked out from the last fit's daily states (SevereSplit keeps them per ride) must not
+    come from another model version's fit: they are set aside, and the analysis is marked as made without them."""
+    from types import SimpleNamespace
+    from goodpush.metrics.severe_hr import SevereSplit
+    from goodpush.models.physio import PhysioRun
+    run = PhysioRun(SimpleNamespace(processed=tmp_path, reports=tmp_path, cfg={}))
+    derived = (PhysioRun.STATES, SevereSplit.FILE)
+    stored_fit(tmp_path, PhysioRun.structure().replace("|v", "|v0"), derived)   # another version's fit
+    said = []
+    assert run.reset(said.append) and not any((tmp_path / f).exists() for f in derived) and said
+    assert run.reset(said.append) and len(said) == 1                     # nothing left: no fit of this one yet
+    stored_fit(tmp_path, PhysioRun.structure(), derived)                 # this version's
+    assert not run.reset(said.append) and all((tmp_path / f).exists() for f in derived)
+    assert not run.analysed()
+    run.mark(True)
+    assert run.analysed()
+    run.mark(False)
+    assert not run.analysed()
+
+
 def dose_problem(cap, days=28, weight=1.0, **kw):
     from goodpush.physio.plan import DosePlan, Target
     m = PhysioModel(synthetic())

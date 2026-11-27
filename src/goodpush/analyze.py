@@ -315,6 +315,32 @@ def build_weekly(d: pd.DataFrame) -> pd.DataFrame:
 
 
 def run_analysis(proj: Project, progress=print) -> dict:
+    """the analysis (`analyse`) on the physio model's own daily states. Without states of this model version (a
+    new version: the old fit's are set aside; or no fit yet) the model is fitted once on tables made without
+    them, then everything is analysed again on its states - no input comes from another model's fit
+    (models.physio.PhysioRun.reset; 2026-11-27)."""
+    try:
+        from .models.physio import PhysioRun
+        run = PhysioRun(proj)
+    except ImportError:                              # no physio extra: no model, nothing comes from one
+        return analyse(proj, progress)
+    first = run.reset(progress)
+    r = analyse(proj, progress)
+    run.mark(not first)
+    if first:
+        try:
+            progress("physio model: its first fit of this version, then the analysis again on its daily states ...")
+            run.fit(progress=progress)
+        except Exception as e:  # noqa: BLE001 - e.g. too little data: the analysis stands without the model
+            progress(f"physio model: no first fit ({e}) - the analysis without its states")
+            return r
+        r = analyse(proj, progress)
+        run.mark(True)
+    return r
+
+
+def analyse(proj: Project, progress=print) -> dict:
+    """the activities, daily and weekly tables (saved in processed/) and the athlete's info."""
     acts, info = build_activities(proj, progress)
     try:                                             # heart rate at the end of each ride's best efforts: all-out?
         acts = PowerCheck.effort_heart_rates(proj.processed, acts)

@@ -365,6 +365,7 @@ class PhysioRun:
     LOCK = "physio_nuts.lock"        # held by a NUTS run (full or refresh): one at a time (peer sync skips *.lock)
     SEVERE = "severe"                # the illnesses (models.illness severity) the model allows a larger change in
     FULL_RUN = "goodpush physio --nuts --samples 2500 --ess 400 --max-minutes 540"   # what to run for new draws
+    ANALYSED = "physio_analysed.txt"   # the model (structure) whose daily states the analysis tables were made from
 
     def __init__(self, proj):
         self.proj = proj
@@ -383,8 +384,41 @@ class PhysioRun:
         jax.config.update("jax_compilation_cache_dir", str(path))
         jax.config.update("jax_persistent_cache_min_compile_time_secs", 0.0)   # the many small ones add up
 
+    def reset(self, progress=print) -> bool:
+        """True when there are no daily states of this model to build inputs from (no fit of this version yet).
+        Another version's states - and the rides' heart-rate splits made with them (SevereSplit, kept per ride) -
+        are deleted first: nothing of another model's fit gets into this one's inputs (2026-11-27: a broken fit's
+        states would have fed the next version's). A process on an older VERSION than the code on disk touches
+        nothing (`same_code`)."""
+        from ..metrics.severe_hr import SevereSplit
+        from ..physio.model import VERSION
+        if self.version_on_disk() != VERSION:
+            return False
+        if self.stored() is not None and (self.processed / self.STATES).exists():
+            return False
+        gone = [f for f in (self.STATES, SevereSplit.FILE) if (self.processed / f).exists()]   # (ANALYSED names
+                                                                                                 # its own model)
+        for f in gone:
+            (self.processed / f).unlink()
+        if gone:
+            progress(f"physio model {self.structure().rsplit('|', 1)[-1]}: the last fit is of another model version - "
+                     "its daily states and what was worked out from them set aside")
+        return True
+
+    def analysed(self) -> bool:
+        """the analysis tables were made from this model's own daily states (ANALYSED, written by the analysis)."""
+        try:
+            return (self.processed / self.ANALYSED).read_text(encoding="utf-8").strip() == self.structure()
+        except OSError:
+            return False
+
+    def mark(self, own: bool) -> None:
+        """the analysis just made its tables from this model's daily states (`own`) or without any."""
+        (self.processed / self.ANALYSED).write_text(self.structure() if own else "", encoding="utf-8")
+
     def inputs(self) -> PhysioData:
         import json
+        self.reset()                               # never another model's states (SevereSplit reads them)
         acts = pd.read_parquet(self.processed / "activities.parquet")
         daily = pd.read_parquet(self.processed / "daily.parquet")
         ath = self.proj.cfg.get("athlete") or {}
