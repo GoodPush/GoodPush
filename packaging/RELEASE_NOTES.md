@@ -1,18 +1,27 @@
-## goodpush 0.3.0
+## goodpush 0.4.0
 
 Analyse your cycling training and plan the next weeks, on your own computer, from your Strava / Garmin exports
 and the Garmin Personal API.
 
-### New in 0.3.0
+### New in 0.4.0
 
-- **New charts** on every page, drawn with Apache ECharts. They zoom the same way everywhere: Ctrl + wheel or a
-  pinch, or drag the ends of the bar under a chart. Once zoomed, drag the chart (or Shift + wheel) to move along;
-  double-click to see it all. Hovering one chart shows the same day on the charts that share its time axis.
-- **Changed:** dragging across a chart no longer zooms into that stretch; use Ctrl + wheel, a pinch or the bar.
-  Selecting a stretch on the load chart and on a ride works as before: drag across it, drag its edges to move them,
-  double-click to clear it.
-- **Settings are saved more carefully:** a few numbers could be written as text, and accented names now stay as you
-  typed them in `goodpush.toml`.
+- **A broken power meter no longer throws off your fitness.** One ride with power no rider could hold (say minutes
+  at 1000 W at an easy heart rate) used to lift the whole fitted history. Now:
+  - the model treats a best power far above your curve as a probable bad reading and sets it aside (the Rider page
+    says so when you hover it);
+  - a ride whose minutes are far above your usual while your heart rate stayed easy loses its best powers. Its
+    time and load still count;
+  - you can mark power as wrong yourself: **Power is wrong** on the Ride page, or rides, days and date ranges in
+    Settings > Importing (a meter that read high for weeks). Those rides count as rides without power. Power that
+    was flagged but is real can be kept with one click;
+  - the model's starting point is the median of your first year's 8-week bests, so one glitch can't move it.
+- **Physiological model v17.** On the first run after updating, your fit is redone from your rides, about a minute.
+  It never builds on the old version's fit, so a fit that had gone wrong doesn't carry over. The ranges need a new
+  full run (the Model page shows the command).
+- **A new look:** light and dark themes with readable colours, one style for buttons and fields, and a bottom bar on
+  phones that reaches every page.
+- **Settings in sections** you can open and close, and **Fit the model from scratch** under Data and model.
+- Python 3.12 or later is needed to run from source.
 
 ### What goodpush does
 
