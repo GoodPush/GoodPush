@@ -15,6 +15,7 @@ from .progress import Progress
 from .io.strava import mood_flags, project_activities, sport_class, weight_history
 from .metrics import load as L
 from .metrics.power import MMP_DURATIONS
+from .metrics.power_check import PowerCheck
 from .models.cp import cp_series, daily_envelope, estimate_ftp_series, rolling_envelope
 
 ZONE_COLS = [f"pz{i + 1}_s" for i in range(len(L.POWER_ZONES))]
@@ -315,6 +316,14 @@ def build_weekly(d: pd.DataFrame) -> pd.DataFrame:
 
 def run_analysis(proj: Project, progress=print) -> dict:
     acts, info = build_activities(proj, progress)
+    try:                                             # heart rate at the end of each ride's best efforts: all-out?
+        acts = PowerCheck.effort_heart_rates(proj.processed, acts)
+    except Exception as e:  # noqa: BLE001 - the analysis works without them
+        progress(f"effort heart rates skipped: {e}")
+    acts = PowerCheck.of(proj).apply(acts, info["lthr"])   # power you marked wrong, or heart rate says is: set aside
+    n_bad = acts["power_ignored"].value_counts()
+    if n_bad.drop("", errors="ignore").sum():
+        progress("power set aside: " + ", ".join(f"{int(v)} ride(s) {k}" for k, v in n_bad.items() if k))
     Progress.step(progress, "Analysing", 1, 5)
     if acts["date"].isna().all():
         raise RuntimeError("no dated activities found")
@@ -387,17 +396,10 @@ def run_analysis(proj: Project, progress=print) -> dict:
         acts = AllOutStep.add_to(proj, acts, progress)
     except Exception as e:  # noqa: BLE001 - the analysis works without them
         progress(f"all-out steps skipped: {e}")
-    try:                                             # heart rate at the end of each ride's best efforts: all-out?
+    if "effort_hr_60" in acts:                       # merged first thing (PowerCheck)
         from .metrics.effort_hr import EffortHeartRate
-        eh = EffortHeartRate.table(proj.processed)
-        if len(eh):
-            sid = acts["id"].astype(str).str.replace(r"\.0$", "", regex=True)
-            acts = acts.drop(columns=[c for c in eh.columns if c != "id" and c in acts]).assign(_sid=sid) \
-                .merge(eh.rename(columns={"id": "_sid"}), on="_sid", how="left").drop(columns="_sid")
-            mx = EffortHeartRate.maxed(acts, info["max_hr"]).sum()
-            progress("all-out by heart rate: " + ", ".join(f"{d // 60} min {int(c)}" for d, c in mx.items()))
-    except Exception as e:  # noqa: BLE001 - the analysis works without them
-        progress(f"effort heart rates skipped: {e}")
+        mx = EffortHeartRate.maxed(acts, info["max_hr"]).sum()
+        progress("all-out by heart rate: " + ", ".join(f"{d // 60} min {int(c)}" for d, c in mx.items()))
     Progress.step(progress, "Analysing", 4, 5)
     daily = build_daily(proj, acts, ftp, wellness, days)
     ad = AL.to_daily(af, days)

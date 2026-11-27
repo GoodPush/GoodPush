@@ -149,7 +149,9 @@ class RiderPage extends Page {
       const rows = on.map(([s, j]) => {
         const O = P.observed[j], q = pts[j].effort.get(d), pred = P.predicted[j][d];
         if (q == null || !pred) return "";
-        const odds = O.all_out && !CONFIRMED.includes(O.kind[q]) ? ` · ${fmt(O.all_out[q])} % likely all-out` : "";
+        const bad = O.bad && O.bad[q] >= 50;     // the model's odds it was a broken power meter's reading
+        const odds = bad ? " · probably a bad reading: the model sets it aside"
+          : O.all_out && !CONFIRMED.includes(O.kind[q]) ? ` · ${fmt(O.all_out[q])} % likely all-out` : "";
         return `<div class="small">${this.powerName(s)}: ${fmt(100 * O.w[q] / pred)} % of predicted · ${esc(KIND_WORDS[O.kind[q]] || O.kind[q])}${odds}</div>`;
       }).join("");
       return rows ? rows + '<div class="small muted">click for the ride</div>' : "";
