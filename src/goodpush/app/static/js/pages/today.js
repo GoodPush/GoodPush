@@ -1,5 +1,5 @@
-// Today: one day at a time (#today, #today/2026-11-25): the verdict and the session in one card, that morning's numbers,
-// the next session; ‹ › (and the arrow keys, a swipe on a phone) step through the days (TodayPage). Sync state and setup
+// Today: one day at a time (#today, #today/2026-11-25): the verdict (its why open) and the session (its steps shown) in
+// one card, that morning's numbers; ‹ › (and the arrow keys, a swipe on a phone) step through the days (TodayPage). Sync state and setup
 // tasks are in the top bar (status_bar.js).
 import {Segmented} from "../controls.js";
 import {Page} from "./page.js";
@@ -97,7 +97,7 @@ class TodayPage extends Page {
       <div><h2>${esc(STATUS_LABEL[st] || st)}</h2><div class="basis">${basis}</div></div></div>
       <p class="vwhy">${esc(reasons[0] || "Nothing flagged in sleep, HRV, resting HR or load.")}</p>
       ${this.feel()}
-      <details class="dayfold" id="todaywhy"><summary>Why</summary><div class="whybody">${more}</div></details></div>`;
+      <details class="dayfold" id="todaywhy" open><summary>Why</summary><div class="whybody">${more}</div></details></div>`;
   }
 
   session(d) {
@@ -122,9 +122,9 @@ class TodayPage extends Page {
       ${profileSVG(s)}
       ${s.adjusted ? `<div class="adj">⚠ ${esc(s.adjusted)}</div>` : ""}
       ${d === td ? markButtons(s) : ""}
-      <details class="dayfold" id="todaysteps"><summary>Steps and why</summary><div class="whybody">${steps}
+      <div class="whybody" id="todaysteps">${steps}
         ${s.note ? `<p class="why">${esc(s.note)}</p>` : ""}<p class="why">${esc(s.why)}</p>
-        ${d !== td ? markButtons(s) : ""}</div></details>
+        ${d !== td ? markButtons(s) : ""}</div>
       ${proposal}</div>`;
   }
 
@@ -161,14 +161,6 @@ class TodayPage extends Page {
     </div></div>`;
   }
 
-  nextLine(d) {
-    if (d < today()) return "";
-    const n = sessions().find((x) => x.date > d && x.type !== "rest");
-    if (!n) return "";
-    return `<div class="nextline"><span class="muted">Next</span><a href="${this.dayHref(n.date)}"><b>${esc(niceDate(n.date))}: ${esc(n.title)}</b></a>
-      <span class="muted">${hhmm(n.minutes)} · ${fmt(n.tss)} TSS</span><span class="spacer"></span><a href="#plan">Week plan →</a></div>`;
-  }
-
   html() {
     const td = today();
     if (!td) return `<h1>${S.name ? `Hi ${esc(S.name)}` : "Today"}</h1>${this.nudge(td)}<div class="card muted">No data yet. Connect Garmin
@@ -177,8 +169,7 @@ class TodayPage extends Page {
     return `${this.header(d)}
       ${this.nudge(d)}
       <div class="daycard">${this.verdict(d)}${this.session(d)}</div>
-      ${this.strip(d)}
-      ${this.nextLine(d)}`;
+      ${this.strip(d)}`;
   }
 
   wire() {

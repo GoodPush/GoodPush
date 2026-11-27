@@ -195,3 +195,58 @@ def test_today_steps_through_days_without_module_state():
     assert "router.routeArg()" in today and "ISO_DAY.test(a)" in today
     assert "class DaySteps" in today and "new DaySteps().listen();" in today
     assert not re.findall(r"^(?:let|var) ", today, re.M)
+
+
+def test_today_shows_its_why_and_steps_open_and_no_next_line():
+    """2026-11-27: the verdict's Why starts open, the session's steps are shown (no fold), and the links to the next
+    session and the week plan at the bottom are gone."""
+    today = (JS / "pages" / "today.js").read_text(encoding="utf-8")
+    assert 'id="todaywhy" open>' in today
+    assert 'id="todaysteps"' in today and '<details class="dayfold" id="todaysteps"' not in today
+    assert "nextline" not in today and "Week plan" not in today
+
+
+# colour-vision simulation (Machado, Oliveira & Fernandes 2009, full severity) and OKLab (Ottosson 2020): published
+# colour-science constants (the privacy check reads pairs of decimals as coordinates)
+CVD = {"protan": [[0.152286, 1.052583, -0.204868],      # privacy: ok
+                  [0.114503, 0.786281, 0.099216],       # privacy: ok
+                  [-0.003882, -0.048116, 1.051998]],    # privacy: ok
+       "deutan": [[0.367322, 0.860646, -0.227968],      # privacy: ok
+                  [0.280085, 0.672501, 0.047413],       # privacy: ok
+                  [-0.011820, 0.042940, 0.968881]],     # privacy: ok
+       "tritan": [[1.255528, -0.076749, -0.178779],     # privacy: ok
+                  [-0.078411, 0.930809, 0.147602],      # privacy: ok
+                  [0.004733, 0.691367, 0.303900]]}      # privacy: ok
+OKLAB_LMS = [[0.4122214708, 0.5363325363, 0.0514459929],     # privacy: ok
+             [0.2119034982, 0.6806995451, 0.1073969566],     # privacy: ok
+             [0.0883024619, 0.2817188376, 0.6299787005]]     # privacy: ok
+OKLAB_LAB = [[0.2104542553, 0.7936177850, -0.0040720468],    # privacy: ok
+             [1.9779984951, -2.4285922050, 0.4505937099],    # privacy: ok
+             [0.0259040371, 0.7827717662, -0.8086757660]]    # privacy: ok
+
+
+def oklab(hex_colour: str, sim=None):
+    """a colour (#rrggbb) in OKLab, as seen with the colour-vision simulation `sim` (Machado 2009, full severity)."""
+    import numpy as np
+    c = np.array([int(hex_colour[i:i + 2], 16) for i in (1, 3, 5)]) / 255
+    rgb = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    rgb = np.clip(np.asarray(sim) @ rgb, 0, 1) if sim is not None else rgb
+    return np.asarray(OKLAB_LAB) @ np.cbrt(np.asarray(OKLAB_LMS) @ rgb)
+
+
+def test_the_morning_dots_are_colour_blind_safe():
+    """the last 7 mornings are ovals in --mgreen / --mamber / --mred (each theme): every pair stays apart for normal
+    vision (OKLab Delta E x100 >= 15) and for protan, deutan and tritan vision (>= 8); the verdict is also in each
+    oval's label."""
+    import itertools
+    import numpy as np
+    css = (Path(__file__).parents[1] / "styles" / "app.css").read_text(encoding="utf-8")
+    themes = re.findall(r"--mgreen: (#\w{6}); --mamber: (#\w{6}); --mred: (#\w{6});", css)
+    assert len(themes) == 2
+    for cols in themes:
+        for a, b in itertools.combinations(cols, 2):
+            assert 100 * np.linalg.norm(oklab(a) - oklab(b)) >= 15, (a, b)
+            for name, sim in CVD.items():
+                assert 100 * np.linalg.norm(oklab(a, sim) - oklab(b, sim)) >= 8, (name, a, b)
+    widgets = (JS / "widgets.js").read_text(encoding="utf-8")
+    assert 'class="mdot7 ${esc(m.status)}" role="img" title="${esc(t)}" aria-label="${esc(t)}"' in widgets
