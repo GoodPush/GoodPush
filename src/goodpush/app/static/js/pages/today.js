@@ -59,7 +59,7 @@ class TodayPage extends Page {
   nudge(d) {
     if (d !== today() || wellnessAge() != null || S.garmin_api?.configured) return "";
     return `<div class="nudge">${cloudIcon("off")}<span><b>Connect Garmin</b> to get a readiness verdict: your sleep, HRV and resting HR
-      each morning. The Personal API key goes in once.</span><span class="spacer"></span><a class="btn sm primary" href="#settings">Connect Garmin</a></div>`;
+      each morning. The Personal API key goes in once.</span><span class="spacer"></span><a class="btn sm primary" href="#settings/keys">Connect Garmin</a></div>`;
   }
 
   feel() {

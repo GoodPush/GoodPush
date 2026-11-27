@@ -41,13 +41,13 @@ class SyncPage extends Page {
     <p class="sub">What goodpush has brought in from Garmin and the others, and what it sends out. Everything stays on this computer.</p>
     <div class="card syncsum"><div class="row"><span class="syncicon big s-${lv}">${cloudIcon(lv)}</span>
       <div class="grow"><b>${esc(syncStatus.tip(lv))}</b><div class="small muted">${syncStatus.note()}${last ? `<br>${last}` : ""}</div></div>
-      ${G.configured ? `<button class="btn primary" data-act="garmin_sync"${lv === "run" ? " disabled" : ""}>Update now</button>` : '<a class="btn primary" href="#settings">Connect Garmin</a>'}
+      ${G.configured ? `<button class="btn primary" data-act="garmin_sync"${lv === "run" ? " disabled" : ""}>Update now</button>` : '<a class="btn primary" href="#settings/keys">Connect Garmin</a>'}
       ${syncStatus.peers().length && LOCAL ? '<button class="btn" data-act="peer_sync_all">Sync other computer</button>' : ""}</div></div>
     <div class="tablewrap card flush"><table class="synctable">
       <thead><tr><th>Data</th><th>From / to</th><th>Newest</th><th>Last checked</th><th>State</th></tr></thead>
       <tbody>${this.rows().map((r) => `<tr>${r.map((c, i) => `<td${i === 2 || i === 3 ? ' class="num"' : ""}>${i < 4 ? esc(c) : c}</td>`).join("")}</tr>`).join("")}</tbody>
     </table></div>
-    <p class="small muted">Keys, automatic checks and the ride apps are set in <a href="#settings">Settings</a>.</p>
+    <p class="small muted">Keys, automatic checks and the ride apps are set in Settings: <a href="#settings/keys">API keys</a>, <a href="#settings/garmin">Garmin connection</a>, <a href="#settings/icu">intervals.icu</a>, <a href="#settings/incyclist">Incyclist</a>.</p>
     <h2>Last update log</h2>
     ${(jobs.JOB?.log || []).length ? "" : '<p class="small muted">Nothing has run since the app started.</p>'}
     ${jobs.jobLog()}`;

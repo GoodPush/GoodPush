@@ -88,7 +88,7 @@ class SyncStatus {
       <div class="small muted">${this.note()}</div>
       <div class="row">${G.configured
         ? `<button class="btn sm primary" data-st="garmin_sync"${lv === "run" ? " disabled" : ""}>Update now</button>`
-        : '<a class="btn sm primary" href="#settings">Connect Garmin</a>'}
+        : '<a class="btn sm primary" href="#settings/keys">Connect Garmin</a>'}
         ${peers.length && LOCAL ? `<button class="btn sm" data-st="peer_sync_all">Sync other computer</button>` : ""}
         <span class="spacer"></span><a class="small" href="#sync">All sync details →</a></div></div>`;
   }
@@ -106,7 +106,7 @@ class SetupTasks {
     const G = S.garmin_api || {}, P = S.physio, C = P?.full_run_cores, I = S.intervals_icu || {}, inc = S.incyclist || {};
     return [
       {key: "garmin", title: "Connect Garmin", text: "Your Personal API key, once. Sleep, HRV and rides then come in by themselves.",
-        done: G.configured || wellnessAge() != null, act: '<a class="btn sm primary" href="#settings">Connect</a>', required: true},
+        done: G.configured || wellnessAge() != null, act: '<a class="btn sm primary" href="#settings/keys">Connect</a>', required: true},
       {key: "history", title: "Bring in your whole history",
         text: `goodpush started with your last 90 days${S.import_guide?.first ? ` (rides from ${esc(niceDate(S.import_guide.first))})` : ""}. Your account export makes fitness, thresholds and the plan much better: <a href="https://www.garmin.com/account/datamanagement/exportdata/" target="_blank" rel="noopener">ask Garmin for it</a> (or Strava: Settings → My Account → Download your archive), then drop the .zip anywhere in the app.`,
         done: !S.import_guide?.show, act: '<label class="btn sm">Choose the .zip<input type="file" id="setupzip" accept=".zip,application/zip" hidden></label>'},
@@ -114,7 +114,7 @@ class SetupTasks {
         text: `Your thresholds and the plan's sessions come from a quick best fit with no ranges. The full run takes about an hour (2 h at most)${C ? ` and keeps ${C.chains} of ${C.all} cores busy` : ""} at low priority: best started overnight.`,
         done: !P || !!P.cp_p05, act: '<a class="btn sm" href="#model">Model page</a>'},
       {key: "rideapp", title: "Send your plan to a ride app", text: "intervals.icu or Incyclist get each planned session with its steps.",
-        done: !!I.configured || !!inc.sync, act: '<a class="btn sm" href="#settings">Settings</a>', optional: true},
+        done: !!I.configured || !!inc.sync, act: '<a class="btn sm" href="#settings/icu">Settings</a>', optional: true},
     ];
   }
 
