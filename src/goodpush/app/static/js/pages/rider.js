@@ -3,7 +3,7 @@
 import {Lazy, Pref, Segmented} from "../controls.js";
 import {Page} from "./page.js";
 import {S} from "../api.js";
-import {$, css, esc, fmt} from "../util.js";
+import {$, css, esc, fmt, INTENSITY_COL} from "../util.js";
 import {hint, niceDate, tile} from "../widgets.js";
 import {router} from "../main.js";
 import {ZOOM_HELP} from "./fitness.js";
@@ -330,7 +330,7 @@ class RiderPage extends Page {
     const ahead = (k) => d.map((_, i) => (i === d.length - 1 ? P[k][i] : null)).concat(fut.map(([, i]) => F[k][i]));
     const ms = (q) => new Date(q + "T12:00:00").getTime(), W = (v) => fmt(v) + " W";
     TimeWindow.of("physio").showLast(days, ms(last), ms(x[x.length - 1]), 365);
-    const vline = fut.length ? ms(last) : null, lines = [["lt1", "--s3", "LT1"], ["cp", "--s1", "CP"], ["map", "--s2", "MAP (5 min)"]];   // low to high
+    const vline = fut.length ? ms(last) : null, lines = [["lt1", "LT1"], ["cp", "CP"], ["map", "MAP (5 min)"]].map(([k, n]) => [k, INTENSITY_COL[k], n]);   // low to high, zone colours
     const series = [];
     lines.forEach(([k, c]) => { if (P[k + "_p05"]) series.push({kind: "band", y: pad(P[k + "_p05"]), y2: pad(P[k + "_p95"]), color: css(c)}); });
     lines.forEach(([k, c, n]) => series.push({kind: "line", y: pad(P[k]), color: css(c), name: n, fmt: W},

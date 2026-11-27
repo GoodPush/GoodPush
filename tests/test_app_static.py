@@ -266,3 +266,23 @@ def test_red_amber_green_is_colour_blind_safe_everywhere():
     assert "--mgreen" not in css and ".mdot7.green { background:var(--good) }" in css
     widgets = (JS / "widgets.js").read_text(encoding="utf-8")
     assert 'class="mdot7 ${esc(m.status)}" role="img" title="${esc(t)}" aria-label="${esc(t)}"' in widgets
+
+
+def test_the_physio_lines_take_their_zone_colours():
+    """2026-11-27: the model's LT1 / CP / FTP / MAP / Pmax lines (Rider and Model pages) are coloured where their
+    intensity lands on the zone colour map (util.js INTENSITY_COL), not the series colours; each stays visible as a
+    line (3:1 on the chart surface) in both themes."""
+    util = (JS / "util.js").read_text(encoding="utf-8")
+    col = dict(re.findall(r'(\w+): "(--z\d)"', util.split("export const INTENSITY_COL = ", 1)[1].split("};", 1)[0]))
+    assert col == {"lt1": "--z3", "cp": "--z4", "ftp": "--z4", "map": "--z5", "w_prime": "--z6", "pmax": "--z7"}
+    model = (JS / "pages" / "model.js").read_text(encoding="utf-8")
+    rider = (JS / "pages" / "rider.js").read_text(encoding="utf-8")
+    for line in (model.split("const MODEL_Q", 1)[1].split("};", 1)[0], model.split("const READ_LINE", 1)[1].split("};", 1)[0],
+                 rider.split("chartPhysio(", 1)[1].split("const series", 1)[0]):
+        assert "INTENSITY_COL" in line and not re.search(r'"--s\d"', line), line
+    css = (Path(__file__).parents[1] / "styles" / "app.css").read_text(encoding="utf-8")
+    surfaces = re.findall(r"--surface: (#\w{6});", css)
+    zones = [dict(re.findall(r"--(z\d): (#\w{6})", z)) for z in re.findall(r"(--z1: #\w{6};.*)", css)]
+    assert len(surfaces) == len(zones) == 2
+    for surface, z in zip(surfaces, zones):
+        assert all(contrast(z[c[2:]], surface) >= 3 for c in col.values()), (surface, z)
