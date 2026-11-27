@@ -488,7 +488,13 @@ and run the same command again to carry on:</p>
 </div>
 <p>It usually finishes within an hour, 9 hours at most. After that the app refreshes the ranges by itself about once a
 week, in the background at low priority (<code class="docutils literal notranslate"><span class="pre">[physio]</span> <span class="pre">ranges_every_days</span></code>, 0 = never; Settings &gt; Physiological model).
-A full run is only needed again when the model’s version changes.</p>
+A full run is only needed again when the model’s version changes, or when its first day moves (below).</p>
+<p><strong>Only your recent rides.</strong> The model always fits on rides only (runs, strength and the rest never reach it), from
+your first ride with power. To leave out older years, set Settings &gt; Physiological model &gt; <em>Fit on the last (days)</em>
+(<code class="docutils literal notranslate"><span class="pre">[physio]</span> <span class="pre">since_days</span></code>, e.g. 1825 = the last 5 years; 0 = all your data), or try it once with
+<code class="docutils literal notranslate"><span class="pre">goodpush</span> <span class="pre">physio</span> <span class="pre">--since-days</span> <span class="pre">1825</span></code>. The first day goes back to the start of its quarter (1 Jan, 1 Apr, 1 Jul,
+1 Oct) and moves on four times a year rather than every day; each move is a full fit, and the ranges need the full
+run above again.</p>
 <p>Everything the model finds is about one person’s data and observational: treat its training responses as hypotheses.
 How it works: <a class="reference internal" href="../model/overview.html"><span class="std std-doc">the model pages</span></a>.</p>
 </section>

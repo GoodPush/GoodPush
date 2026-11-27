@@ -2579,14 +2579,36 @@ promises a gain (or MAX_ROUNDS). One forecast + gradient per parameter set and r
 
 <dl class="py method">
 <dt class="sig sig-object py" id="goodpush.models.physio.PhysioInputs.start">
-<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">daily</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioInputs.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioInputs.start" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">daily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioInputs.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioInputs.start" title="Link to this definition">¶</a></dt>
 <dd><p>the model’s first day: your first ride with power (else the first day). Months of rides without power
-before it left the starting state to its prior: an FTP setting from those months read as a career best.</p>
+before it left the starting state to its prior: an FTP setting from those months read as a career best.
+since_days ([physio] since_days; 0 = all your data): no earlier than <cite>window_start</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>acts</strong> (<em>DataFrame</em>)</p></li>
 <li><p><strong>daily</strong> (<em>DataFrame</em>)</p></li>
+<li><p><strong>since_days</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Timestamp</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="goodpush.models.physio.PhysioInputs.window_start">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">window_start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">last</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since_days</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioInputs.window_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioInputs.window_start" title="Link to this definition">¶</a></dt>
+<dd><p>the first day of the last <cite>since_days</cite> days up to <cite>last</cite> (your newest data day), moved back to the start
+of its quarter (1 Jan, 1 Apr, 1 Jul, 1 Oct): the model’s weekly noise terms count from its first day, so a
+start that moved every day would make every day’s fit a full one and drop the ranges’ draws. It moves four
+times a year instead (each time: a full fit, and the ranges need a full run).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>last</strong> (<em>Timestamp</em>)</p></li>
+<li><p><strong>since_days</strong> (<em>int</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2597,12 +2619,13 @@ before it left the starting state to its prior: an FTP setting from those months
 
 <dl class="py method">
 <dt class="sig sig-object py" id="goodpush.models.physio.PhysioInputs.build">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">daily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftp_history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lthr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">illnesses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioInputs.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioInputs.build" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">daily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ftp_history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lthr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">illnesses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioInputs.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioInputs.build" title="Link to this definition">¶</a></dt>
 <dd><p>intervals: models.intervals.IntervalLog (steady reps for the heart-rate curve), if there is one; max_hr: your
 maximum heart rate (efforts that reached it are all-out: metrics.effort_hr); illnesses: severe illnesses as
 (onset, comeback) dates (<cite>noise_scale</cite>). Starts at the first ride with power (<cite>start</cite>).
 severe: metrics.severe_hr.SevereSplit - the rides’ seconds with heart rate by their evidence of being severe
-(hr_hist_h); None: none (evidence 0, the power edges alone).</p>
+(hr_hist_h); None: none (evidence 0, the power edges alone). since_days: only about the last this many days
+(<cite>start</cite>; 0 = all).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2613,6 +2636,7 @@ severe: metrics.severe_hr.SevereSplit - the rides’ seconds with heart rate by 
 <li><p><strong>intervals</strong> (<em>DataFrame</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>max_hr</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>illnesses</strong> (<em>list</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>since_days</strong> (<em>int</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2860,7 +2884,7 @@ heart rate at its end, EffortHeartRate).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="goodpush.models.physio.PhysioRun">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">goodpush.models.physio.</span></span><span class="sig-name descname"><span class="pre">PhysioRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioRun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioRun" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">goodpush.models.physio.</span></span><span class="sig-name descname"><span class="pre">PhysioRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">since_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioRun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioRun" title="Link to this definition">¶</a></dt>
 <dd><p>The physio model for this workspace, kept current cheaply:</p>
 <ul class="simple">
 <li><p>full fit (<cite>fit</cite>, <cite>goodpush physio</cite>): posterior mode over everything (+ optional posterior draws);</p></li>
@@ -2873,6 +2897,11 @@ about weekly, [physio] ranges_every_days): a short NUTS run from the stored run�
 <p>A full NUTS run (FULL_RUN) is only needed when there are no draws or the model changed.</p>
 <p>Kept in processed/physio_fit.npz (parameters, what was seen; synced), physio_draws.npz (draws; this machine
 only) and processed/physio_states.parquet (daily capacities; with draws also their 5 / 95 % quantiles).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>since_days</strong> (<em>int</em><em> | </em><em>None</em>)</p>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="goodpush.models.physio.PhysioRun.FIT">
 <span class="sig-name descname"><span class="pre">FIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'physio_fit.npz'</span></span><a class="headerlink" href="#goodpush.models.physio.PhysioRun.FIT" title="Link to this definition">¶</a></dt>
@@ -2991,6 +3020,12 @@ yourself (JAX_COMPILATION_CACHE_DIR; the tests share one across runs) wins.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="goodpush.models.physio.PhysioRun.since_days">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">since_days</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#goodpush.models.physio.PhysioRun.since_days" title="Link to this definition">¶</a></dt>
+<dd><p>fit on about the last this many days only (PhysioInputs.window_start); 0 = all your data.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="goodpush.models.physio.PhysioRun.stored">
 <span class="sig-name descname"><span class="pre">stored</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioRun.stored"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioRun.stored" title="Link to this definition">¶</a></dt>
@@ -3061,6 +3096,20 @@ that made them; none (and “”) when there are none or they belong to another 
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="goodpush.models.physio.PhysioRun.first_day">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">first_day</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/goodpush/models/physio.html#PhysioRun.first_day"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#goodpush.models.physio.PhysioRun.first_day" title="Link to this definition">¶</a></dt>
+<dd><p>the stored fit’s first day (from its last day and its number of days), None if it doesn’t say.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>st</strong> (<em>dict</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4438,6 +4487,7 @@ relative to it, as your past rides are to theirs).</p>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.ILLNESS_NOISE"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.ILLNESS_NOISE</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.ILLNESS_AFTER_DAYS"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.ILLNESS_AFTER_DAYS</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.start"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.start()</span></code></a></li>
+<li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.window_start"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.window_start()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.build"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.build()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.effort_weights"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.effort_weights()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioInputs.noise_scale"><code class="docutils literal notranslate"><span class="pre">PhysioInputs.noise_scale()</span></code></a></li>
@@ -4479,12 +4529,14 @@ relative to it, as your past rides are to theirs).</p>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.FULL_RUN"><code class="docutils literal notranslate"><span class="pre">PhysioRun.FULL_RUN</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.keep_compiled"><code class="docutils literal notranslate"><span class="pre">PhysioRun.keep_compiled()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.inputs"><code class="docutils literal notranslate"><span class="pre">PhysioRun.inputs()</span></code></a></li>
+<li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.since_days"><code class="docutils literal notranslate"><span class="pre">PhysioRun.since_days</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.stored"><code class="docutils literal notranslate"><span class="pre">PhysioRun.stored()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.same_model"><code class="docutils literal notranslate"><span class="pre">PhysioRun.same_model()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.kept"><code class="docutils literal notranslate"><span class="pre">PhysioRun.kept()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.nuts_running"><code class="docutils literal notranslate"><span class="pre">PhysioRun.nuts_running()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.priors"><code class="docutils literal notranslate"><span class="pre">PhysioRun.priors()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.structure"><code class="docutils literal notranslate"><span class="pre">PhysioRun.structure()</span></code></a></li>
+<li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.first_day"><code class="docutils literal notranslate"><span class="pre">PhysioRun.first_day()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.warm_start"><code class="docutils literal notranslate"><span class="pre">PhysioRun.warm_start()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.key"><code class="docutils literal notranslate"><span class="pre">PhysioRun.key()</span></code></a></li>
 <li><a class="reference internal" href="#goodpush.models.physio.PhysioRun.history_key"><code class="docutils literal notranslate"><span class="pre">PhysioRun.history_key()</span></code></a></li>
