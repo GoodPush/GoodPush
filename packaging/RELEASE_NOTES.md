@@ -1,7 +1,25 @@
-## goodpush 0.4.0
+## goodpush 0.4.1
 
 Analyse your cycling training and plan the next weeks, on your own computer, from your Strava / Garmin exports
 and the Garmin Personal API.
+
+### New in 0.4.1
+
+- **Today, one card for the day:** this morning's verdict with its reasons, how you feel, and today's session with
+  its steps. **‹ ›** beside the date (or the arrow keys, or a swipe on a phone) steps through the days: what you rode
+  and that morning's numbers, or what's planned.
+- **The last 7 mornings** are a row of ovals; hover one for the day and why.
+- **Setup n/4** at the top right lists what's left to set up: Garmin, your whole history, the model's full run, a
+  ride app.
+- **Sync icon (two arrows)** at the top right: whether your data is up to date, **Update now**, and the new Sync page
+  with the last update's log. Everything still stays on your computer.
+- **Colour-blind-safe colours:** every red / amber / green (verdicts, status chips, the morning ovals, the sync
+  state) is now a teal green, amber and crimson that stay apart for red-green and blue-yellow colour blindness.
+- **The physiology model's lines** (LT1, CP, MAP, ...) and their legends take the colour of the training zone each
+  one falls in.
+- **The app's own dialogs** instead of the browser's OK / Cancel boxes, with buttons that say what they do.
+- **Fixed:** "Unable to decompress Zstandard data" when the installed app and a copy run from source shared a
+  workspace.
 
 ### New in 0.4.0
 
