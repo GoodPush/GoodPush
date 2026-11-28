@@ -290,3 +290,39 @@ def test_the_physio_lines_take_their_zone_colours():
     assert len(surfaces) == len(zones) == 2
     for surface, z in zip(surfaces, zones):
         assert all(contrast(z[c[2:]], surface) >= 3 for c in col.values()), (surface, z)
+
+
+def test_trend_reads_a_number_and_its_change_over_days():
+    """trend.js (Trend): a day's number from the physio model's states and its change over n days, run in Node."""
+    import json
+    import shutil
+    import subprocess
+    import pytest
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("no Node.js")
+    script = """globalThis.location = {hostname: "test"};
+const {Trend} = await import("./trend.js");
+const P = {date: ["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-08"], cp: [200, 202, null, 207.4]};
+const t = new Trend(P);
+console.log(JSON.stringify([t.value("cp", "2026-11-08"), t.value("cp", "2026-11-11"), t.value("cp", "2026-11-12"),
+  t.change("cp", "2026-11-08", 7), t.change("cp", "2026-11-08", 5), t.change("cp", "2026-11-08", 30),
+  Trend.words(5.4), Trend.words(-2.6), Trend.words(0.4), Trend.words(0.04, 1), Trend.words(null)]));"""
+    out = subprocess.run([node, "--experimental-default-type=module", "--input-type=module", "-e", script], cwd=JS,
+                         capture_output=True, text=True, encoding="utf-8", check=True).stdout
+    got = json.loads(out)
+    assert got[:3] == [207.4, 207.4, None]          # a day up to 3 past the last state reads the last; later, none
+    assert abs(got[3] - 7.4) < 1e-9 and got[4] is None and got[5] is None   # no number then (null, or before the first)
+    assert got[6:] == [["+5", "up"], ["−3", "down"], ["±0", ""], ["±0", ""], ["–", ""]]
+
+
+def test_today_shows_your_numbers_with_their_changes():
+    """Today: LT1, CP · FTP, MAP, 20 min and W′ from the physio model (S.physio, p20 from the server), each with its
+    7, 14 and 30-day change (Trend), below the morning strip; not for days ahead of the model."""
+    today = (JS / "pages" / "today.js").read_text(encoding="utf-8")
+    assert 'import {Trend} from "../trend.js";' in today and "const SPANS = [7, 14, 30];" in today
+    for k in ('"lt1"', '"cp"', '"map"', '"p20"', '"w_prime"'):
+        assert k in today.split("const NUMBERS = ", 1)[1].split(";", 1)[0]
+    assert "${this.strip(d)}\n      ${this.numbers(d)}" in today and "T.index(d) < 0" in today
+    css = (STATIC / "app.css").read_text(encoding="utf-8")
+    assert ".strip.nums" in css and ".strip .chg" in css
