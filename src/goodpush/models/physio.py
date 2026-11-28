@@ -363,6 +363,8 @@ class PhysioRun:
     RECENT_DAYS = 28                 # these last days may change (late syncs) without a full refit
     JAX_CACHE = "jax_cache"          # processed/: compiled model code (this machine and jax version only)
     LOCK = "physio_nuts.lock"        # held by a NUTS run (full or refresh): one at a time (peer sync skips *.lock)
+    PROGRESS = "physio_nuts_progress.log"   # while LOCK is held: its start and last progress line (the Model page
+                                            # shows a run started elsewhere; peer sync skips *.log)
     SEVERE = "severe"                # the illnesses (models.illness severity) the model allows a larger change in
     FULL_RUN = "goodpush physio --nuts --samples 2500 --ess 400 --max-minutes 540"   # what to run for new draws
     ANALYSED = "physio_analysed.txt"   # the model (structure) whose daily states the analysis tables were made from
@@ -506,6 +508,40 @@ class PhysioRun:
             return True
         lock.release()
         return False
+
+    @classmethod
+    def nuts_progress(cls, processed) -> dict | None:
+        """the NUTS run holding LOCK (any process): {"kind" (full | refresh), "started", "t" (epoch s), "line" (its
+        last progress line)}; None when no run holds it, or it hasn't said anything yet."""
+        import json
+        if not cls.nuts_running(processed):
+            return None
+        try:
+            return json.loads((Path(processed) / cls.PROGRESS).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+
+    def tracked(self, progress, kind: str):
+        """`progress` that also keeps PROGRESS up to date (call with LOCK held; untrack() when the run ends)."""
+        import functools
+        import time
+        say = functools.partial(self.said, progress, kind, time.time())
+        say("physio model: starting the sampling run ...")
+        return say
+
+    def said(self, progress, kind: str, started: float, line: str) -> None:
+        """one progress line: passed on, and written to PROGRESS (tracked)."""
+        import json
+        import time
+        progress(line)
+        body = json.dumps({"kind": kind, "started": started, "t": time.time(), "line": str(line)}).encode("utf-8")
+        try:
+            self.write_whole(self.processed / self.PROGRESS, lambda f: f.write(body))
+        except OSError:
+            pass
+
+    def untrack(self) -> None:
+        (self.processed / self.PROGRESS).unlink(missing_ok=True)
 
     @staticmethod
     def priors() -> str:
@@ -675,8 +711,11 @@ class PhysioRun:
             from filelock import FileLock, Timeout
             try:
                 with FileLock(str(self.processed / self.LOCK), timeout=0):
-                    return self.fitted(samples, maxiter, progress, data, model, nuts, fresh, target_ess,
-                                       max_minutes, warmup)
+                    try:
+                        return self.fitted(samples, maxiter, self.tracked(progress, "full"), data, model, nuts,
+                                           fresh, target_ess, max_minutes, warmup)
+                    finally:
+                        self.untrack()
             except Timeout:
                 raise RuntimeError("another NUTS run of this model is going on (a refresh, or a full run): "
                                    "try again when it's done") from None
@@ -743,7 +782,10 @@ class PhysioRun:
         from filelock import FileLock, Timeout
         try:
             with FileLock(str(self.processed / self.LOCK), timeout=0):
-                return self.refreshed(progress)
+                try:
+                    return self.refreshed(self.tracked(progress, "refresh"))
+                finally:
+                    self.untrack()
         except Timeout:
             progress("physio model: another NUTS run is going on: no refresh now")
             return None
@@ -1025,23 +1067,62 @@ class PhysioDiagnostics:
                       "change_pct": round(100 * float(df.std()), 2), "training_change_pct": round(100 * float(dt.std()), 2)}
         return out
 
+    def inputs(self) -> dict:
+        """what the fit was given: its days (from the first, which [physio] since_days can move), the days with
+        riding and their hours, and how many best powers and threshold readings"""
+        d = self.model.data
+        ridden = np.asarray(d.hist_h).sum(axis=1)
+        return {"first_day": str(d.days[0]), "days": int(len(d.days)), "ride_days": int((ridden > 0).sum()),
+                "hours": round(float(ridden.sum()), 1), "efforts": int(len(d.effort_w)),
+                "readings": int(len(d.reading_w))}
+
+    def best(self) -> dict:
+        """today's thresholds from the best fit (W; W' in kJ): what `previous` compares the next fit with"""
+        path = self.model.trajectory(self.z)
+        return {c: round(float(np.asarray(path[c])[-1]) / (1000.0 if c == "w_prime" else 1.0), 1)
+                for c in self.TODAY if c in path}
+
+    @staticmethod
+    def set_aside(acts, first_day: str) -> dict:
+        """rides from `first_day` on whose power the power check set aside (metrics.power_check: activities'
+        `power_ignored`), by reason: {"marked": n, "heart rate": n}, zeros where none"""
+        out = {"marked": 0, "heart rate": 0}
+        if acts is None or "power_ignored" not in acts or not first_day:
+            return out
+        why = acts.loc[pd.to_datetime(acts["date"]) >= pd.Timestamp(first_day), "power_ignored"].fillna("")
+        return {k: int((why == k).sum()) for k in out}
+
+    @staticmethod
+    def previous(old: dict, day: str, version: int) -> dict | None:
+        """the best fit's numbers before the newest data day (`old`: the file this save replaces), so the app can say
+        what the latest rides moved. Kept through refits of the same day; None across model versions."""
+        if old.get("version") != version or not old.get("best"):
+            return None
+        if old.get("day") != day:
+            return {"day": old.get("day"), "best": old["best"]}
+        return old.get("previous")
+
     def save(self, processed, sampling: dict | None, draws_day: str = "") -> None:
         """`draws_day`: the data day of the run that made the draws ("" without draws): ranges older than the data
         say so in the app."""
         import json
+        from ..physio.model import VERSION
         f = processed / self.FILE
+        try:
+            old = json.loads(f.read_text(encoding="utf-8")) or {}
+        except (OSError, ValueError):
+            old = {}
         if sampling is None:                       # a daily update: the run that made the draws stays shown
-            try:
-                sampling = json.loads(f.read_text(encoding="utf-8")).get("sampling")
-            except (OSError, ValueError):
-                sampling = None
+            sampling = old.get("sampling")
             if sampling is not None and self.T is None:
                 sampling = None                    # its draws are gone (another model layout)
-        from ..physio.model import VERSION
-        out = {"day": str(self.model.data.days[-1]), "draws_day": draws_day, "sampling": sampling, "version": VERSION,
+        day = str(self.model.data.days[-1])
+        out = {"day": day, "draws_day": draws_day, "sampling": sampling, "version": VERSION,
                "posterior": self.posterior(), "efforts": self.efforts(), "readings": self.readings(),
-               "training": self.training(), "assumed": self.assumed()}
-        f.write_text(json.dumps(out, ensure_ascii=True), encoding="utf-8")
+               "training": self.training(), "assumed": self.assumed(), "inputs": self.inputs(), "best": self.best(),
+               "previous": self.previous(old, day, VERSION)}
+        body = json.dumps(out, ensure_ascii=True).encode("utf-8")
+        PhysioRun.write_whole(f, lambda g: g.write(body))
 
 
 class TrainingResponse:

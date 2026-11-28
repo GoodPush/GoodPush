@@ -290,3 +290,65 @@ def test_the_physio_lines_take_their_zone_colours():
     assert len(surfaces) == len(zones) == 2
     for surface, z in zip(surfaces, zones):
         assert all(contrast(z[c[2:]], surface) >= 3 for c in col.values()), (surface, z)
+
+
+def test_the_model_page_answers_can_i_trust_it_at_the_top():
+    """2026-11-27 Model page critique (reviews/model-page/README.md): one ranges verdict opens the page (no Ranges tile
+    beside it to disagree with), predicted vs observed has titled axes over one range, the readings chart can take
+    each source's bias out, chart kinds have shapes as well as colours, and the charts have a text alternative."""
+    model = (JS / "pages" / "model.js").read_text(encoding="utf-8")
+    charts = (JS / "charts.js").read_text(encoding="utf-8")
+    assert 'tile("Ranges"' not in model and "rangesVerdict()" in model
+    assert all(f'["Ranges: {w}' in model for w in ("none yet", "rough", "trustworthy"))
+    effort = model.split('EChart.draw("mdEffort"', 1)[1].split("series:", 1)[0]
+    assert all(k in effort for k in ("xDomain: [lo, hi]", "yDomain: [lo, hi]", "xName:", "yName:", "tick", "label:"))
+    assert "yDomain" in charts.split("yRange(view) {", 1)[1].split("}", 1)[0]
+    assert 'id="mdReadFair"' in model and "bias[n]" in model and "READ_NAME" in model
+    assert all(f'"{s}"]' in model for s in ("diamond", "triangle")) and "symbol: s.shape" in charts
+    assert 'box.setAttribute("role", "img")' in charts
+    assert all(f'EChart.draw("{c}"' in model for c in ("mdEffort", "mdRead", "mdFatigue"))
+    assert model.count("label: `") >= 3
+    assert "j.stage || j.other" in model                         # keeps polling while a run started elsewhere goes on
+
+
+def test_the_model_page_shows_todays_best_fit_before_any_ranges():
+    """2026-11-28 Model page review: before a sampling run the verdict says today's numbers come from the best fit,
+    so the page shows them (W' in kJ, as on the Rider page); the fatigue legend names "Planned" only when the plan's
+    forecast draws that dashed line; the riding table's hint sits in its heading, not alone in the card."""
+    model = (JS / "pages" / "model.js").read_text(encoding="utf-8")
+    assert "if (!rows) return this.bestFitSection();" in model
+    best = model.split("bestFitSection() {", 1)[1].split("\n  }\n", 1)[0]
+    assert "Today, from the best fit" in best and "after a sampling run" in best and "/ 1000" in best
+    fatigue = model.split("fatigueSection() {", 1)[1].split("\n  }\n", 1)[0]
+    assert "this.fatiguePlanned() ?" in fatigue
+    riding = model.split("ridingSection() {", 1)[1].split("\n  }\n", 1)[0]
+    assert '<div class="card">${hint(' not in riding
+
+
+def test_the_model_page_says_where_you_are_heading_and_what_the_fit_used():
+    """2026-11-28 Model page ideas: today's numbers with their 6-week change and what the latest rides moved (a big
+    move flagged), what the fit was given (days, rides, best powers, readings, rides set aside), the predicted vs
+    observed chart in one sentence, and how fresh the LT1 / CP readings are, with a ramp test named when they're old."""
+    model = (JS / "pages" / "model.js").read_text(encoding="utf-8")
+    assert model.count("this.trendCell(k)") == 2 and model.count("${this.movedLine()}") == 2
+    assert "const TREND_DAYS = 42;" in model and "const MOVED_BIG = 0.03;" in model and "const FRESH_DAYS = 42;" in model
+    assert "${this.inputsCard()}" in model and "I.set_aside" in model
+    assert 'id="mdEffortSay"' in model and '$("#mdEffortSay").textContent = this.effortSay(pick);' in model
+    assert "${this.readingsFresh()}" in model and "a ramp test would add a fresh one" in model
+    server = (Path(__file__).parents[1] / "src" / "goodpush" / "app" / "server.py").read_text(encoding="utf-8")
+    assert "PhysioDiagnostics.set_aside(" in server
+
+
+def test_the_intensity_colours_keep_their_order_in_both_themes():
+    """--z1 (easy) is the yellow end and --z7 (hard) the blue end in light and dark alike (the dark theme reversed
+    the scale before 2026-11-27); text on a zone colour (--on-z*) stays readable on it."""
+    css = (Path(__file__).parents[1] / "styles" / "app.css").read_text(encoding="utf-8")
+    zones = [dict(re.findall(r"--(z\d): (#\w{6})", z)) for z in re.findall(r"(--z1: #\w{6};.*)", css)]
+    on = [dict(re.findall(r"--on-(z\d): (#\w{6})", z)) for z in re.findall(r"(--on-z1: #\w{6};.*)", css)]
+    assert len(zones) == len(on) == 2
+    for z, t in zip(zones, on):
+        r, g, b = (int(z["z1"][i:i + 2], 16) for i in (1, 3, 5))
+        assert r > b + 60 and g > b + 60                         # z1 yellow
+        r, g, b = (int(z["z7"][i:i + 2], 16) for i in (1, 3, 5))
+        assert b > r + 40                                        # z7 blue
+        assert all(contrast(t[k], z[k]) >= 4.5 for k in t), (z, t)

@@ -114,7 +114,10 @@ export class SelectionPanel {
 // optional: group (charts sharing zoom, crosshair and selection), scrollbar, view [a, b] (the window it opens on),
 // yExtra [arrays on x] (also set the y axis, not drawn), xAxis false (no x labels: for charts stacked above one that
 // has them), xDomain [a, b] (the full x range, when it isn't just the data's), vline / hline, shade, bands, planFrom,
-// tipNote(x), tipReverse, onPick(x), onHover(x), onView, select, xStep.
+// tipNote(x), tipReverse, onPick(x), onHover(x), onView, select, xStep, xName / yName (axis titles), yDomain [a, b]
+// (a fixed y range, e.g. the same as xDomain for a predicted-vs-observed chart), tick (one tick step on both axes),
+// label (what the chart shows, in a sentence: its text alternative for screen readers). A dots series may set shape
+// ("circle" | "diamond" | "triangle" | "rect"), so its kind isn't told by colour alone.
 // Drawn by Apache ECharts (static/vendor), which does the axes, ticks, marks, crosshair, tooltip box, zoom / pan (dataZoom: Ctrl + wheel / pinch zooms,
 // drag or Shift + wheel pans, the slider is the scrollbar, double-click shows all). A group's charts (spec.group) share
 // their x range, zoom and crosshair: passed on here (pointer, zoomed), not by ECharts' connect, which shows a pointer only
@@ -138,6 +141,7 @@ export class EChart {
   static draw(id, spec) {
     const box = document.getElementById(id);
     if (!box) return;
+    if (spec.label) { box.setAttribute("role", "img"); box.setAttribute("aria-label", spec.label); }
     for (const [k, c] of Object.entries(EChart.live)) if (!c.chart.getDom().isConnected) { c.chart.dispose(); delete EChart.live[k]; }
     const c = EChart.live[id];
     if (c && c.chart.getDom() === box) c.update(spec);
@@ -248,15 +252,17 @@ export class EChart {
       lineStyle: {opacity: 0}, tooltip: {show: false}}));
     const view = this.tw?.view;
     if (series.length) Object.assign(series[0], this.marks(view || dom));
-    this.gridBox = {top: this.zoomable || labelled ? 20 : 6, bottom: (spec.xAxis === false ? 4 : 22) + (slider ? 24 : 0)};
+    this.gridBox = {top: this.zoomable || labelled ? 20 : 6, bottom: (spec.xAxis === false ? 4 : 22) + (slider ? 24 : 0) + (spec.xName ? 20 : 0)};
+    const title = (name, gap) => name ? {name, nameLocation: "middle", nameGap: gap, nameTextStyle: {color: ink2, fontSize: 11.5}} : {};
     const ticks = spec.xTicks ? new Map(spec.xTicks) : null;    // fixed ticks [[x, label], ...]
     const win = view || dom, step = spec.xStep ? spec.xStep(win[1] - win[0], Math.max(4, Math.floor((this.chart.getWidth() - 54) / 90))) : undefined;
     const H = this.chart.getHeight();
     return {
       animation: false,
-      grid: {left: 44, right: 10, ...this.gridBox},
+      grid: {left: spec.yName ? 62 : 44, right: 10, ...this.gridBox},
       xAxis: {type: spec.xType === "date" ? "time" : spec.xType === "log" ? "log" : "value", min: dom[0], max: dom[1],
-        axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
+        axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false}, ...title(spec.xName, 26),
+        ...(spec.tick ? {interval: spec.tick} : {}),
         axisLabel: {show: spec.xAxis !== false, color: ink2, fontSize: 11, hideOverlap: true,
           ...(step ? {customValues: this.stepValues(dom, step)} : {}),
           ...(spec.xTickFmt ? {formatter: (v) => spec.xTickFmt(v, step)} : {}),
@@ -265,6 +271,7 @@ export class EChart {
         ? {type: "category", data: spec.rows, inverse: true, axisLine: {show: false}, axisTick: {show: false}, splitLine: {show: false},
           axisLabel: {color: ink2, fontSize: 11}}
         : {type: "value", scale: !(spec.zero || spec.series.some((s) => s.kind === "bar")), ...this.yRange(view),
+          ...title(spec.yName, 46), ...(spec.tick ? {interval: spec.tick} : {}),
           splitNumber: H < 150 ? 3 : H < 260 ? 4 : 5,             // fewer y ticks on a short chart
           axisLine: {show: false}, axisTick: {show: false}, splitLine: {lineStyle: {color: grid}}, axisLabel: {color: ink2, fontSize: 11, formatter: (v) => (spec.yFmt || String)(v)}},
       tooltip: {trigger: spec.tipItem ? "item" : "axis", confine: true, className: "etip", transitionDuration: 0, padding: [6, 9],
@@ -300,6 +307,7 @@ export class EChart {
   // and yExtra in the x window shown, padded and rounded out to whole ticks as drawChart did; {} = ECharts' own
   yRange(view) {
     const spec = this.spec;
+    if (spec.yDomain) return {min: spec.yDomain[0], max: spec.yDomain[1]};
     if (!spec.series.some((s) => s.range === false)) return {};
     const seen = (x) => !view || (x != null && x >= view[0] && x <= view[1]);
     const ys = [];
@@ -340,7 +348,8 @@ export class EChart {
     if (s.kind === "dots") {
       const data = X.flatMap((x, i) => s.y[i] == null ? [] : [{value: [x, s.y[i]],
         itemStyle: {opacity: s.alpha ? s.alpha[i] : s.r ? 0.75 : 1}}]);
-      const out = [{type: "scatter", data, symbolSize: 2 * (s.r || 4), itemStyle: s.hollow
+      const out = [{type: "scatter", data, symbol: s.shape || "circle", symbolSize: 2 * (s.r || 4) * (s.shape && s.shape !== "circle" ? 1.25 : 1),
+        itemStyle: s.hollow
         ? {color: "transparent", borderColor: col, borderWidth: 1.2}
         : {color: col, borderColor: s.r ? "transparent" : css("--surface"), borderWidth: s.r ? 0 : 1.5}}];
       if (s.lo) {

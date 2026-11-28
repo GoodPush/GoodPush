@@ -39,7 +39,9 @@
   /* good / warn / bad: every red-amber-green in the app, colour-blind safe (tests/test_app_static.py measures them) */
   --good: #2b7d74; --warn: #916508; --bad: #9a0b33; --mring: rgba(11,11,11,.22);
   --good-bg: #f1f8f6; --warn-bg: #fdf1d8; --bad-bg: #f8e1e7;
+  /* intensity, easy -> hard: yellow -> navy here, yellow -> blue in dark (the same hue order in both themes) */
   --z1: #e5cf52; --z2: #bcae6c; --z3: #948e77; --z4: #727274; --z5: #4f576c; --z6: #243c6e; --z7: #00224e;
+  --on-z1: #0b0b0b; --on-z3: #0b0b0b; --on-z5: #fcfcfb; --on-z7: #fcfcfb;   /* text on those colours */
 }
 @plugin "./vendor/daisyui-theme.mjs" {
   name: "dark";
@@ -61,7 +63,8 @@
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s7: #9085e9;
   --good: #6fd6c0; --warn: #e1a536; --bad: #e8505f; --mring: rgba(255,255,255,.18);
   --good-bg: #143029; --warn-bg: #33270c; --bad-bg: #2f151a;
-  --z1: #3b496c; --z2: #5b606e; --z3: #777777; --z4: #979177; --z5: #b9ab6d; --z6: #dcc859; --z7: #fee838;
+  --z1: #d8c24e; --z2: #b3a76a; --z3: #918e7c; --z4: #7b7f8c; --z5: #6b7ea6; --z6: #5f84c8; --z7: #6a94f0;
+  --on-z1: #121211; --on-z3: #121211; --on-z5: #121211; --on-z7: #121211;
 }
 
 :root { --radius: 14px; --nav-h: 64px }
@@ -766,3 +769,28 @@ details.setsec[open] > summary { border-bottom:1px solid var(--grid); border-rad
 .maint p { margin:0 }
 .maint .btn { width:100% }
 @media (max-width:640px) { .maint { grid-template-columns:1fr; gap:4px } .maint p { margin-bottom:10px } }
+
+/* Model page: the ranges verdict at the top, the run button under it */
+.mdverdict { display:flex; flex-direction:column; gap:10px; margin-bottom:6px }
+.mdv-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px }
+.mdv-say { color:var(--ink2); font-size:14px; flex:1 1 320px; min-width:0 }
+.status.gray { background:var(--surface2); color:var(--ink2) }
+/* Model page: its two groups of sections, the riding table's heading, the legend's shaped marks */
+.mdgroup { margin:34px 0 -6px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; font-weight:650;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--ink2) }
+.mdsub { font-size:15px; margin:22px 0 8px }
+.legend .sym { font-size:11px; line-height:1; margin-right:5px }
+/* a table that becomes one card per row on a phone: each cell with its column's name (data-label) */
+@media (max-width:640px) {
+  table.stacktable thead { display:none }
+  table.stacktable, table.stacktable tbody, table.stacktable tr, table.stacktable td { display:block; width:100% }
+  table.stacktable tr { padding:8px 0; border-bottom:1px solid var(--line) }
+  table.stacktable td { border:0; padding:3px 0; text-align:left }
+  table.stacktable td[data-label]::before { content:attr(data-label); display:block; font-size:11.5px; color:var(--ink2); margin-bottom:1px }
+  table.stacktable td[style*="min-width"] { min-width:0 !important }
+}
+@media (max-width:760px) { .seg button { min-height:44px } }
+@media (max-width:640px) {   /* .kv: short values, each beside its column's name */
+  table.stacktable.kv td[data-label] { display:flex; justify-content:space-between; gap:12px }
+  table.stacktable.kv td[data-label]::before { display:inline; margin:0 }
+}
