@@ -534,12 +534,9 @@ class PhysioRun:
         import json
         import time
         progress(line)
-        path = self.processed / self.PROGRESS
+        body = json.dumps({"kind": kind, "started": started, "t": time.time(), "line": str(line)}).encode("utf-8")
         try:
-            tmp = path.with_suffix(".tmp")
-            tmp.write_text(json.dumps({"kind": kind, "started": started, "t": time.time(), "line": str(line)}),
-                           encoding="utf-8")
-            tmp.replace(path)
+            self.write_whole(self.processed / self.PROGRESS, lambda f: f.write(body))
         except OSError:
             pass
 

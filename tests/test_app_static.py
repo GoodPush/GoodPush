@@ -290,3 +290,37 @@ def test_the_physio_lines_take_their_zone_colours():
     assert len(surfaces) == len(zones) == 2
     for surface, z in zip(surfaces, zones):
         assert all(contrast(z[c[2:]], surface) >= 3 for c in col.values()), (surface, z)
+
+
+def test_the_model_page_answers_can_i_trust_it_at_the_top():
+    """2026-11-27 Model page critique (reviews/model-page/README.md): one ranges verdict opens the page (no Ranges tile
+    beside it to disagree with), predicted vs observed has titled axes over one range, the readings chart can take
+    each source's bias out, chart kinds have shapes as well as colours, and the charts have a text alternative."""
+    model = (JS / "pages" / "model.js").read_text(encoding="utf-8")
+    charts = (JS / "charts.js").read_text(encoding="utf-8")
+    assert 'tile("Ranges"' not in model and "rangesVerdict()" in model
+    assert all(f'["Ranges: {w}' in model for w in ("none yet", "rough", "trustworthy"))
+    effort = model.split('EChart.draw("mdEffort"', 1)[1].split("series:", 1)[0]
+    assert all(k in effort for k in ("xDomain: [lo, hi]", "yDomain: [lo, hi]", "xName:", "yName:", "tick", "label:"))
+    assert "yDomain" in charts.split("yRange(view) {", 1)[1].split("}", 1)[0]
+    assert 'id="mdReadFair"' in model and "bias[n]" in model and "READ_NAME" in model
+    assert all(f'"{s}"]' in model for s in ("diamond", "triangle")) and "symbol: s.shape" in charts
+    assert 'box.setAttribute("role", "img")' in charts
+    assert all(f'EChart.draw("{c}"' in model for c in ("mdEffort", "mdRead", "mdFatigue"))
+    assert model.count("label: `") >= 3
+    assert "j.stage || j.other" in model                         # keeps polling while a run started elsewhere goes on
+
+
+def test_the_intensity_colours_keep_their_order_in_both_themes():
+    """--z1 (easy) is the yellow end and --z7 (hard) the blue end in light and dark alike (the dark theme reversed
+    the scale before 2026-11-27); text on a zone colour (--on-z*) stays readable on it."""
+    css = (Path(__file__).parents[1] / "styles" / "app.css").read_text(encoding="utf-8")
+    zones = [dict(re.findall(r"--(z\d): (#\w{6})", z)) for z in re.findall(r"(--z1: #\w{6};.*)", css)]
+    on = [dict(re.findall(r"--on-(z\d): (#\w{6})", z)) for z in re.findall(r"(--on-z1: #\w{6};.*)", css)]
+    assert len(zones) == len(on) == 2
+    for z, t in zip(zones, on):
+        r, g, b = (int(z["z1"][i:i + 2], 16) for i in (1, 3, 5))
+        assert r > b + 60 and g > b + 60                         # z1 yellow
+        r, g, b = (int(z["z7"][i:i + 2], 16) for i in (1, 3, 5))
+        assert b > r + 40                                        # z7 blue
+        assert all(contrast(t[k], z[k]) >= 4.5 for k in t), (z, t)

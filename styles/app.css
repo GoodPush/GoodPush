@@ -775,3 +775,22 @@ details.setsec[open] > summary { border-bottom:1px solid var(--grid); border-rad
 .mdv-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px }
 .mdv-say { color:var(--ink2); font-size:14px; flex:1 1 320px; min-width:0 }
 .status.gray { background:var(--surface2); color:var(--ink2) }
+/* Model page: its two groups of sections, the riding table's heading, the legend's shaped marks */
+.mdgroup { margin:34px 0 -6px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; font-weight:650;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--ink2) }
+.mdsub { font-size:15px; margin:22px 0 8px }
+.legend .sym { font-size:11px; line-height:1; margin-right:5px }
+/* a table that becomes one card per row on a phone: each cell with its column's name (data-label) */
+@media (max-width:640px) {
+  table.stacktable thead { display:none }
+  table.stacktable, table.stacktable tbody, table.stacktable tr, table.stacktable td { display:block; width:100% }
+  table.stacktable tr { padding:8px 0; border-bottom:1px solid var(--line) }
+  table.stacktable td { border:0; padding:3px 0; text-align:left }
+  table.stacktable td[data-label]::before { content:attr(data-label); display:block; font-size:11.5px; color:var(--ink2); margin-bottom:1px }
+  table.stacktable td[style*="min-width"] { min-width:0 !important }
+}
+@media (max-width:760px) { .seg button { min-height:44px } }
+@media (max-width:640px) {   /* .kv: short values, each beside its column's name */
+  table.stacktable.kv td[data-label] { display:flex; justify-content:space-between; gap:12px }
+  table.stacktable.kv td[data-label]::before { display:inline; margin:0 }
+}
