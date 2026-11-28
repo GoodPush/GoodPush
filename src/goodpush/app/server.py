@@ -577,7 +577,7 @@ def save_upload(proj, rfile, length: int, name: str) -> tuple[Path, str]:
 ACT_FIELDS = ["id", "name", "type", "sport", "indoor", "workout", "type_name", "duration_s", "moving_s",
               "distance_m", "elev_gain", "np_used", "avg_power", "max_power", "if_", "tss", "tss_source",
               "avg_hr", "max_hr", "work_kj", "ef", "decoupling", "avg_cadence", "ftp", "gear",
-              "description", "private_note", "avg_temp", "calories", "also"]
+              "description", "private_note", "avg_temp", "calories", "also", "power_ignored"]
 
 
 def _jsonable(v):
@@ -1988,10 +1988,10 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
             own = PlanState.load(sp).own_on(season.changed_days(old, today()))
             if own and body.get("replan_own") is None:   # days you set yourself in the weeks that changed: ask first
                 first, last = (pd.Timestamp(k[:10]).strftime("%a %d %b") for k in (own[0], own[-1]))
-                return {"answer": "replan_own", "ask": (
+                return {"answer": "replan_own", "title": "Plan your own days again?", "ask": (
                     f"You set {len(own)} day(s) yourself (moved, added or resized) in the weeks this changes "
-                    f"({first} – {last}).\n\nOK: the planner plans them for the new season.\n"
-                    "Cancel: they stay as you set them.")}
+                    f"({first} – {last}).\n\nThe planner can plan them for the new season, or they can stay as "
+                    "you set them."), "yes": "Plan them again", "no": "Keep my days"}
             season.save(proj.root)
             with PlanState.open(sp) as st:
                 if body.get("replan_own"):
@@ -2007,7 +2007,7 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
                 ask = (season.place_phase(Phase(**{k: v.get(k) for k in ("type", "start", "weeks", "name", "build_weeks", "hours")}), merge)
                        if a == "add_phase" else season.edit_phase(str(body.get("id")), v.get("start"), v.get("weeks"), merge))
                 if ask:
-                    return {"ask": ask}
+                    return {"ask": ask, "title": "Merge the phases?", "yes": "Merge them", "no": "Keep them apart"}
             elif a == "delete_phase":
                 season.delete_phase(str(body.get("id")))
             elif a == "add_event":
@@ -2129,6 +2129,20 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
             if a == "override" and body.get("value") == "sick":            # an illness: learn from it too
                 return jobs.start("Updating plan", lambda log: _sick_day(proj, log), queue=True)
             return jobs.start("Updating plan", lambda log: _plan_only(proj, log), queue=True)
+        if a == "ride_power":                 # Ride page: this ride's power is wrong / keep it / undo (metrics.power_check)
+            from ..metrics.power_check import PowerCheck
+            from .tomledit import set_values
+            ride = str(body.get("ride") or "").removesuffix(".0")
+            if not ride:
+                raise ValueError("no ride given")
+            ing = proj.cfg.get("ingest", {})
+            bad, keep = PowerCheck.edited(list(ing.get("bad_power") or []), list(ing.get("keep_power") or []),
+                                          ride, str(body.get("value") or ""))
+            set_values(proj.root / "goodpush.toml", "ingest", {"bad_power": bad, "keep_power": keep})
+            proj = load_project(proj.root)
+            data.proj = proj
+            return jobs.start("Re-analysing without that ride's power" if body.get("value") == "bad"
+                              else "Re-analysing with that ride's power", lambda log: _reanalyse(proj, log))
         if a == "settings":                   # any section of SETTINGS (config.py); the Plan page sends plan
             section = body.get("section") or "plan"
             vals = clean_settings(section, body.get("values") or {})
@@ -2390,7 +2404,8 @@ def make_handler(proj, key: str | None, lan: bool, warm: bool = True, port: int 
                     if full_run.running():
                         busy.append("The model run goes on by itself, without its backtest.")
                     if busy and not body.get("force"):
-                        return self._json({"ask": " ".join(busy) + "\n\nQuit goodpush anyway?"})
+                        return self._json({"title": "Quit goodpush anyway?", "ask": " ".join(busy), "yes": "Quit",
+                                           "no": "Keep it running", "danger": True})
                     self._json({"ok": True})
                     threading.Thread(target=self.server.shutdown, name="goodpush quit", daemon=True).start()
                     return None

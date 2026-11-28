@@ -149,7 +149,10 @@ def test_end_to_end(tmp_path: Path):
     from goodpush.models.dips import BreakLabels
     BreakLabels(proj.processed).set_period("2024-02-07", "2024-04-01", "gain")     # marked on the load chart
     BreakLabels(proj.processed).set_period("2024-05-01", "2024-05-06", "illness")
-    r = run_analysis(proj, progress=lambda *a: None)
+    said = []
+    r = run_analysis(proj, progress=said.append)
+    from goodpush.models.physio import PhysioRun
+    assert PhysioRun(proj).analysed() and any("first fit" in str(s) for s in said)   # analysed on its own states
     res = write_reports(proj, r, progress=lambda *a: None)
     assert (proj.reports / "dashboard.html").exists()
     assert 200 < res["power"]["ftp_now"] < 300
@@ -1553,6 +1556,7 @@ def test_app_asks_before_a_season_change_replans_your_own_days(tmp_path: Path):
         post({"action": "lock_session", "key": kept, "locked": False})
         j = post(body)
         assert j["answer"] == "replan_own" and "2 day(s)" in j["ask"]
+        assert j["title"] and j["yes"] and j["no"]                         # the dialog's title and buttons
         assert len(Season.load(proj.root).phases) == 1                     # nothing saved before the answer
         post({**body, "replan_own": True})
         assert len(Season.load(proj.root).phases) == 2
@@ -1985,7 +1989,8 @@ def test_quit_in_the_app_stops_the_server_and_asks_while_a_ride_is_open(tmp_path
         url, json.dumps(b).encode(), {"Content-Type": "application/json", "X-GoodPush": "1"})).read())
     monkeypatch.setattr(RideLauncher, "proc", SimpleNamespace(poll=lambda: None))     # a ride window open
     try:
-        assert "ride window" in post({"action": "quit"})["ask"]
+        j = post({"action": "quit"})
+        assert "ride window" in j["ask"] and j["yes"] == "Quit" and j["danger"]
         assert th.is_alive()                                                # nothing stopped before the answer
         assert post({"action": "quit", "force": True}) == {"ok": True}
         th.join(5)

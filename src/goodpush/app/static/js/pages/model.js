@@ -1,20 +1,20 @@
 // Model: can you trust the physio model - a verdict, today's numbers with their ranges, how its predictions sit next to
 // what you rode and measured, the sampler's details, folded (ModelPage).
-import {Lazy, Pref, Segmented} from "../controls.js";
+import {ask, Lazy, Pref, Segmented} from "../controls.js";
 import {Page} from "./page.js";
 import {api, S} from "../api.js";
-import {$, css, esc, fmt} from "../util.js";
+import {$, css, esc, fmt, INTENSITY_COL} from "../util.js";
 import {hint, niceDate, tile} from "../widgets.js";
 import {router} from "../main.js";
 import {DOMAIN, DOMAIN_ORDER, riderPage} from "./rider.js";
 import {EChart, TimeWindow} from "../charts.js";
 import {GUIDE} from "./help.js";
 
-const MODEL_Q = {cp: ["CP", "W", "--s1"], map: ["MAP (5 min)", "W", "--s2"], ftp: ["FTP (1-hour power)", "W", "--s4"], lt1: ["LT1", "W", "--s3"],
-  w_prime: ["W′", "kJ", "--s7"], pmax: ["Pmax (sprint)", "W", "--muted"], fade: ["Fade past 30 min", "% of CP", "--ink2"]};
+const MODEL_Q = {cp: ["CP", "W", INTENSITY_COL.cp], map: ["MAP (5 min)", "W", INTENSITY_COL.map], ftp: ["FTP (1-hour power)", "W", INTENSITY_COL.ftp], lt1: ["LT1", "W", INTENSITY_COL.lt1],
+  w_prime: ["W′", "kJ", INTENSITY_COL.w_prime], pmax: ["Pmax (sprint)", "W", INTENSITY_COL.pmax], fade: ["Fade past 30 min", "% of CP", "--ink2"]};
 const KIND_COL = {easy: ["Easy ride", "--line"], hard: ["Hard ride", "--s3"], test: ["Test", "--s1"], maxed: ["Heart rate maxed", "--s2"]};
 const CHAIN_COL = ["--s1", "--s2", "--s3", "--s4", "--s7"];
-const READ_LINE = {lt1: ["LT1", "--s3"], cp: ["CP", "--s1"], map: ["MAP", "--s2"], ftp: ["FTP", "--s4"]};
+const READ_LINE = {lt1: ["LT1", INTENSITY_COL.lt1], cp: ["CP", INTENSITY_COL.cp], map: ["MAP", INTENSITY_COL.map], ftp: ["FTP", INTENSITY_COL.ftp]};   // the zone colour map
 const DOT_COL = ["--s1", "--s2", "--s3", "--s4", "--s7", "--ink2", "--muted"];
 // threshold readings' sources (models.physio SOURCES) by the names people know
 const READ_NAME = {my_ftp: "FTP you entered", alpha1_lt1: "alpha1 on rides (LT1)", ramp_lt1: "Ramp test, alpha1 (LT1)",
@@ -111,15 +111,15 @@ class ModelRunCard {
   }
 
   async start() {
-    if (!confirm("Start a full sampling run and then the backtest?\n"
-      + "It usually takes about an hour at low priority (9 h at most); you can stop it any time.")) return;
+    if (!await ask.confirm({title: "Run sampling and the backtest?", yes: "Start the run",
+      text: "A full sampling run first, then the backtest. It usually takes about an hour at low priority "
+        + "(9 hours at most), and you can stop it any time."})) return;
     if (await api.action({action: "model_run"}, "Started: sampling, then the backtest")) this.poll();
   }
 
   async stop() {
-    if (!confirm("Stop the run? The sampling is saved up to its last checkpoint and goes on from there next time.")) {
-      return;
-    }
+    if (!await ask.confirm({title: "Stop the run?", yes: "Stop the run", no: "Keep it running",
+      text: "The sampling is saved up to its last checkpoint and goes on from there next time."})) return;
     if (await api.action({action: "model_run_stop"}, "Stopping…")) this.poll();
   }
 
