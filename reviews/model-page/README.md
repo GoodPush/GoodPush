@@ -122,6 +122,22 @@ A fresh look at the page as a new model version leaves it: best fit only, no ran
 
 ![After: today's numbers from the best fit](img/after-best-fit.jpg)
 
+## Additions (2026-11-28)
+
+Five things the page didn't say, added after the third pass:
+
+| Added | Where | From |
+|---|---|---|
+| **6-week change** beside each of today's numbers | Today table (best fit or ranges) | the best fit's daily line (`S.physio`) |
+| **What the latest rides moved**: today's best fit against the one before the newest data day; a move over 3 % is flagged as worth checking that ride's power | under the Today table | `physio_diagnostics.json` `best` / `previous` (new, `PhysioDiagnostics.previous`) |
+| **What the fit used**: days and first day, days with riding and hours, best powers, threshold readings, rides whose power the power check set aside | under Status | `inputs` (new, `PhysioDiagnostics.inputs`); set-aside counts by the server (`PhysioDiagnostics.set_aside`) |
+| **Predicted vs observed in one sentence**: how many efforts beat the prediction, and how close the five closest to all-out sit | under the chart, follows the duration buttons | the efforts already on the page |
+| **How fresh the readings are**: the latest LT1 and CP reading, and a ramp test named when one is older than 6 weeks | under the readings table | the readings already on the page |
+
+![Today's numbers with their 6-week change and what the latest rides moved](img/after-trend-moved.jpg)
+
+![What the fit used](img/after-fit-used.jpg)
+
 ## What works well
 
 * The page shows its doubts: ranges, divergences, bias and spread, and "≈ as assumed" where the data barely moved a
